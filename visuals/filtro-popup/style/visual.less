@@ -1,0 +1,638 @@
+// Visual "Filtro em Pop-up": botão + pop-up de filtros.
+// As cores/tamanhos vêm do painel de formatação via variáveis CSS (ver applyStyles em visual.ts).
+
+.fp-root {
+    --fp-button-bg: #3BB39A;
+    --fp-button-fg: #1F2B2A;
+    --fp-popup-bg: #3BB39A;
+    --fp-panel-bg: #F4FBF9;
+    --fp-popup-fg: #1F2B2A;
+    --fp-font-size: 16px;
+    --fp-font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --fp-radius: 14px;
+    --fp-button-height: 56px;
+    --fp-gap: 8px;
+    --fp-title-size: 16px;
+    --fp-field-size: 13px;
+    --fp-value-size: 13px;
+    --fp-action-size: 13px;
+    --fp-action-font: var(--fp-font-family);
+    --fp-action-align: flex-end;
+    --fp-action-width: auto;
+    --fp-clear-bg: transparent;
+    --fp-clear-fg: #1F2B2A;
+    --fp-close-bg: #1F2B2A;
+    --fp-close-fg: #3BB39A;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    font-family: var(--fp-font-family);
+    color: var(--fp-popup-fg);
+    overflow: hidden;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    button {
+        font-family: inherit;
+        color: inherit;
+        cursor: pointer;
+    }
+}
+
+.fp-icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+// ------------------------------------------------------------------ botão
+
+.fp-button {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: var(--fp-button-height);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+    border-radius: var(--fp-radius);
+    background: var(--fp-button-bg);
+    color: var(--fp-button-fg);
+    font-size: var(--fp-font-size);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+    z-index: 3;
+
+    &:hover {
+        filter: brightness(1.05);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+    }
+
+    &:active {
+        transform: translateY(1px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--fp-button-fg);
+        outline-offset: 2px;
+    }
+}
+
+.fp-button-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7em;
+    padding: 0 0.9em;
+    position: relative;
+}
+
+.fp-button-icon {
+    position: absolute;
+    left: 0.85em;
+    width: 1.35em;
+    height: 1.35em;
+}
+
+.fp-no-icon .fp-button-icon,
+.fp-no-icon .fp-header-icon {
+    display: none;
+}
+
+.fp-button-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-left: 1.6em;
+
+    .fp-no-icon & {
+        padding-left: 0;
+    }
+}
+
+.fp-badge {
+    min-width: 1.45em;
+    height: 1.45em;
+    padding: 0 0.4em;
+    border-radius: 999px;
+    background: var(--fp-button-fg);
+    color: var(--fp-button-bg);
+    font-size: 0.72em;
+    font-weight: 700;
+    line-height: 1.45em;
+    text-align: center;
+}
+
+.fp-divider {
+    flex: none;
+    width: 2px;
+    align-self: stretch;
+    margin: 10px 0;
+    border-radius: 2px;
+    background: var(--fp-button-fg);
+    opacity: 0.55;
+}
+
+.fp-button-chevron {
+    flex: none;
+    width: 3.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .fp-icon {
+        width: 1.25em;
+        height: 1.25em;
+        transition: transform 0.2s ease;
+    }
+
+    .fp-open & .fp-icon {
+        transform: rotate(180deg);
+    }
+}
+
+// ------------------------------------------------------------------ pop-up
+
+.fp-backdrop {
+    position: absolute;
+    inset: 0;
+    display: none;
+    z-index: 1;
+
+    .fp-open & {
+        display: block;
+    }
+}
+
+.fp-popup {
+    position: absolute;
+    top: calc(var(--fp-button-height) + var(--fp-gap));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--fp-radius);
+    background: var(--fp-popup-bg);
+    color: var(--fp-popup-fg);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+    font-size: var(--fp-value-size);
+    z-index: 2;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+
+    .fp-open & {
+        visibility: visible;
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+
+    .fp-overlay & {
+        top: 0;
+        z-index: 4;
+    }
+}
+
+.fp-popup-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 0.6em 0.5em 0.5em 0.8em;
+    font-size: var(--fp-title-size);
+    font-weight: 700;
+}
+
+.fp-header-icon {
+    width: 1.2em;
+    height: 1.2em;
+}
+
+.fp-popup-title {
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fp-close {
+    flex: none;
+    width: 2em;
+    height: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
+
+.fp-popup-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 0.75em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    scrollbar-width: thin;
+}
+
+.fp-popup-footer {
+    flex: none;
+    display: flex;
+    justify-content: var(--fp-action-align);
+    padding: 0.75em;
+    font-size: var(--fp-action-size);
+    font-family: var(--fp-action-font);
+}
+
+// Grade com colunas 1fr: os dois botões ficam sempre com a mesma largura (a do maior).
+.fp-actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0.6em;
+    max-width: 100%;
+}
+
+.fp-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    width: var(--fp-action-width);
+    min-width: 0;
+    height: 2.5em;
+    padding: 0 1.1em;
+    border-radius: calc(var(--fp-radius) * 0.75);
+    font-size: 1em;
+    font-family: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: filter 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+}
+
+.fp-root .fp-action-secondary {
+    border: 2px solid var(--fp-clear-fg);
+    background: var(--fp-clear-bg);
+    color: var(--fp-clear-fg);
+
+    &:not(:disabled):hover {
+        filter: brightness(0.92);
+    }
+}
+
+.fp-root .fp-action-primary {
+    border: 2px solid var(--fp-close-bg);
+    background: var(--fp-close-bg);
+    color: var(--fp-close-fg);
+
+    &:hover {
+        filter: brightness(1.25);
+    }
+}
+
+// ------------------------------------------------------------- cada filtro
+
+.fp-field {
+    flex: none;
+    border-radius: calc(var(--fp-radius) * 0.75);
+    background: var(--fp-panel-bg);
+    overflow: hidden;
+    border-left: 4px solid transparent;
+    transition: border-color 0.15s ease;
+
+    &.fp-active {
+        border-left-color: var(--fp-popup-fg);
+    }
+}
+
+.fp-field-header {
+    display: flex;
+    align-items: center;
+}
+
+.fp-field-toggle {
+    font-size: var(--fp-field-size);
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 0.7em 0.4em 0.7em 0.8em;
+    border: none;
+    background: transparent;
+    text-align: left;
+}
+
+.fp-field-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-weight: 700;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fp-field-count {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.9em;
+    opacity: 0.7;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    .fp-active & {
+        opacity: 1;
+        font-weight: 600;
+    }
+}
+
+.fp-field-chevron {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
+
+    .fp-collapsed & {
+        transform: none;
+    }
+}
+
+.fp-field-clear {
+    flex: none;
+    width: 2.2em;
+    height: 2.2em;
+    margin-right: 0.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    visibility: hidden;
+
+    .fp-active & {
+        visibility: visible;
+    }
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+}
+
+.fp-field-content {
+    padding: 0 0.8em 0.8em;
+
+    .fp-collapsed & {
+        display: none;
+    }
+}
+
+.fp-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
+    padding: 0 0.7em;
+    height: 2.3em;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+
+    &:focus-within {
+        border-color: var(--fp-popup-bg);
+        box-shadow: 0 0 0 2px var(--fp-popup-bg);
+    }
+
+    input {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+    }
+
+    .fp-icon {
+        opacity: 0.6;
+    }
+}
+
+.fp-list {
+    max-height: 14em;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.fp-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.65em;
+    padding: 0.38em 0.4em;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    text-align: left;
+    font-size: 1em;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--fp-popup-bg);
+    }
+}
+
+.fp-item-all {
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px 6px 0 0;
+    margin-bottom: 0.2em;
+}
+
+.fp-check {
+    flex: none;
+    width: 1.15em;
+    height: 1.15em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--fp-popup-fg);
+    border-radius: 4px;
+    background: #fff;
+    transition: background 0.12s ease;
+
+    .fp-icon {
+        width: 0.85em;
+        height: 0.85em;
+        stroke-width: 3.2;
+        color: var(--fp-panel-bg);
+        visibility: hidden;
+    }
+
+    .fp-item-radio & {
+        border-radius: 50%;
+    }
+
+    .fp-selected & {
+        background: var(--fp-popup-bg);
+        border-color: var(--fp-popup-bg);
+
+        .fp-icon {
+            visibility: visible;
+            color: #fff;
+        }
+    }
+
+    .fp-partial & {
+        background: linear-gradient(var(--fp-popup-bg), var(--fp-popup-bg)) center / 55% 2.5px no-repeat, #fff;
+    }
+}
+
+.fp-item-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fp-list-note {
+    padding: 0.5em 0.4em 0.2em;
+    font-size: 0.9em;
+    opacity: 0.7;
+}
+
+.fp-range {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6em;
+}
+
+.fp-range-input {
+    flex: 1 1 8em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+    font-size: 0.9em;
+    font-weight: 600;
+
+    input {
+        height: 2.3em;
+        padding: 0 0.6em;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        background: #fff;
+        font: inherit;
+        font-weight: 400;
+        color: inherit;
+
+        &:focus {
+            outline: none;
+            border-color: var(--fp-popup-bg);
+            box-shadow: 0 0 0 2px var(--fp-popup-bg);
+        }
+    }
+}
+
+.fp-empty {
+    margin: auto 0;
+    padding: 1.5em 1em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+    text-align: center;
+    border-radius: calc(var(--fp-radius) * 0.75);
+    background: var(--fp-panel-bg);
+}
+
+// ------------------------------------------------------- campos aninhados
+
+.fp-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 0.15em;
+    padding-left: calc(var(--fp-depth, 0) * 1.35em);
+
+    .fp-item {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+
+.fp-caret,
+.fp-caret-spacer {
+    flex: none;
+    width: 1.6em;
+    height: 1.6em;
+}
+
+.fp-caret {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+
+    .fp-icon {
+        transform: rotate(-90deg);
+        transition: transform 0.15s ease;
+    }
+
+    &.fp-caret-open .fp-icon {
+        transform: none;
+    }
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+}
+
+.fp-item-count {
+    flex: none;
+    min-width: 1.6em;
+    padding: 0 0.45em;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.07);
+    font-size: 0.8em;
+    line-height: 1.6em;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.fp-tree {
+    max-height: 18em;
+}

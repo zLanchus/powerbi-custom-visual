@@ -1,0 +1,330 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Filtro aninhado 1",
+            "description": "As colunas colocadas aqui viram um único filtro em árvore, na ordem em que foram adicionadas (a primeira é o nível de cima).",
+            "name": "nest1",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Filtro aninhado 2",
+            "description": "As colunas colocadas aqui viram um único filtro em árvore, na ordem em que foram adicionadas (a primeira é o nível de cima).",
+            "name": "nest2",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Filtro aninhado 3",
+            "description": "As colunas colocadas aqui viram um único filtro em árvore, na ordem em que foram adicionadas (a primeira é o nível de cima).",
+            "name": "nest3",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Filtro aninhado 4",
+            "description": "As colunas colocadas aqui viram um único filtro em árvore, na ordem em que foram adicionadas (a primeira é o nível de cima).",
+            "name": "nest4",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Filtros sem aninhamento",
+            "description": "Cada coluna colocada aqui vira um filtro separado no pop-up.",
+            "name": "fields",
+            "kind": "Grouping"
+        }
+    ],
+    "objects": {
+        "general": {
+            "properties": {
+                "filter": {
+                    "type": {
+                        "filter": true
+                    }
+                }
+            }
+        },
+        "button": {
+            "properties": {
+                "text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showIcon": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showBadge": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "popup": {
+            "properties": {
+                "title": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "panelFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "overlay": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fieldFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "valueFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                }
+            }
+        },
+        "slicer": {
+            "properties": {
+                "singleSelect": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showSearch": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "rangeForNumbers": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "actions": {
+            "properties": {
+                "align": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "left",
+                                "displayName": "Esquerda"
+                            },
+                            {
+                                "value": "center",
+                                "displayName": "Centro"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "Direita"
+                            }
+                        ]
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "width": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "clearFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "clearFontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "closeFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "closeFontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "nest1": {
+                        "max": 6
+                    },
+                    "nest2": {
+                        "max": 6
+                    },
+                    "nest3": {
+                        "max": 6
+                    },
+                    "nest4": {
+                        "max": 6
+                    },
+                    "fields": {
+                        "max": 20
+                    }
+                }
+            ],
+            "categorical": {
+                "categories": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "nest1"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "nest2"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "nest3"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "nest4"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "fields"
+                            }
+                        }
+                    ],
+                    "dataReductionAlgorithm": {
+                        "window": {
+                            "count": 30000
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "sorting": {
+        "default": {}
+    },
+    "suppressDefaultTitle": true,
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "privileges": []
+}

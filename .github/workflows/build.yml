@@ -1,0 +1,32 @@
+name: Build dos visuais
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        visual: [filtro-popup]
+    defaults:
+      run:
+        working-directory: visuals/${{ matrix.visual }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: visuals/${{ matrix.visual }}/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit -p .
+      - run: npx pbiviz package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.visual }}-pbiviz
+          path: visuals/${{ matrix.visual }}/dist/*.pbiviz

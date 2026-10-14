@@ -1,0 +1,5 @@
+node_modules/
+.tmp/
+webpack.statistics.*.html
+*.log
+.DS_Store
