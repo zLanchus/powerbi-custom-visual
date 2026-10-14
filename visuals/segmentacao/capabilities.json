@@ -1,0 +1,291 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Campo",
+            "description": "Coluna cujos valores viram as opções da segmentação.",
+            "name": "field",
+            "kind": "Grouping"
+        }
+    ],
+    "objects": {
+        "general": {
+            "properties": {
+                "filter": {
+                    "type": {
+                        "filter": true
+                    }
+                }
+            }
+        },
+        "layout": {
+            "properties": {
+                "mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "blocks",
+                                "displayName": "Blocos (botões)"
+                            },
+                            {
+                                "value": "list",
+                                "displayName": "Lista vertical"
+                            },
+                            {
+                                "value": "dropdown",
+                                "displayName": "Suspenso"
+                            }
+                        ]
+                    }
+                },
+                "singleSelect": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showSelectAll": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showSearch": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columns": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "gap": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "header": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showClear": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "items": {
+            "properties": {
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "selectedFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "selectedFontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showCheck": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "dropdown": {
+            "properties": {
+                "placeholder": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "panelFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "field": {
+                        "max": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "categories": {
+                    "for": {
+                        "in": "field"
+                    },
+                    "dataReductionAlgorithm": {
+                        "window": {
+                            "count": 30000
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "sorting": {
+        "default": {}
+    },
+    "suppressDefaultTitle": true,
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "supportsSynchronizingFilterState": true,
+    "privileges": []
+}

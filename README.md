@@ -7,6 +7,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | Visual | O que faz | Download |
 |---|---|---|
 | [**Filtro em Pop-up**](visuals/filtro-popup/) | Botão "Abrir Filtros" que abre um pop-up com slicers: filtros simples, filtros aninhados em árvore (ex.: Ano › Mês), colunas de várias tabelas, pesquisa, limpar todos, copiar/colar, sincronização entre páginas e formatação completa. | [`.pbiviz`](visuals/filtro-popup/dist/) |
+| [**Segmentação Estilizada**](visuals/segmentacao/) | Substituto da segmentação nativa com três estilos: blocos (botões), lista vertical ou suspenso. Mesmo padrão visual e de formatação do Filtro em Pop-up. | [`.pbiviz`](visuals/segmentacao/dist/) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -24,7 +25,8 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 ```
 powerbi-custom-visual/
 ├── visuals/
-│   └── filtro-popup/        # um visual por pasta
+│   ├── filtro-popup/        # um visual por pasta
+│   └── segmentacao/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone

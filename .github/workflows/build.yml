@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        visual: [filtro-popup]
+        visual: [filtro-popup, segmentacao]
     defaults:
       run:
         working-directory: visuals/${{ matrix.visual }}

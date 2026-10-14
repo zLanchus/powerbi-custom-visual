@@ -1,0 +1,395 @@
+// Visual "Segmentação Estilizada": blocos, lista vertical ou suspenso.
+// Mesmo padrão visual do "Filtro em Pop-up"; cores e tamanhos vêm do painel
+// de formatação via variáveis CSS (ver applyStyles em visual.ts).
+
+.fs-root {
+    --fs-gap: 8px;
+    --fs-header-size: 14px;
+    --fs-header-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --fs-header-fg: #1F2B2A;
+    --fs-item-size: 13px;
+    --fs-item-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --fs-item-bg: #F4FBF9;
+    --fs-item-fg: #1F2B2A;
+    --fs-sel-bg: #3BB39A;
+    --fs-sel-fg: #1F2B2A;
+    --fs-item-radius: 10px;
+    --fs-item-height: 36px;
+    --fs-item-bw: 0px;
+    --fs-item-bc: transparent;
+    --fs-dd-bg: #3BB39A;
+    --fs-dd-fg: #1F2B2A;
+    --fs-dd-size: 15px;
+    --fs-dd-radius: 14px;
+    --fs-dd-height: 48px;
+    --fs-dd-bw: 0px;
+    --fs-dd-bc: transparent;
+    --fs-dd-panel: #FFFFFF;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: var(--fs-item-font);
+    color: var(--fs-item-fg);
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    button {
+        font-family: inherit;
+        color: inherit;
+        cursor: pointer;
+    }
+}
+
+.fs-icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+// ------------------------------------------------------------- cabeçalho
+
+.fs-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: 1.6em;
+    font-family: var(--fs-header-font);
+    font-size: var(--fs-header-size);
+    font-weight: 700;
+    color: var(--fs-header-fg);
+}
+
+.fs-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fs-clear {
+    flex: none;
+    width: 1.8em;
+    height: 1.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+}
+
+.fs-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--fs-gap);
+}
+
+.fs-scroll {
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+// ------------------------------------------------------------------ itens
+
+.fs-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    min-width: 0;
+    min-height: var(--fs-item-height);
+    padding: 0 0.9em;
+    border: var(--fs-item-bw) solid var(--fs-item-bc);
+    border-radius: var(--fs-item-radius);
+    background: var(--fs-item-bg);
+    color: var(--fs-item-fg);
+    font-size: var(--fs-item-size);
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+        filter: brightness(0.96);
+    }
+
+    &.fs-selected {
+        background: var(--fs-sel-bg);
+        color: var(--fs-sel-fg);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--fs-sel-bg);
+        outline-offset: 1px;
+    }
+}
+
+.fs-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fs-check {
+    flex: none;
+    width: 1.15em;
+    height: 1.15em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.85);
+
+    .fs-icon {
+        width: 0.85em;
+        height: 0.85em;
+        stroke-width: 3.2;
+        color: var(--fs-sel-bg);
+        visibility: hidden;
+    }
+
+    .fs-radio & {
+        border-radius: 50%;
+    }
+
+    .fs-selected & {
+        background: #fff;
+        border-color: #fff;
+
+        .fs-icon {
+            visibility: visible;
+        }
+    }
+
+    .fs-partial & {
+        background: linear-gradient(var(--fs-sel-bg), var(--fs-sel-bg)) center / 55% 2.5px no-repeat, #fff;
+    }
+}
+
+.fs-item-all {
+    font-weight: 700;
+}
+
+.fs-note {
+    padding: 0.4em;
+    font-size: calc(var(--fs-item-size) * 0.9);
+    opacity: 0.7;
+}
+
+// ------------------------------------------------------------------ blocos
+
+.fs-blocks {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: var(--fs-gap);
+
+    &.fs-grid {
+        display: grid;
+    }
+
+    .fs-block {
+        justify-content: center;
+        text-align: center;
+
+        .fs-label {
+            flex: 0 1 auto;
+        }
+    }
+
+    &:not(.fs-grid) .fs-block {
+        flex: 1 1 auto;
+    }
+
+    .fs-note {
+        width: 100%;
+    }
+}
+
+// ------------------------------------------------------------------ lista
+
+.fs-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--fs-gap) / 2);
+}
+
+.fs-row {
+    flex: none;
+    width: 100%;
+}
+
+.fs-search {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    height: 2.3em;
+    padding: 0 0.8em;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: #fff;
+    color: var(--fs-item-fg);
+    font-size: var(--fs-item-size);
+
+    &:focus-within {
+        border-color: var(--fs-sel-bg);
+        box-shadow: 0 0 0 2px var(--fs-sel-bg);
+    }
+
+    input {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+    }
+
+    .fs-icon {
+        opacity: 0.6;
+    }
+}
+
+// --------------------------------------------------------------- suspenso
+
+.fs-trigger {
+    flex: none;
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    height: var(--fs-dd-height);
+    padding: 0;
+    border: var(--fs-dd-bw) solid var(--fs-dd-bc);
+    border-radius: var(--fs-dd-radius);
+    background: var(--fs-dd-bg);
+    color: var(--fs-dd-fg);
+    font-size: var(--fs-dd-size);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: filter 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+        filter: brightness(1.05);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+    }
+}
+
+.fs-trigger-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 1em;
+    text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fs-divider {
+    flex: none;
+    width: 2px;
+    align-self: stretch;
+    margin: 10px 0;
+    border-radius: 2px;
+    background: currentColor;
+    opacity: 0.55;
+}
+
+.fs-trigger-chevron {
+    flex: none;
+    width: 3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .fs-icon {
+        width: 1.2em;
+        height: 1.2em;
+        transition: transform 0.2s ease;
+    }
+
+    .fs-dropdown-open & .fs-icon {
+        transform: rotate(180deg);
+    }
+}
+
+.fs-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+
+    .fs-dropdown-open & {
+        display: block;
+    }
+}
+
+.fs-panel {
+    position: absolute;
+    top: calc(var(--fs-dd-height) + 6px);
+    left: 0;
+    right: 0;
+    // Altura do conteúdo, até o fim do visual (clicar abaixo dela fecha a lista).
+    max-height: calc(100% - var(--fs-dd-height) - 6px);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    padding: 0.6em;
+    border-radius: var(--fs-dd-radius);
+    background: var(--fs-dd-panel);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+
+    .fs-dropdown-open & {
+        visibility: visible;
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+}
+
+.fs-empty {
+    margin: auto 0;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    text-align: center;
+    border-radius: var(--fs-item-radius);
+    background: var(--fs-item-bg);
+}
