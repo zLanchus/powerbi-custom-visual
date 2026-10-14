@@ -263,25 +263,6 @@
     },
     "dataViewMappings": [
         {
-            "conditions": [
-                {
-                    "nest1": {
-                        "max": 6
-                    },
-                    "nest2": {
-                        "max": 6
-                    },
-                    "nest3": {
-                        "max": 6
-                    },
-                    "nest4": {
-                        "max": 6
-                    },
-                    "fields": {
-                        "max": 20
-                    }
-                }
-            ],
             "categorical": {
                 "categories": {
                     "select": [
