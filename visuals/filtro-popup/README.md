@@ -8,12 +8,12 @@ Botão **"Abrir Filtros"** (verde-água, ícone de funil, divisória e seta) que
 
 ## Como usar no Power BI
 
-1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.5.0.0.pbiviz`](dist/).
+1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.5.1.0.pbiviz`](dist/).
 2. No Power BI Desktop: painel **Visualizações → `...` → Importar um visual de um arquivo** e selecione o `.pbiviz`.
 3. Insira o visual na página e arraste as colunas para os espaços de dados:
    - **Filtro aninhado 1, 2, 3 e 4** — todas as colunas colocadas no mesmo espaço viram **um único filtro em árvore**, na ordem em que foram adicionadas (a primeira é o nível de cima). Ex.: *Ano* e *Mês* no "Filtro aninhado 1" e *Área* e *Curso* no "Filtro aninhado 2". Sem limite de colunas por espaço.
    - **Filtros sem aninhamento** — cada coluna vira um filtro separado, sem limite de colunas.
-   - **Ligação entre tabelas (opcional)** — necessária quando as colunas vêm de **tabelas diferentes**. Veja abaixo.
+   - **Ligação entre tabelas (opcional)** — necessária quando alguma coluna vem de uma **tabela sem relacionamento** com as outras. Veja "Colunas de tabelas diferentes" abaixo.
 4. Clique no botão para abrir o pop-up.
 
 ### O que tem no pop-up
@@ -49,14 +49,25 @@ Botão **"Abrir Filtros"** (verde-água, ícone de funil, divisória e seta) que
 
 ## Colunas de tabelas diferentes
 
-O Power BI busca todas as colunas do visual numa única consulta. Quando elas vêm de tabelas diferentes e não há uma medida no visual, ele não sabe como combiná-las e mostra o erro *"Não é possível determinar as relações entre os campos"* (o mesmo acontece com uma tabela nativa nas mesmas condições).
+O Power BI busca todas as colunas do visual numa **única consulta** (um visual personalizado não consegue consultar cada coluna separadamente, como a segmentação nativa faz). Por isso as tabelas usadas precisam estar ligadas de alguma forma — exatamente como numa tabela/matriz nativa com as mesmas colunas.
 
-Para resolver, coloque algo em **Ligação entre tabelas (opcional)**:
+**Tabelas relacionadas** (ex.: tabela fato + Calendário): funciona direto. Opcionalmente, coloque em **Ligação entre tabelas** uma medida da tabela fato (ou qualquer coluna dela como *Contagem*) para mostrar só as combinações que existem.
 
-- uma medida que você já tenha (ex.: `Total de pedidos`), **ou**
-- qualquer coluna da tabela fato (ex.: o ID do pedido), escolhendo **Contagem** no menu do campo — não precisa criar nada em DAX.
+**Tabela sem relacionamento** (ex.: tabela criada com *Inserir dados* ou *Nova tabela*): o Power BI recusa a consulta e o visual não aparece, mesmo com uma medida comum da tabela fato — essa medida não "enxerga" a tabela solta. A solução é uma medida que **use todas as tabelas envolvidas**. Crie-a e coloque em **Ligação entre tabelas**:
 
-Com isso o Power BI usa os relacionamentos do modelo e o pop-up mostra só os valores/combinações que existem. Se uma tabela não tem relacionamento nenhum com as outras, crie um no modelo ou use uma medida que funcione sem ele (ex.: `Ligação = 1`).
+```DAX
+Ligação Filtros =
+IF ( NOT ISEMPTY ( 'Fato' ), 1 )
+    * IF ( NOT ISEMPTY ( 'Tabela Local' ), 1 )
+```
+
+- Troque `'Fato'` pela sua tabela principal e `'Tabela Local'` pela tabela sem relacionamento.
+- Se tiver mais de uma tabela solta, acrescente uma linha `* IF ( NOT ISEMPTY ( 'Outra Tabela' ), 1 )` para cada uma.
+- Use **só essa medida** em "Ligação entre tabelas" (tire outras medidas/contagens de lá).
+
+Com isso o Power BI consegue montar a consulta: cada valor da tabela solta aparece combinado com os valores das tabelas relacionadas que têm dados.
+
+> Filtrar por uma tabela sem relacionamento não filtra os outros visuais por si só — isso também é verdade para a segmentação nativa. Ela só tem efeito em medidas que leiam o valor escolhido (ex.: `SELECTEDVALUE('Tabela Local'[Coluna])`).
 
 ## Importante: tamanho do visual
 

@@ -32,7 +32,7 @@
         },
         {
             "displayName": "Ligação entre tabelas (opcional)",
-            "description": "Use quando as colunas vêm de tabelas diferentes: coloque aqui uma medida ou uma coluna da tabela fato (como contagem). Assim o Power BI sabe como relacionar as tabelas e mostra só as combinações que existem.",
+            "description": "Necessário quando há colunas de tabelas sem relacionamento entre si (ex.: tabela criada no próprio Power BI). Coloque aqui uma medida que use todas as tabelas envolvidas — veja o README do visual.",
             "name": "link",
             "kind": "Measure"
         }

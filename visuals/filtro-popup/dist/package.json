@@ -1,5 +1,5 @@
 {
-		"version": "1.5.0.0",
+		"version": "1.5.1.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/filtroPopup7AA90184E2E143838BC5449850609E02.pbiviz.json"
 			}
 		],
-		"visual": {"name":"filtroPopup","displayName":"Filtro em Pop-up","guid":"filtroPopup7AA90184E2E143838BC5449850609E02","visualClassName":"Visual","version":"1.5.0.0","description":"Botão que abre um pop-up com filtros (slicers) aplicados ao relatório.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"filtroPopup","displayName":"Filtro em Pop-up","guid":"filtroPopup7AA90184E2E143838BC5449850609E02","visualClassName":"Visual","version":"1.5.1.0","description":"Botão que abre um pop-up com filtros (slicers) aplicados ao relatório.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"
