@@ -29,6 +29,12 @@
             "description": "Cada coluna colocada aqui vira um filtro separado no pop-up.",
             "name": "fields",
             "kind": "Grouping"
+        },
+        {
+            "displayName": "Ligação entre tabelas (opcional)",
+            "description": "Use quando as colunas vêm de tabelas diferentes: coloque aqui uma medida ou uma coluna da tabela fato (como contagem). Assim o Power BI sabe como relacionar as tabelas e mostra só as combinações que existem.",
+            "name": "link",
+            "kind": "Measure"
         }
     ],
     "objects": {
@@ -297,6 +303,15 @@
                             "count": 30000
                         }
                     }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "link"
+                            }
+                        }
+                    ]
                 }
             }
         }
@@ -307,5 +322,6 @@
     "suppressDefaultTitle": true,
     "supportsKeyboardFocus": true,
     "supportsLandingPage": false,
-    "privileges": []
+    "privileges": [],
+    "supportsSynchronizingFilterState": true
 }

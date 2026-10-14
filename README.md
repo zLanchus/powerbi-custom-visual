@@ -6,7 +6,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 
 | Visual | O que faz | Download |
 |---|---|---|
-| [**Filtro em Pop-up**](visuals/filtro-popup/) | Botão "Abrir Filtros" que abre um pop-up com slicers: filtros simples, filtros aninhados em árvore (ex.: Ano › Mês), pesquisa, limpar todos e formatação completa. | [`.pbiviz`](visuals/filtro-popup/dist/) |
+| [**Filtro em Pop-up**](visuals/filtro-popup/) | Botão "Abrir Filtros" que abre um pop-up com slicers: filtros simples, filtros aninhados em árvore (ex.: Ano › Mês), colunas de várias tabelas, pesquisa, limpar todos, copiar/colar, sincronização entre páginas e formatação completa. | [`.pbiviz`](visuals/filtro-popup/dist/) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">

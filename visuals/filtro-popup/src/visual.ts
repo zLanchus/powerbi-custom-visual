@@ -10,6 +10,8 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
+import ISelectionId = powerbi.visuals.ISelectionId;
 import DataView = powerbi.DataView;
 import FilterAction = powerbi.FilterAction;
 import PrimitiveValue = powerbi.PrimitiveValue;
@@ -75,6 +77,7 @@ function icon(kind: "funnel" | "chevron" | "close" | "check" | "search" | "erase
 export class Visual implements IVisual {
     private host: IVisualHost;
     private events: IVisualEventService;
+    private selectionManager: ISelectionManager;
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
 
@@ -113,6 +116,21 @@ export class Visual implements IVisual {
             if (e.key === "Escape" && this.isOpen) {
                 this.setOpen(false);
                 this.button.focus();
+            }
+        });
+
+        // Menu do botão direito do Power BI (copiar, colar, etc.), como nos visuais nativos.
+        this.selectionManager = this.host.createSelectionManager();
+        this.root.addEventListener("contextmenu", (e: MouseEvent) => {
+            e.preventDefault();
+            this.selectionManager.showContextMenu({} as ISelectionId, { x: e.clientX, y: e.clientY });
+        });
+
+        // Cliques fora de campos de texto não puxam o foco do teclado para dentro do visual,
+        // assim Ctrl+C / Ctrl+V continuam indo para o Power BI (copiar e colar o visual).
+        this.root.addEventListener("mousedown", (e: MouseEvent) => {
+            if (!(e.target instanceof HTMLInputElement)) {
+                e.preventDefault();
             }
         });
     }
@@ -395,7 +413,7 @@ export class Visual implements IVisual {
         chevronWrap.appendChild(icon("chevron"));
 
         this.button.append(main, divider, chevronWrap);
-        this.button.addEventListener("click", () => this.setOpen(!this.isOpen));
+        this.button.addEventListener("click", (e: MouseEvent) => this.setOpen(!this.isOpen, e.detail === 0));
         this.root.appendChild(this.button);
     }
 
@@ -409,13 +427,15 @@ export class Visual implements IVisual {
         this.clearAllButton.disabled = count === 0;
     }
 
-    private setOpen(open: boolean): void {
+    private setOpen(open: boolean, viaKeyboard = false): void {
         this.isOpen = open;
         this.root.classList.toggle("fp-open", open);
         this.button.setAttribute("aria-expanded", String(open));
-        if (open) {
+        if (open && viaKeyboard) {
             const first = this.popup.querySelector<HTMLElement>("input, button.fp-close");
             first?.focus();
+        } else if (!open && this.root.contains(document.activeElement)) {
+            (document.activeElement as HTMLElement).blur();
         }
     }
 

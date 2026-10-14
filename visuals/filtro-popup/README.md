@@ -8,11 +8,12 @@ Botão **"Abrir Filtros"** (verde-água, ícone de funil, divisória e seta) que
 
 ## Como usar no Power BI
 
-1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.3.0.0.pbiviz`](dist/).
+1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.4.0.0.pbiviz`](dist/).
 2. No Power BI Desktop: painel **Visualizações → `...` → Importar um visual de um arquivo** e selecione o `.pbiviz`.
 3. Insira o visual na página e arraste as colunas para os espaços de dados:
    - **Filtro aninhado 1, 2, 3 e 4** — todas as colunas colocadas no mesmo espaço viram **um único filtro em árvore**, na ordem em que foram adicionadas (a primeira é o nível de cima). Ex.: *Ano* e *Mês* no "Filtro aninhado 1" e *Área* e *Curso* no "Filtro aninhado 2". Sem limite de colunas por espaço.
    - **Filtros sem aninhamento** — cada coluna vira um filtro separado, sem limite de colunas.
+   - **Ligação entre tabelas (opcional)** — necessária quando as colunas vêm de **tabelas diferentes**. Veja abaixo.
 4. Clique no botão para abrir o pop-up.
 
 ### O que tem no pop-up
@@ -23,6 +24,8 @@ Botão **"Abrir Filtros"** (verde-água, ícone de funil, divisória e seta) que
 - Opcional: modo **intervalo (De/Até)** para campos numéricos e de data.
 - **Limpar todos os filtros** e **Fechar** no rodapé; também fecha com `Esc`, no `X` ou clicando fora do pop-up.
 - O botão mostra um contador com quantos campos estão filtrados.
+- **Copiar e colar:** clique no visual e use `Ctrl+C` / `Ctrl+V`, ou o **menu do botão direito** do Power BI.
+- **Sincronizar entre páginas:** o visual aparece no painel **Exibir → Sincronizar segmentações**, como a segmentação nativa. Ao colar em outra página, o Power BI pergunta se quer sincronizar.
 
 ### Formatação (painel "Formatar visual")
 
@@ -41,8 +44,19 @@ Botão **"Abrir Filtros"** (verde-água, ícone de funil, divisória e seta) que
 - O filtro enviado ao Power BI:
   - se só itens inteiros do primeiro nível estão marcados → filtro simples nessa coluna;
   - caso contrário → filtro de várias colunas (*tuple filter* da API de visuais), com o caminho completo de cada item marcado. Por isso ele é exato: marcar *2025 › Mar* filtra só março de 2025.
-- As colunas de uma mesma árvore devem ser da mesma tabela (ou de tabelas relacionadas) para o filtro de várias colunas funcionar.
+- As colunas de uma mesma árvore podem ser de tabelas diferentes, desde que estejam relacionadas no modelo (veja "Colunas de tabelas diferentes").
 - A ordem dos itens segue a ordem do Power BI, incluindo "Classificar por coluna" (ex.: meses em ordem de calendário).
+
+## Colunas de tabelas diferentes
+
+O Power BI busca todas as colunas do visual numa única consulta. Quando elas vêm de tabelas diferentes e não há uma medida no visual, ele não sabe como combiná-las e mostra o erro *"Não é possível determinar as relações entre os campos"* (o mesmo acontece com uma tabela nativa nas mesmas condições).
+
+Para resolver, coloque algo em **Ligação entre tabelas (opcional)**:
+
+- uma medida que você já tenha (ex.: `Total de pedidos`), **ou**
+- qualquer coluna da tabela fato (ex.: o ID do pedido), escolhendo **Contagem** no menu do campo — não precisa criar nada em DAX.
+
+Com isso o Power BI usa os relacionamentos do modelo e o pop-up mostra só os valores/combinações que existem. Se uma tabela não tem relacionamento nenhum com as outras, crie um no modelo ou use uma medida que funcione sem ele (ex.: `Ligação = 1`).
 
 ## Importante: tamanho do visual
 
@@ -72,7 +86,7 @@ npm start             # servidor de desenvolvimento (visual "Developer Visual" n
 
 Estrutura:
 
-- `capabilities.json` — espaços de dados ("Filtro aninhado 1–4" e "Filtros sem aninhamento"), propriedades do painel de formatação e a propriedade `general.filter` usada para aplicar os filtros.
+- `capabilities.json` — espaços de dados ("Filtro aninhado 1–4", "Filtros sem aninhamento" e "Ligação entre tabelas"), suporte a sincronizar segmentações, propriedades do painel de formatação e a propriedade `general.filter` usada para aplicar os filtros.
 - `src/visual.ts` — interface (botão, pop-up, listas) e integração com o host (`applyJsonFilter`).
 - `src/hierarchy.ts` — monta a árvore dos espaços aninhados e o filtro de várias colunas (tuple) dela.
 - `src/filters.ts` — monta os filtros JSON (`BasicFilter` "In" e `AdvancedFilter` de intervalo) e reconstrói o estado a partir dos filtros salvos.
