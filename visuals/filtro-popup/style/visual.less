@@ -12,6 +12,12 @@
     --fp-radius: 14px;
     --fp-button-height: 56px;
     --fp-gap: 8px;
+    --fp-button-bw: 0px;
+    --fp-button-bc: transparent;
+    --fp-popup-bw: 0px;
+    --fp-popup-bc: transparent;
+    --fp-field-bw: 0px;
+    --fp-field-bc: transparent;
     --fp-title-size: 16px;
     --fp-field-size: 13px;
     --fp-value-size: 13px;
@@ -63,7 +69,7 @@
     display: flex;
     align-items: center;
     padding: 0;
-    border: none;
+    border: var(--fp-button-bw) solid var(--fp-button-bc);
     border-radius: var(--fp-radius);
     background: var(--fp-button-bg);
     color: var(--fp-button-fg);
@@ -186,6 +192,7 @@
     bottom: 0;
     display: flex;
     flex-direction: column;
+    border: var(--fp-popup-bw) solid var(--fp-popup-bc);
     border-radius: var(--fp-radius);
     background: var(--fp-popup-bg);
     color: var(--fp-popup-fg);
@@ -327,11 +334,12 @@
     border-radius: calc(var(--fp-radius) * 0.75);
     background: var(--fp-panel-bg);
     overflow: hidden;
-    border-left: 4px solid transparent;
-    transition: border-color 0.15s ease;
+    border: var(--fp-field-bw) solid var(--fp-field-bc);
+    transition: box-shadow 0.15s ease;
 
+    // Faixa à esquerda indicando filtro ativo (não interfere na borda escolhida).
     &.fp-active {
-        border-left-color: var(--fp-popup-fg);
+        box-shadow: inset 4px 0 0 var(--fp-popup-fg);
     }
 }
 

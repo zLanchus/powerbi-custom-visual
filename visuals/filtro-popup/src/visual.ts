@@ -428,6 +428,9 @@ export class Visual implements IVisual {
     }
 
     private setOpen(open: boolean, viaKeyboard = false): void {
+        if (open && !this.isOpen && this.formattingSettings?.slicerCard.startCollapsed.value) {
+            this.collapseAll();
+        }
         this.isOpen = open;
         this.root.classList.toggle("fp-open", open);
         this.button.setAttribute("aria-expanded", String(open));
@@ -437,6 +440,15 @@ export class Visual implements IVisual {
         } else if (!open && this.root.contains(document.activeElement)) {
             (document.activeElement as HTMLElement).blur();
         }
+    }
+
+    /** Recolhe todos os blocos de filtro (usado ao abrir o pop-up). */
+    private collapseAll(): void {
+        for (const field of this.fields) {
+            this.collapsed.set(field.key, true);
+        }
+        this.popupBody.querySelectorAll<HTMLElement>("section.fp-field")
+            .forEach(section => section.classList.add("fp-collapsed"));
     }
 
     // ---------------------------------------------------------------- popup
@@ -878,6 +890,15 @@ export class Visual implements IVisual {
         style.setProperty("--fp-title-size", this.px(p.titleFontSize.value));
         style.setProperty("--fp-field-size", this.px(p.fieldFontSize.value));
         style.setProperty("--fp-value-size", this.px(p.valueFontSize.value));
+
+        const f = this.formattingSettings.slicerCard;
+        const border = (width: number): string => Math.max(0, width || 0) + "px";
+        style.setProperty("--fp-button-bw", border(b.borderWidth.value));
+        style.setProperty("--fp-button-bc", b.borderColor.value.value);
+        style.setProperty("--fp-popup-bw", border(p.borderWidth.value));
+        style.setProperty("--fp-popup-bc", p.borderColor.value.value);
+        style.setProperty("--fp-field-bw", border(f.borderWidth.value));
+        style.setProperty("--fp-field-bc", f.borderColor.value.value);
 
         const a = this.formattingSettings.actionsCard;
         const align = String(a.align.value?.value || "right");

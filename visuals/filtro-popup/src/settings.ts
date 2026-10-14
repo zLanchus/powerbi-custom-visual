@@ -69,9 +69,21 @@ class ButtonCardSettings extends FormattingSettingsCard {
 
     name: string = "button";
     displayName: string = "Botão";
+    borderWidth = new formattingSettings.NumUpDown({
+        name: "borderWidth",
+        displayName: "Espessura da borda (px)",
+        value: 0
+    });
+
+    borderColor = new formattingSettings.ColorPicker({
+        name: "borderColor",
+        displayName: "Cor da borda",
+        value: { value: DEFAULT_FONT_COLOR }
+    });
+
     slices: Array<FormattingSettingsSlice> = [
         this.text, this.fill, this.fontColor, this.fontSize, this.fontFamily,
-        this.radius, this.height, this.showIcon, this.showBadge
+        this.radius, this.height, this.borderWidth, this.borderColor, this.showIcon, this.showBadge
     ];
 }
 
@@ -128,9 +140,21 @@ class PopupCardSettings extends FormattingSettingsCard {
 
     name: string = "popup";
     displayName: string = "Pop-up";
+    borderWidth = new formattingSettings.NumUpDown({
+        name: "borderWidth",
+        displayName: "Espessura da borda (px)",
+        value: 0
+    });
+
+    borderColor = new formattingSettings.ColorPicker({
+        name: "borderColor",
+        displayName: "Cor da borda",
+        value: { value: DEFAULT_FONT_COLOR }
+    });
+
     slices: Array<FormattingSettingsSlice> = [
         this.title, this.titleFontSize, this.fieldFontSize, this.valueFontSize,
-        this.fill, this.panelFill, this.fontColor, this.overlay
+        this.fill, this.panelFill, this.fontColor, this.borderWidth, this.borderColor, this.overlay
     ];
 }
 
@@ -155,7 +179,28 @@ class SlicerCardSettings extends FormattingSettingsCard {
 
     name: string = "slicer";
     displayName: string = "Filtros";
-    slices: Array<FormattingSettingsSlice> = [this.singleSelect, this.showSearch, this.rangeForNumbers];
+    startCollapsed = new formattingSettings.ToggleSwitch({
+        name: "startCollapsed",
+        displayName: "Abrir com os filtros retraídos",
+        description: "Ao abrir o pop-up, todos os filtros aparecem fechados; clique no título para expandir.",
+        value: true
+    });
+
+    borderWidth = new formattingSettings.NumUpDown({
+        name: "borderWidth",
+        displayName: "Espessura da borda dos filtros (px)",
+        value: 0
+    });
+
+    borderColor = new formattingSettings.ColorPicker({
+        name: "borderColor",
+        displayName: "Cor da borda dos filtros",
+        value: { value: DEFAULT_FONT_COLOR }
+    });
+
+    slices: Array<FormattingSettingsSlice> = [
+        this.startCollapsed, this.singleSelect, this.showSearch, this.rangeForNumbers, this.borderWidth, this.borderColor
+    ];
 }
 
 const ALIGN_ITEMS: powerbi.IEnumMember[] = [
