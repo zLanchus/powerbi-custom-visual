@@ -1,0 +1,28 @@
+[
+  {
+    "id": "filtro-popup",
+    "name": "Filtro em Pop-up",
+    "summary": "Botão \"Abrir Filtros\" que abre um pop-up com todos os filtros do relatório num lugar só.",
+    "features": [
+      "Filtros simples e filtros aninhados em árvore (ex.: Ano › Mês)",
+      "Pesquisa, selecionar tudo, limpar todos e fechar",
+      "Copiar/colar e sincronização entre páginas",
+      "Fontes, cores, bordas e posição dos botões configuráveis"
+    ],
+    "cover": "2-aberto.png",
+    "images": ["3-aninhado.png", "4-formatacao.png"]
+  },
+  {
+    "id": "segmentacao",
+    "name": "Segmentação Estilizada",
+    "summary": "Substituto mais bonito da segmentação de dados nativa, em três estilos.",
+    "features": [
+      "Blocos (botões), lista vertical ou suspenso",
+      "Seleção única ou múltipla, selecionar tudo e pesquisa",
+      "Copiar/colar e sincronização entre páginas",
+      "Cores de item normal e selecionado, bordas e fontes configuráveis"
+    ],
+    "cover": "1-blocos.png",
+    "images": ["2-lista.png", "3-suspenso.png"]
+  }
+]

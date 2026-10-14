@@ -3,3 +3,4 @@ node_modules/
 webpack.statistics.*.html
 *.log
 .DS_Store
+_site/
