@@ -87,16 +87,16 @@ const html = `<!doctype html>
   <meta name="description" content="Visuais personalizados para Power BI prontos para baixar e importar.">
   <style>
     :root {
-      --teal: #3BB39A; --dark: #1F2B2A; --panel: #F4FBF9; --bg: #EEF3F2; --muted: #51605E; --card: #FFFFFF;
-      --line: rgba(31, 43, 42, .1);
+      --primary: #6CBEEB; --dark: #0F2B45; --panel: #F1F8FD; --bg: #EEF4F9; --muted: #4E6175; --card: #FFFFFF;
+      --line: rgba(15, 43, 69, .1);
     }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #111817; --card: #1A2322; --panel: #22302E; --dark: #E8F2EF; --muted: #A7B6B3; --line: rgba(255,255,255,.08); }
+      :root { --bg: #0F1720; --card: #17212B; --panel: #203040; --dark: #E6F1FA; --muted: #A5B6C6; --line: rgba(255,255,255,.08); }
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); color: var(--dark); font: 16px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
     a { color: inherit; }
-    header { background: var(--teal); color: #1F2B2A; }
+    header { background: var(--primary); color: #0F2B45; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
     header .wrap { padding-top: 48px; padding-bottom: 40px; }
     header h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 40px); line-height: 1.15; }
@@ -113,7 +113,7 @@ const html = `<!doctype html>
     li { margin: 2px 0; }
     .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
     .download { display: inline-flex; align-items: center; gap: 12px; height: 52px; padding: 0 18px; border-radius: 14px;
-                background: var(--teal); color: #1F2B2A; font-weight: 700; text-decoration: none;
+                background: var(--primary); color: #0F2B45; font-weight: 700; text-decoration: none;
                 box-shadow: 0 1px 2px rgba(0,0,0,.12); transition: filter .15s, box-shadow .15s; }
     .download:hover { filter: brightness(1.05); box-shadow: 0 3px 10px rgba(0,0,0,.16); }
     .download svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }

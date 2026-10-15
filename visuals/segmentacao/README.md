@@ -8,7 +8,7 @@ Substituto mais bonito da **segmentação de dados (slicer) nativa** do Power BI
 
 ## Como usar
 
-1. Baixe [`dist/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.1.0.0.0.pbiviz`](dist/).
+1. Baixe [`dist/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.1.1.0.0.pbiviz`](dist/).
 2. No Power BI Desktop: **Visualizações → `…` → Importar um visual de um arquivo**.
 3. Arraste **uma coluna** para **Campo**.
 4. Em **Formatar visual → Layout → Estilo**, escolha **Blocos (botões)**, **Lista vertical** ou **Suspenso**.

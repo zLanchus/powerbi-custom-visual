@@ -1,5 +1,5 @@
 {
-		"version": "1.0.0.0",
+		"version": "1.1.0.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.pbiviz.json"
 			}
 		],
-		"visual": {"name":"segmentacaoEstilizada","displayName":"Segmentação Estilizada","guid":"segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8","visualClassName":"Visual","version":"1.0.0.0","description":"Substituto da segmentação de dados nativa com layout em blocos, lista vertical ou suspenso.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"segmentacaoEstilizada","displayName":"Segmentação Estilizada","guid":"segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8","visualClassName":"Visual","version":"1.1.0.0","description":"Substituto da segmentação de dados nativa com layout em blocos, lista vertical ou suspenso.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"

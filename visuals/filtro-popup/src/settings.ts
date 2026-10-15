@@ -7,9 +7,9 @@ import FormattingSettingsCard = formattingSettings.SimpleCard;
 import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
 
-/** Cor padrão do botão (verde-água da referência). */
-export const DEFAULT_FILL = "#3BB39A";
-export const DEFAULT_FONT_COLOR = "#1F2B2A";
+/** Cores padrão do repositório (ver DESIGN.md na raiz). */
+export const DEFAULT_FILL = "#6CBEEB";
+export const DEFAULT_FONT_COLOR = "#0F2B45";
 
 class ButtonCardSettings extends FormattingSettingsCard {
     text = new formattingSettings.TextInput({
@@ -104,7 +104,7 @@ class PopupCardSettings extends FormattingSettingsCard {
     panelFill = new formattingSettings.ColorPicker({
         name: "panelFill",
         displayName: "Cor dos painéis de filtro",
-        value: { value: "#F4FBF9" }
+        value: { value: "#F1F8FD" }
     });
 
     fontColor = new formattingSettings.ColorPicker({

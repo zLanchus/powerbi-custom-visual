@@ -22,6 +22,10 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 2. No Power BI Desktop: painel **Visualizações → `…` → Importar um visual de um arquivo**.
 3. Selecione o `.pbiviz`. O visual aparece no painel de visualizações do relatório.
 
+## Padrão visual
+
+Todos os visuais usam o mesmo padrão: **azul-claro `#6CBEEB`** como cor principal, **azul-marinho `#0F2B45`** para texto e **`#F1F8FD`** para painéis, além das mesmas formas e opções de formatação. Visuais novos devem seguir o **[DESIGN.md](DESIGN.md)**.
+
 ## Estrutura do repositório
 
 ```
@@ -38,6 +42,7 @@ powerbi-custom-visual/
 │       ├── pbiviz.json
 │       └── README.md
 ├── site/                    # página de download (GitHub Pages)
+├── DESIGN.md                # padrão visual (cores, formas, opções) para todos os visuais
 └── .github/workflows/       # build de todos os visuais + publicação do site
 ```
 
@@ -57,7 +62,7 @@ A cada push na `main`, o GitHub Actions instala, valida e empacota todos os visu
 
 ### Adicionando um novo visual
 
-1. `npx powerbi-visuals-tools new <nome>` dentro de `visuals/`.
+1. `npx powerbi-visuals-tools new <nome>` dentro de `visuals/` e aplique o padrão do [DESIGN.md](DESIGN.md).
 2. Preencha `pbiviz.json` (nome, descrição, autor) e escreva um `README.md` para ele.
 3. Rode `npm run package` e faça commit do `dist/*.pbiviz`.
 4. Adicione uma linha na tabela de visuais acima, o visual em `site/visuals.json` e o nome da pasta na lista `matrix.visual` de `.github/workflows/build.yml`.

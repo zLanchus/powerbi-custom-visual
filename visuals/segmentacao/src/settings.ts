@@ -7,10 +7,10 @@ import FormattingSettingsCard = formattingSettings.SimpleCard;
 import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
 
-/** Mesmas cores padrão do visual Filtro em Pop-up. */
-export const TEAL = "#3BB39A";
-export const DARK = "#1F2B2A";
-export const PANEL = "#F4FBF9";
+/** Cores padrão do repositório (ver DESIGN.md na raiz). */
+export const PRIMARY = "#6CBEEB";
+export const DARK = "#0F2B45";
+export const PANEL = "#F1F8FD";
 const FONT = "\"Segoe UI\", wf_segoe-ui_normal, helvetica, arial, sans-serif";
 
 export type LayoutMode = "blocks" | "list" | "dropdown";
@@ -141,7 +141,7 @@ class ItemsCardSettings extends FormattingSettingsCard {
     selectedFill = new formattingSettings.ColorPicker({
         name: "selectedFill",
         displayName: "Selecionado: cor de fundo",
-        value: { value: TEAL }
+        value: { value: PRIMARY }
     });
 
     selectedFontColor = new formattingSettings.ColorPicker({
@@ -199,7 +199,7 @@ class DropdownCardSettings extends FormattingSettingsCard {
     fill = new formattingSettings.ColorPicker({
         name: "fill",
         displayName: "Cor de fundo da caixa",
-        value: { value: TEAL }
+        value: { value: PRIMARY }
     });
 
     fontColor = new formattingSettings.ColorPicker({
