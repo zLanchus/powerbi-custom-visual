@@ -21,6 +21,12 @@ const MODE_ITEMS: powerbi.IEnumMember[] = [
     { value: "dropdown", displayName: "Suspenso" }
 ];
 
+const FILTER_ITEMS: powerbi.IEnumMember[] = [
+    { value: "auto", displayName: "Automático" },
+    { value: "filter", displayName: "Filtro (colunas comuns)" },
+    { value: "selection", displayName: "Seleção (parâmetros de campo)" }
+];
+
 class LayoutCardSettings extends FormattingSettingsCard {
     mode = new formattingSettings.ItemDropdown({
         name: "mode",
@@ -60,10 +66,18 @@ class LayoutCardSettings extends FormattingSettingsCard {
         value: 8
     });
 
+    filterMode = new formattingSettings.ItemDropdown({
+        name: "filterMode",
+        displayName: "Como filtrar",
+        description: "Automático detecta parâmetros de campo e colunas com chave oculta e usa seleção nelas.",
+        items: FILTER_ITEMS,
+        value: FILTER_ITEMS[0]
+    });
+
     name: string = "layout";
     displayName: string = "Layout";
     slices: Array<FormattingSettingsSlice> = [
-        this.mode, this.singleSelect, this.showSelectAll, this.showSearch, this.columns, this.gap
+        this.mode, this.singleSelect, this.showSelectAll, this.showSearch, this.columns, this.gap, this.filterMode
     ];
 }
 

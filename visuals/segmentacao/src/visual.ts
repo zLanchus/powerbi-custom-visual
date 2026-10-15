@@ -78,6 +78,12 @@ export class Visual implements IVisual {
     private body: HTMLElement;
 
     private field: FieldModel | undefined;
+    private category: powerbi.DataViewCategoryColumn | undefined;
+    /** Primeira linha do data view de cada valor (para criar a seleção). */
+    private rowOf = new Map<string, number>();
+    /** true quando a coluna é filtrada por seleção (ex.: parâmetro de campo). */
+    private selectionMode = false;
+    private selectionRestored = false;
     private state: FieldState = emptyState();
     private search = "";
     private dropdownOpen = false;
@@ -138,10 +144,21 @@ export class Visual implements IVisual {
             }
 
             this.field = this.readField(dataView);
-            const filters = (options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>;
-            const filter = this.field && filters.find(f => f && f.target && !Array.isArray(f.target)
-                && sameTarget(f.target as IFilterTarget, this.field.target));
-            this.state = this.field && filter ? stateFromFilter(this.field, filter) : emptyState();
+            const wasSelectionMode = this.selectionMode;
+            this.selectionMode = !!this.field && this.useSelection();
+            if (this.selectionMode) {
+                if (!wasSelectionMode) {
+                    // Remove um filtro antigo que tenha ficado do modo "filtro".
+                    this.host.applyJsonFilter(null, "general", "filter", FilterAction.remove);
+                }
+                this.state = this.savedSelection(dataView);
+                this.restoreSelection();
+            } else {
+                const filters = (options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>;
+                const filter = this.field && filters.find(f => f && f.target && !Array.isArray(f.target)
+                    && sameTarget(f.target as IFilterTarget, this.field.target));
+                this.state = this.field && filter ? stateFromFilter(this.field, filter) : emptyState();
+            }
 
             this.applyStyles();
             this.render();
@@ -157,18 +174,21 @@ export class Visual implements IVisual {
 
     private readField(dataView: DataView | undefined): FieldModel | undefined {
         const category = dataView?.categorical?.categories?.[0];
+        this.category = category;
+        this.rowOf.clear();
         if (!category) {
             return undefined;
         }
         const column = category.source;
         const kind = getKind(column);
         const unique = new Map<string, ValueItem>();
-        for (const raw of category.values) {
+        category.values.forEach((raw, row) => {
             const key = valueKey(raw);
             if (!unique.has(key)) {
                 unique.set(key, { key, raw, label: formatValue(raw, kind) });
+                this.rowOf.set(key, row);
             }
-        }
+        });
         return {
             key: column.queryName || column.displayName,
             displayName: column.displayName,
@@ -189,8 +209,91 @@ export class Visual implements IVisual {
 
     // --------------------------------------------------------------- filters
 
+    /**
+     * Colunas com chave oculta (parâmetros de campo, colunas com "Agrupar por")
+     * não aceitam filtro só pelo texto exibido: nelas o visual usa a seleção do
+     * Power BI, que converte cada item na chave certa (como a segmentação nativa).
+     */
+    private useSelection(): boolean {
+        const mode = String(this.formattingSettings.layoutCard.filterMode.value?.value || "auto");
+        if (mode !== "auto") {
+            return mode === "selection";
+        }
+        const keys = this.category?.identityFields as unknown[] | undefined;
+        const expr = this.category?.source.expr;
+        if (!keys?.length || !expr) {
+            return false;
+        }
+        const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+        return !keys.some(k => same(k, expr));
+    }
+
+    /** Seleção salva no relatório (o Power BI não guarda seleções sozinho). */
+    private savedSelection(dataView: DataView | undefined): FieldState {
+        const state = emptyState();
+        const saved = dataView?.metadata?.objects?.state?.selected;
+        if (typeof saved === "string" && saved && this.field) {
+            try {
+                const keys = JSON.parse(saved) as string[];
+                for (const item of this.field.values) {
+                    if (keys.includes(item.key)) {
+                        state.selected.set(item.key, item.raw);
+                    }
+                }
+            } catch {
+                // valor salvo inválido: começa sem seleção
+            }
+        }
+        return state;
+    }
+
+    private selectionIds(): ISelectionId[] {
+        const category = this.category;
+        if (!category) {
+            return [];
+        }
+        return Array.from(this.state.selected.keys())
+            .map(key => this.rowOf.get(key))
+            .filter((row): row is number => row !== undefined && row >= 0)
+            .map(row => this.host.createSelectionIdBuilder().withCategory(category, row).createSelectionId());
+    }
+
+    /** Ao abrir o relatório, reaplica a seleção salva (uma vez). */
+    private restoreSelection(): void {
+        if (this.selectionRestored || this.state.selected.size === 0) {
+            this.selectionRestored = this.selectionRestored || !!this.field;
+            return;
+        }
+        this.selectionRestored = true;
+        const ids = this.selectionIds();
+        if (ids.length) {
+            this.selectionManager.select(ids, false);
+        }
+    }
+
+    private applySelection(): void {
+        const ids = this.selectionIds();
+        if (ids.length) {
+            this.selectionManager.select(ids, false);
+        } else {
+            this.selectionManager.clear();
+        }
+        this.host.persistProperties({
+            merge: [{
+                objectName: "state",
+                selector: null,
+                properties: { selected: JSON.stringify(Array.from(this.state.selected.keys())) }
+            }]
+        });
+        this.render();
+    }
+
     /** Envia o filtro ao Power BI, com a mesma mecânica da segmentação nativa. */
     private applyFilter(): void {
+        if (this.selectionMode) {
+            this.applySelection();
+            return;
+        }
         const filter = this.field && buildFilter(this.field, this.state, false, this.single);
         if (filter) {
             this.host.applyJsonFilter(filter, "general", "filter", FilterAction.merge);

@@ -61,6 +61,24 @@
                     "type": {
                         "numeric": true
                     }
+                },
+                "filterMode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "filter",
+                                "displayName": "Filtro (colunas comuns)"
+                            },
+                            {
+                                "value": "selection",
+                                "displayName": "Seleção (parâmetros de campo)"
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -252,6 +270,15 @@
                                 "color": true
                             }
                         }
+                    }
+                }
+            }
+        },
+        "state": {
+            "properties": {
+                "selected": {
+                    "type": {
+                        "text": true
                     }
                 }
             }
