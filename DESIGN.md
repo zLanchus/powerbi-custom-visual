@@ -38,6 +38,7 @@ Todo visual deve oferecer, no mínimo, para cada parte relevante (botão, pop-up
 - `supportsSynchronizingFilterState: true` (sincronizar segmentações) quando o visual filtra.
 - Menu do botão direito (`selectionManager.showContextMenu`) e `mousedown` com `preventDefault` fora de campos de texto, para `Ctrl+C` / `Ctrl+V` funcionarem.
 - Textos da interface em português do Brasil.
+- Números formatados com `valueFormatter` (`powerbi-visuals-utils-formattingutils`) usando o formato da medida e `host.locale`. Nesse caso, inclua `stringResources/pt-BR/resources.resjson` (e `en-US`): sem isso o empacotador remove os formatos de país e os números saem no padrão americano.
 
 ## Checklist para um visual novo
 

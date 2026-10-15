@@ -10,7 +10,10 @@
       "Fontes, cores, bordas e posição dos botões configuráveis"
     ],
     "cover": "2-aberto.png",
-    "images": ["3-aninhado.png", "4-formatacao.png"]
+    "images": [
+      "3-aninhado.png",
+      "4-formatacao.png"
+    ]
   },
   {
     "id": "segmentacao",
@@ -23,6 +26,25 @@
       "Cores de item normal e selecionado, bordas e fontes configuráveis"
     ],
     "cover": "1-blocos.png",
-    "images": ["2-lista.png", "3-suspenso.png"]
+    "images": [
+      "2-lista.png",
+      "3-suspenso.png"
+    ]
+  },
+  {
+    "id": "matriz",
+    "name": "Matriz Estilizada",
+    "summary": "Matriz com linhas, colunas e valores como a nativa, com seções de colunas e visual mais limpo.",
+    "features": [
+      "Seções de colunas com título e cor (ex.: Mensal × YTD)",
+      "Hierarquia expansível ao clicar na linha, subtotais e total",
+      "Formatação condicional por célula (fx nativo ou escala/regras rápidas)",
+      "Parâmetros de campo, filtro cruzado e copiar/colar"
+    ],
+    "cover": "1-hierarquia.png",
+    "images": [
+      "2-formatacao.png",
+      "3-colunas.png"
+    ]
   }
 ]

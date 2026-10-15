@@ -10,6 +10,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 |---|---|---|
 | [**Filtro em Pop-up**](visuals/filtro-popup/) | Botão "Abrir Filtros" que abre um pop-up com slicers: filtros simples, filtros aninhados em árvore (ex.: Ano › Mês), colunas de várias tabelas, pesquisa, limpar todos, copiar/colar, sincronização entre páginas e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/filtro-popup.pbiviz) |
 | [**Segmentação Estilizada**](visuals/segmentacao/) | Substituto da segmentação nativa com três estilos: blocos (botões), lista vertical ou suspenso. Mesmo padrão visual e de formatação do Filtro em Pop-up. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/segmentacao.pbiviz) |
+| [**Matriz Estilizada**](visuals/matriz/) | Matriz com linhas, colunas e valores como a nativa, com seções de colunas configuráveis, hierarquia expansível, subtotais e formatação condicional por célula. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/matriz.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -32,7 +33,8 @@ Todos os visuais usam o mesmo padrão: **azul-claro `#6CBEEB`** como cor princip
 powerbi-custom-visual/
 ├── visuals/
 │   ├── filtro-popup/        # um visual por pasta
-│   └── segmentacao/
+│   ├── segmentacao/
+│   └── matriz/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone

@@ -1,0 +1,312 @@
+// Visual "Matriz Estilizada". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação via variáveis CSS (applyStyles em visual.ts).
+
+.mx-root {
+    --mx-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --mx-bg: #FFFFFF;
+    --mx-row-h: 36px;
+    --mx-zebra: transparent;
+    --mx-hover: #F1F8FD;
+    --mx-grid: #E4EDF5;
+    --mx-radius: 12px;
+    --mx-bw: 1px;
+    --mx-bc: #E4EDF5;
+    --mx-sec-bg: #F1F8FD;
+    --mx-sec-fg: #0F2B45;
+    --mx-sec-size: 12px;
+    --mx-sec-case: uppercase;
+    --mx-accent-h: 3px;
+    --mx-head-bg: #FFFFFF;
+    --mx-head-fg: #4E6175;
+    --mx-head-size: 12px;
+    --mx-head-case: none;
+    --mx-col-w: 96px;
+    --mx-row-bg: #FFFFFF;
+    --mx-row-fg: #0F2B45;
+    --mx-row-size: 13px;
+    --mx-row-w: 260px;
+    --mx-indent: 18px;
+    --mx-parent-weight: 650;
+    --mx-val-fg: #0F2B45;
+    --mx-val-size: 13px;
+    --mx-total-bg: #F1F8FD;
+    --mx-total-fg: #0F2B45;
+    --mx-divider: color-mix(in srgb, var(--mx-grid) 55%, #8FA7BC);
+
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: var(--mx-bw) solid var(--mx-bc);
+    border-radius: var(--mx-radius);
+    background: var(--mx-bg);
+    font-family: var(--mx-font);
+    color: var(--mx-val-fg);
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.mx-scroll {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    scrollbar-width: thin;
+}
+
+.mx-table {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+// --------------------------------------------------------------- cabeçalho
+
+.mx-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.mx-table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mx-corner {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    width: var(--mx-row-w);
+    min-width: var(--mx-row-w);
+    max-width: var(--mx-row-w);
+    padding: 10px 14px;
+    vertical-align: bottom;
+    text-align: left;
+    background: var(--mx-head-bg);
+    color: var(--mx-head-fg);
+    font-size: var(--mx-head-size);
+    text-transform: var(--mx-head-case);
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--mx-divider);
+    border-right: 1px solid var(--mx-grid);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Faixa de seção: título discreto com uma linha colorida em cima.
+.mx-sec {
+    padding: 9px 12px 7px;
+    text-align: center;
+    background: var(--mx-sec-bg);
+    color: var(--mx-sec-fg);
+    font-size: var(--mx-sec-size);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: var(--mx-sec-case);
+    box-shadow: inset 0 var(--mx-accent-h) 0 var(--mx-accent, #6CBEEB);
+}
+
+.mx-member {
+    padding: 7px 12px;
+    text-align: center;
+    background: var(--mx-head-bg);
+    color: var(--mx-row-fg);
+    font-size: var(--mx-head-size);
+    border-bottom: 1px solid var(--mx-grid);
+}
+
+.mx-measure {
+    min-width: var(--mx-col-w);
+    padding: 8px 14px;
+    text-align: right;
+    vertical-align: bottom;
+    background: var(--mx-head-bg);
+    color: var(--mx-head-fg);
+    font-size: var(--mx-head-size);
+    text-transform: var(--mx-head-case);
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--mx-divider);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Divisória vertical entre seções.
+.mx-section-start {
+    border-left: 1px solid var(--mx-divider);
+}
+
+// ------------------------------------------------------------------ linhas
+
+.mx-table tbody tr,
+.mx-table tfoot tr {
+    height: var(--mx-row-h);
+    cursor: pointer;
+}
+
+.mx-table tbody tr:nth-child(even) > * {
+    background-color: var(--mx-zebra);
+}
+
+.mx-rowhead {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: var(--mx-row-w);
+    min-width: var(--mx-row-w);
+    max-width: var(--mx-row-w);
+    padding: 0 10px 0 calc(8px + var(--mx-level, 0) * var(--mx-indent));
+    text-align: left;
+    background: var(--mx-row-bg);
+    color: var(--mx-row-fg);
+    font-size: var(--mx-row-size);
+    font-weight: 400;
+    border-bottom: 1px solid var(--mx-grid);
+    border-right: 1px solid var(--mx-grid);
+
+    .mx-parent & {
+        font-weight: var(--mx-parent-weight);
+    }
+}
+
+.mx-rowhead-inner {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.mx-label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.mx-toggle,
+.mx-toggle-spacer {
+    flex: none;
+    width: 22px;
+    height: 22px;
+}
+
+.mx-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(15, 43, 69, 0.08);
+    }
+}
+
+.mx-chevron {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.15s ease;
+
+    .mx-open & {
+        transform: rotate(90deg);
+    }
+}
+
+.mx-cell {
+    min-width: var(--mx-col-w);
+    padding: 0 14px;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--mx-val-fg);
+    font-size: var(--mx-val-size);
+    border-bottom: 1px solid var(--mx-grid);
+
+    .mx-parent & {
+        font-weight: var(--mx-parent-weight);
+    }
+}
+
+.mx-empty-value {
+    color: color-mix(in srgb, var(--mx-val-fg) 40%, transparent);
+}
+
+.mx-formatted {
+    font-weight: 600;
+}
+
+.mx-col-total {
+    font-weight: 650;
+}
+
+// Destaque ao passar o mouse (por cima da formatação condicional, sem apagá-la).
+.mx-table tbody tr:hover > * {
+    box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--mx-hover) 60%, transparent);
+}
+
+.mx-table tbody tr:hover > .mx-rowhead {
+    background: var(--mx-hover);
+    box-shadow: none;
+}
+
+// Seleção: linhas não selecionadas ficam esmaecidas, como na matriz nativa.
+.mx-has-selection tr:not(.mx-selected) > * {
+    opacity: 0.4;
+}
+
+.mx-selected > .mx-rowhead {
+    box-shadow: inset 3px 0 0 #6CBEEB;
+}
+
+// ------------------------------------------------------------------- total
+
+.mx-table tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+}
+
+.mx-total > * {
+    background: var(--mx-total-bg);
+    color: var(--mx-total-fg);
+    font-weight: 700;
+    border-top: 1px solid var(--mx-divider);
+    border-bottom: none;
+}
+
+.mx-total > .mx-rowhead {
+    background: var(--mx-total-bg);
+    color: var(--mx-total-fg);
+}
+
+// ------------------------------------------------------------------- vazio
+
+.mx-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 24px;
+    text-align: center;
+    color: #4E6175;
+    font-size: 13px;
+
+    strong {
+        color: #0F2B45;
+        font-size: 15px;
+    }
+}
