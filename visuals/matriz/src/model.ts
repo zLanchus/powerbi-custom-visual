@@ -84,6 +84,10 @@ function memberKey(value: PrimitiveValue): string {
     return value instanceof Date ? "d" + value.getTime() : typeof value + ":" + String(value);
 }
 
+function hasValues(node: DataViewMatrixNode): boolean {
+    return !!node.values && Object.keys(node.values).length > 0;
+}
+
 export function cellKey(groupKey: string, measureIndex: number): string {
     return groupKey + "|" + measureIndex;
 }
@@ -192,7 +196,8 @@ export function buildModel(dataView: DataView | undefined, locale: string, total
                 label: memberLabel(value, src, locale),
                 level,
                 node,
-                valuesNode: node.values ? node : subtotal,
+                // O valor da linha de cima vem do próprio nó ou do nó de subtotal dela (depende do Power BI).
+                valuesNode: hasValues(node) ? node : subtotal,
                 children,
                 isGrandTotal: false
             });

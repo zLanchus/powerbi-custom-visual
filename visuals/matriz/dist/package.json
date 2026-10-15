@@ -1,5 +1,5 @@
 {
-		"version": "1.1.0.0",
+		"version": "1.2.0.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB.pbiviz.json"
 			}
 		],
-		"visual": {"name":"matrizEstilizada","displayName":"Matriz Estilizada","guid":"matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB","visualClassName":"Visual","version":"1.1.0.0","description":"Matriz com seções de colunas, hierarquia expansível e formatação condicional.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"matrizEstilizada","displayName":"Matriz Estilizada","guid":"matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB","visualClassName":"Visual","version":"1.2.0.0","description":"Matriz com seções de colunas, hierarquia expansível e formatação condicional.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"

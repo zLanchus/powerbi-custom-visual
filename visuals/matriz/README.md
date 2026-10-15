@@ -8,7 +8,7 @@ Matriz para Power BI com o mesmo funcionamento da matriz nativa (linhas, colunas
 
 ## Como usar
 
-1. Baixe [`dist/matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB.1.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
    - **Linhas** — um ou mais campos. Com mais de um, vira hierarquia: clique na linha (ou na seta) para abrir e fechar.
    - **Colunas** (opcional) — como na matriz nativa (ex.: Ano).
