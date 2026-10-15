@@ -8,7 +8,7 @@ Matriz para Power BI com o mesmo funcionamento da matriz nativa (linhas, colunas
 
 ## Como usar
 
-1. Baixe [`dist/matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
    - **Linhas** — um ou mais campos. Com mais de um, vira hierarquia: clique na linha (ou na seta) para abrir e fechar.
    - **Colunas** (opcional) — como na matriz nativa (ex.: Ano).
@@ -37,6 +37,20 @@ Para mudar o nome que aparece no cabeçalho de uma medida, use **Renomear para e
 - **Números** no formato de cada medida e no idioma do relatório.
 - Cabeçalho e coluna de linhas fixos ao rolar.
 
+## Exportar para Excel
+
+O botão de download no canto superior esquerdo da tabela gera um arquivo **.xlsx** com a matriz como ela aparece:
+
+- cabeçalhos das seções e das colunas (mesclados) e das medidas;
+- hierarquia com recuo por nível, subtotais e total geral em negrito;
+- **números de verdade** (não texto), com o formato de cada medida — dá para somar e filtrar no Excel;
+- as cores da formatação condicional;
+- cabeçalho e coluna de linhas congelados.
+
+Em **Formatar visual → Exportar para Excel**: mostrar ou esconder o botão, nome do arquivo e se exporta **todos os níveis** ou só as linhas abertas na tela.
+
+> O download usa o serviço oficial de downloads de visuais personalizados. No Power BI Service, o administrador precisa deixar ligada a opção **"Permitir downloads de visuais personalizados"** (Portal de administração → Configurações do locatário). Se estiver desligada, o visual avisa. O menu **… → Exportar dados** do próprio Power BI também continua disponível.
+
 ## Formatação condicional
 
 Em **Formatar visual → Formatação condicional** há um grupo para cada medida exibida:
@@ -59,6 +73,7 @@ Em **Formatar visual → Formatação condicional** há um grupo para cada medid
 - **Linhas:** título, cores, tamanho, largura, recuo por nível, negrito nos níveis com filhos, níveis abertos ao carregar.
 - **Valores:** cor, tamanho, texto para vazio.
 - **Totais:** subtotais nas linhas e colunas, total geral, rótulo e cores.
+- **Exportar para Excel:** botão, nome do arquivo, todos os níveis ou só os abertos.
 
 ## Observações
 

@@ -15,9 +15,22 @@ import DataView = powerbi.DataView;
 
 import { DARK, VisualFormattingSettingsModel } from "./settings";
 import { MatrixModel, RowItem, ValueColumn, buildModel, cellValue } from "./model";
+import { Cell, Sheet, buildXlsx } from "./xlsx";
 import { MeasureFormat, buildFormatCard, colorProp, mix, readFormat, readableText, ruleColor, toNumber } from "./conditional";
 
 const MAX_RENDERED_ROWS = 5000;
+
+/** Converte a string de formato do Power BI para o Excel (são quase sempre compatíveis). */
+function excelFormat(format: string | undefined): string | undefined {
+    if (!format || /^[GgCcDdNnPp]\d*$/.test(format)) {
+        if (format && /^[Pp]\d*$/.test(format)) {
+            const decimals = Number(format.slice(1) || 2);
+            return (decimals > 0 ? "0." + "0".repeat(decimals) : "0") + "%";
+        }
+        return undefined;
+    }
+    return format;
+}
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
@@ -39,6 +52,19 @@ function chevron(): SVGSVGElement {
     const path = document.createElementNS(SVG_NS, "path");
     path.setAttribute("d", "M9 6l6 6-6 6");
     svg.appendChild(path);
+    return svg;
+}
+
+function downloadIcon(): SVGSVGElement {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("class", "mx-export-icon");
+    for (const d of ["M12 4v11", "M7 10.5l5 5 5-5", "M5 20h14"]) {
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", d);
+        svg.appendChild(path);
+    }
     return svg;
 }
 
@@ -258,16 +284,39 @@ export class Visual implements IVisual {
         this.scroller.scrollLeft = scrollLeft;
     }
 
+    private cornerTitle(model: MatrixModel): string {
+        return this.formattingSettings.rowHeadersCard.title.value || model.rowLevelNames.join(" / ");
+    }
+
+    private showHeaderSections(model: MatrixModel): boolean {
+        const s = this.formattingSettings;
+        return s.sectionHeaderCard.show.value && (model.sections.length > 1 || model.sections.some(n => !!s.sectionTitle(n)));
+    }
+
     private renderHead(model: MatrixModel): HTMLTableSectionElement {
         const s = this.formattingSettings;
         const head = el("thead");
         const cols = model.columns;
         const memberLevels = model.columnLevelNames.length;
-        const showSections = s.sectionHeaderCard.show.value
-            && (model.sections.length > 1 || model.sections.some(n => !!s.sectionTitle(n)));
+        const showSections = this.showHeaderSections(model);
         const headerRows = (showSections ? 1 : 0) + memberLevels + 1;
 
-        const corner = el("th", "mx-corner", s.rowHeadersCard.title.value || model.rowLevelNames.join(" / "));
+        const corner = el("th", "mx-corner");
+        const cornerInner = el("div", "mx-corner-inner");
+        cornerInner.appendChild(el("span", "mx-corner-title", this.cornerTitle(model)));
+        if (s.exportCard.show.value) {
+            const button = el("button", "mx-export");
+            button.type = "button";
+            button.title = "Exportar para Excel";
+            button.setAttribute("aria-label", "Exportar para Excel");
+            button.appendChild(downloadIcon());
+            button.addEventListener("click", (e: MouseEvent) => {
+                e.stopPropagation();
+                this.exportExcel();
+            });
+            cornerInner.appendChild(button);
+        }
+        corner.appendChild(cornerInner);
         corner.rowSpan = headerRows;
         corner.scope = "col";
 
@@ -389,12 +438,24 @@ export class Visual implements IVisual {
         return tr;
     }
 
-    /** Cores da célula: regra "fx" do Power BI > formatação rápida > cor fixa da medida. */
     private applyCellFormat(td: HTMLElement, model: MatrixModel, row: RowItem, c: ValueColumn,
         objects: powerbi.DataViewObjects | undefined, isTotal: boolean): void {
+        const { background, font } = this.cellColors(model, row, c, objects, isTotal);
+        if (background) {
+            td.style.background = background;
+            td.style.color = font || readableText(background, DARK);
+            td.classList.add("mx-formatted");
+        } else if (font) {
+            td.style.color = font;
+        }
+    }
+
+    /** Cores da célula: regra "fx" do Power BI > formatação rápida > cor fixa da medida. */
+    private cellColors(model: MatrixModel, row: RowItem, c: ValueColumn,
+        objects: powerbi.DataViewObjects | undefined, isTotal: boolean): { background: string; font: string } {
         const f = this.formats.get(c.measure.index);
         if (!f) {
-            return;
+            return { background: "", font: "" };
         }
         let background = colorProp(objects, "fill") || "";
         let font = colorProp(objects, "fontColor") || "";
@@ -420,15 +481,7 @@ export class Visual implements IVisual {
             }
         }
 
-        background = background || f.fill;
-        font = font || f.fontColor;
-        if (background) {
-            td.style.background = background;
-            td.style.color = font || readableText(background, DARK);
-            td.classList.add("mx-formatted");
-        } else if (font) {
-            td.style.color = font;
-        }
+        return { background: background || f.fill, font: font || f.fontColor };
     }
 
     // ----------------------------------------------------------- interação
@@ -476,6 +529,146 @@ export class Visual implements IVisual {
             this.selectionManager.clear();
             this.render();
         }
+    }
+
+    // --------------------------------------------------------------- exportar
+
+    /** Gera um .xlsx com a matriz (cabeçalhos das seções, hierarquia, totais e cores) e baixa pelo Power BI. */
+    private async exportExcel(): Promise<void> {
+        const model = this.model;
+        const download = this.host.downloadService;
+        if (!model || !download) {
+            return;
+        }
+        try {
+            const status = await download.exportStatus();
+            if (status !== powerbi.PrivilegeStatus.Allowed) {
+                this.toast(status === powerbi.PrivilegeStatus.DisabledByAdmin
+                    ? "O download por visuais personalizados está desativado pelo administrador do Power BI."
+                    : "Este ambiente do Power BI não permite downloads a partir de visuais personalizados.");
+                return;
+            }
+            const name = (this.formattingSettings.exportCard.fileName.value || "Matriz").replace(/[\\/:*?"<>|]/g, " ").trim() || "Matriz";
+            const content = buildXlsx(this.buildSheet(model, name));
+            const ok = await download.exportVisualsContent(content, name + ".xlsx", "xlsx", "Matriz exportada");
+            if (!ok) {
+                this.toast("O download foi cancelado.");
+            }
+        } catch (e) {
+            this.toast("Não foi possível exportar: " + String(e));
+        }
+    }
+
+    private buildSheet(model: MatrixModel, name: string): Sheet {
+        const s = this.formattingSettings;
+        const cols = model.columns;
+        const headFill = s.sectionHeaderCard.fill.value.value;
+        const headFont = s.sectionHeaderCard.fontColor.value.value;
+        const rows: Cell[][] = [];
+        const merges: Sheet["merges"] = [];
+        const header = (text: string, fill?: string): Cell => ({
+            value: text,
+            style: { bold: true, fill: fill || headFill, font: fill ? readableText(fill, DARK) : headFont, align: "center", borderBottom: true }
+        });
+
+        // Linhas de cabeçalho: seções > membros das colunas > medidas.
+        const spans = (keyOf: (c: ValueColumn) => string): Array<{ from: number; to: number }> => {
+            const out: Array<{ from: number; to: number }> = [];
+            let i = 0;
+            while (i < cols.length) {
+                let j = i + 1;
+                while (j < cols.length && keyOf(cols[j]) === keyOf(cols[i]) && cols[j].section === cols[i].section) {
+                    j++;
+                }
+                out.push({ from: i, to: j - 1 });
+                i = j;
+            }
+            return out;
+        };
+        const addSpanRow = (keyOf: (c: ValueColumn) => string, labelOf: (c: ValueColumn) => string, fillOf?: (c: ValueColumn) => string): void => {
+            const r = rows.length;
+            const row: Cell[] = [header("")];
+            for (const span of spans(keyOf)) {
+                const c = cols[span.from];
+                row[span.from + 1] = header(labelOf(c), fillOf?.(c));
+                for (let k = span.from + 1; k <= span.to; k++) {
+                    row[k + 1] = header("", fillOf?.(c));
+                }
+                if (span.to > span.from) {
+                    merges.push({ r1: r, c1: span.from + 1, r2: r, c2: span.to + 1 });
+                }
+            }
+            rows.push(row);
+        };
+        if (this.showHeaderSections(model)) {
+            addSpanRow(c => String(c.section), c => s.sectionTitle(c.section), c => s.sectionColor(c.section));
+        }
+        model.columnLevelNames.forEach((_, level) => addSpanRow(
+            c => c.group.labels.slice(0, level + 1).join("\u001f"), c => c.group.labels[level] ?? ""));
+        rows.push([header(this.cornerTitle(model))].concat(cols.map(c => header(c.measure.name))));
+        const headerRows = rows.length;
+        if (headerRows > 1) {
+            merges.push({ r1: 0, c1: 0, r2: headerRows - 1, c2: 0 });
+            rows[0][0] = header(this.cornerTitle(model));
+            rows[headerRows - 1][0] = header("");
+        }
+
+        // Linhas de dados (todas, ou só as abertas na tela).
+        const allRows = s.exportCard.allRows.value;
+        const totalFill = s.totalsCard.fill.value.value;
+        const addRow = (row: RowItem): void => {
+            const isTotal = row.isGrandTotal || row.children.length > 0;
+            const bold = row.isGrandTotal || (row.children.length > 0 && s.rowHeadersCard.parentBold.value);
+            const cells: Cell[] = [{
+                value: row.label,
+                style: { bold, indent: row.isGrandTotal ? 0 : row.level, align: "left", fill: row.isGrandTotal ? totalFill : undefined }
+            }];
+            for (const c of cols) {
+                const cell = cellValue(model, row, c.group.key, c.measure.index);
+                const raw = cell?.value;
+                const colors = this.cellColors(model, row, c, cell?.objects, isTotal || c.group.isSubtotal);
+                const fill = colors.background || (row.isGrandTotal ? totalFill : undefined);
+                cells.push({
+                    value: typeof raw === "number" ? raw : raw === null || raw === undefined ? null : String(raw),
+                    style: {
+                        bold: bold || c.group.isSubtotal,
+                        numFmt: excelFormat(c.measure.source.format),
+                        fill,
+                        font: colors.font || (colors.background ? readableText(colors.background, DARK) : undefined),
+                        align: "right"
+                    }
+                });
+            }
+            rows.push(cells);
+        };
+        const walk = (items: RowItem[]): void => {
+            for (const row of items) {
+                addRow(row);
+                if (row.children.length && (allRows || this.expanded.has(row.id))) {
+                    walk(row.children);
+                }
+            }
+        };
+        walk(model.rows);
+        if (model.grandTotal && s.totalsCard.showGrandTotal.value) {
+            addRow(model.grandTotal);
+        }
+
+        const labelWidth = Math.min(60, Math.max(18, ...model.rows.map(r => r.label.length + 4)));
+        return {
+            name,
+            rows,
+            merges,
+            colWidths: [labelWidth].concat(cols.map(c => Math.min(28, Math.max(12, c.measure.name.length + 2)))),
+            freeze: { rows: headerRows, cols: 1 }
+        };
+    }
+
+    /** Mensagem rápida dentro do visual. */
+    private toast(message: string): void {
+        const box = el("div", "mx-toast", message);
+        this.root.appendChild(box);
+        setTimeout(() => box.remove(), 5000);
     }
 
     // ---------------------------------------------------------------- estilos

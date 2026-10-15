@@ -677,6 +677,25 @@
                     }
                 }
             }
+        },
+        "export": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fileName": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "allRows": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
@@ -789,5 +808,10 @@
     "suppressDefaultTitle": true,
     "supportsKeyboardFocus": true,
     "supportsLandingPage": false,
-    "privileges": []
+    "privileges": [
+        {
+            "name": "ExportContent",
+            "essential": false
+        }
+    ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "matriz-estilizada-visual",
   "description": "Matriz estilizada para Power BI com seções de colunas, hierarquia expansível e formatação condicional.",
-  "version": "1.0.0.0",
+  "version": "1.1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/zLanchus/powerbi-custom-visual"

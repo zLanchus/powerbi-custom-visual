@@ -100,6 +100,16 @@ class ValuesCard extends FormattingSettingsCard {
     slices: FormattingSettingsSlice[] = [this.fontColor, this.fontSize, this.emptyText];
 }
 
+class ExportCard extends FormattingSettingsCard {
+    show = toggle("show", "Mostrar botão de exportar para Excel", true);
+    fileName = text("fileName", "Nome do arquivo", "Matriz", "Matriz");
+    allRows = toggle("allRows", "Exportar todos os níveis (mesmo os recolhidos)", true);
+
+    name = "export";
+    displayName = "Exportar para Excel";
+    slices: FormattingSettingsSlice[] = [this.show, this.fileName, this.allRows];
+}
+
 class TotalsCard extends FormattingSettingsCard {
     rowSubtotals = toggle("rowSubtotals", "Subtotais nas linhas com filhos", true);
     columnSubtotals = toggle("columnSubtotals", "Subtotais das colunas", false);
@@ -140,10 +150,11 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     valuesCard = new ValuesCard();
     totalsCard = new TotalsCard();
     sectionsCard = new SectionsCard();
+    exportCard = new ExportCard();
 
     cards: Array<formattingSettings.Cards> = [
         this.tableCard, this.sectionHeaderCard, this.columnHeaderCard, this.rowHeadersCard,
-        this.valuesCard, this.totalsCard, this.sectionsCard
+        this.valuesCard, this.totalsCard, this.sectionsCard, this.exportCard
     ];
 
     sectionTitle(i: number): string {
