@@ -1,0 +1,253 @@
+// Visual "Card Comparativo". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação via variáveis CSS (applyStyles em visual.ts).
+// --cc-scale diminui todas as fontes quando o conteúdo não cabe no visual.
+
+.cc-root {
+    --cc-scale: 1;
+    --cc-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --cc-bg: #FFFFFF;
+    --cc-radius: 16px;
+    --cc-bw: 0px;
+    --cc-bc: #E4EDF5;
+    --cc-pad: 14px;
+    --cc-gap: 24px;
+    --cc-main-bg: #0F2B45;
+    --cc-main-radius: 14px;
+    --cc-main-width: 32%;
+    --cc-main-align: center;
+    --cc-main-text-align: center;
+    --cc-title-size: 15px;
+    --cc-title-color: #FFFFFF;
+    --cc-title-case: uppercase;
+    --cc-period-size: 12px;
+    --cc-period-color: #6CBEEB;
+    --cc-period-case: uppercase;
+    --cc-value-size: 40px;
+    --cc-value-color: #FFFFFF;
+    --cc-good: #2E8B57;
+    --cc-bad: #D64545;
+    --cc-neutral: #4E6175;
+    --cc-result-size: 18px;
+    --cc-label-size: 15px;
+    --cc-label-color: #0F2B45;
+    --cc-label-weight: 400;
+    --cc-empty-color: #8FA7BC;
+    --cc-divider: #E4EDF5;
+    --cc-detail-size: 30px;
+    --cc-detail-color: #0F2B45;
+    --cc-detail-line: #0F2B45;
+    --cc-detail-weight: 700;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    gap: calc(var(--cc-gap) * var(--cc-scale));
+    padding: var(--cc-pad);
+    border: var(--cc-bw) solid var(--cc-bc);
+    border-radius: var(--cc-radius);
+    background: var(--cc-bg);
+    font-family: var(--cc-font);
+    color: var(--cc-label-color);
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.cc-vertical {
+    flex-direction: column;
+}
+
+// ---- bloco do valor principal
+.cc-main {
+    flex: 0 0 var(--cc-main-width);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: var(--cc-main-align);
+    text-align: var(--cc-main-text-align);
+    gap: calc(4px * var(--cc-scale));
+    padding: calc(12px * var(--cc-scale)) calc(16px * var(--cc-scale));
+    border-radius: var(--cc-main-radius);
+    background: var(--cc-main-bg);
+    line-height: 1.1;
+
+    .cc-vertical & {
+        flex: 0 0 auto;
+    }
+}
+
+.cc-title,
+.cc-period,
+.cc-value {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cc-title {
+    font-size: calc(var(--cc-title-size) * var(--cc-scale));
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: var(--cc-title-case);
+    color: var(--cc-title-color);
+}
+
+.cc-period {
+    font-size: calc(var(--cc-period-size) * var(--cc-scale));
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: var(--cc-period-case);
+    color: var(--cc-period-color);
+}
+
+.cc-value {
+    margin-top: calc(4px * var(--cc-scale));
+    font-size: calc(var(--cc-value-size) * var(--cc-scale));
+    font-weight: 700;
+    color: var(--cc-value-color);
+}
+
+// ---- comparações
+.cc-comps {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cc-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(6px * var(--cc-scale)) 0;
+    line-height: 1.2;
+
+    .cc-label-left & {
+        flex-direction: row-reverse;
+    }
+
+    .cc-dividers & + & {
+        border-top: 1px solid var(--cc-divider);
+    }
+}
+
+.cc-result {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35em;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: calc(var(--cc-result-size) * var(--cc-scale));
+    font-weight: 600;
+    color: var(--cc-neutral);
+
+    &[data-tone="good"] {
+        color: var(--cc-good);
+    }
+
+    &[data-tone="bad"] {
+        color: var(--cc-bad);
+    }
+}
+
+.cc-arrow {
+    font-size: 0.7em;
+}
+
+.cc-ref {
+    font-size: 0.85em;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
+.cc-empty-value {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--cc-empty-color);
+}
+
+.cc-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: right;
+    font-size: calc(var(--cc-label-size) * var(--cc-scale));
+    font-weight: var(--cc-label-weight);
+    color: var(--cc-label-color);
+
+    .cc-label-left & {
+        text-align: left;
+    }
+}
+
+// ---- detalhes (fração à direita)
+.cc-details {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: calc(4px * var(--cc-scale));
+    padding: 0 calc(4px * var(--cc-scale));
+
+    .cc-vertical & {
+        flex-direction: row;
+        gap: calc(12px * var(--cc-scale));
+    }
+}
+
+.cc-detail {
+    font-size: calc(var(--cc-detail-size) * var(--cc-scale));
+    font-weight: var(--cc-detail-weight);
+    color: var(--cc-detail-color);
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.cc-detail-line {
+    align-self: stretch;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--cc-detail-line);
+
+    .cc-vertical & {
+        width: 3px;
+        height: auto;
+    }
+}
+
+// ---- vazio
+.cc-empty {
+    margin: auto;
+    max-width: 320px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: #F1F8FD;
+    text-align: center;
+}
+
+.cc-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #0F2B45;
+}
+
+.cc-empty-text {
+    font-size: 12px;
+    color: #4E6175;
+    line-height: 1.4;
+}

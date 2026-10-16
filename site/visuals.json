@@ -63,5 +63,21 @@
       "3-piramide.png",
       "4-medidas.png"
     ]
+  },
+  {
+    "id": "card-comparativo",
+    "name": "Card Comparativo",
+    "summary": "Card de KPI com valor principal, período do calendário e comparações com outras medidas.",
+    "features": [
+      "Valor principal em destaque com o período selecionado (medida do calendário)",
+      "Até 5 comparações: diferença, variação % ou valor",
+      "Verde/vermelho conforme \"maior é melhor\", com setas",
+      "Detalhe em fração à direita e ajuste automático de tamanho"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-variacao.png",
+      "3-empilhado.png"
+    ]
   }
 ]

@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/cardComparativoE2A02E02532C40878D8D23A57D73ED62.pbiviz.json"
+			}
+		],
+		"visual": {"name":"cardComparativo","displayName":"Card Comparativo","guid":"cardComparativoE2A02E02532C40878D8D23A57D73ED62","visualClassName":"Visual","version":"1.0.0.0","description":"Card de KPI com valor principal, período e comparações com outras medidas.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}
