@@ -8,13 +8,13 @@
         },
         {
             "displayName": "Legenda",
-            "description": "Divide cada barra em segmentos coloridos.",
+            "description": "Divide cada barra em segmentos coloridos (com Legenda, use uma medida em Valores).",
             "name": "legend",
             "kind": "Grouping"
         },
         {
             "displayName": "Valores",
-            "description": "Medida que define o tamanho das barras.",
+            "description": "Medida que define o tamanho das barras. Sem Legenda, dá para colocar várias medidas: cada uma vira um segmento.",
             "name": "value",
             "kind": "Measure"
         },
@@ -342,6 +342,14 @@
                         "max": 1
                     },
                     "legend": {
+                        "max": 0
+                    }
+                },
+                {
+                    "category": {
+                        "max": 1
+                    },
+                    "legend": {
                         "max": 1
                     },
                     "value": {
@@ -365,8 +373,8 @@
                         "by": "legend",
                         "select": [
                             {
-                                "bind": {
-                                    "to": "value"
+                                "for": {
+                                    "in": "value"
                                 }
                             },
                             {

@@ -8,11 +8,11 @@ Gráfico de funil/pirâmide como o nativo do Power BI, com um campo de **Legenda
 
 ## Como usar
 
-1. Baixe [`dist/piramideSegmentadaBE8E71986FB04C009D1469C42B38D203.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/piramideSegmentadaBE8E71986FB04C009D1469C42B38D203.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
    - **Categoria**: cada valor vira uma barra (ex.: Etapa do funil, Faixa etária).
    - **Legenda** (opcional): divide cada barra em segmentos (ex.: Canal, Sexo).
-   - **Valores**: a medida que define o tamanho das barras.
+   - **Valores**: a medida que define o tamanho das barras. **Sem Legenda, dá para colocar várias medidas**: cada uma vira um segmento da barra (ex.: *Orgânico*, *Pago*, *Indicação*).
    - **Dicas de ferramenta** (opcional): medidas extras mostradas ao passar o mouse.
 3. Em **Formatar visual → Barras**, escolha a ordem:
    - **Maior em cima (funil)**, que é o padrão;
@@ -26,9 +26,18 @@ Coloque *Faixa etária* em Categoria, *Sexo* em Legenda e a contagem em Valores.
 - ligue **Barras → Pirâmide espelhada**;
 - use **Ordem do Power BI**, classificando a faixa etária como quiser.
 
+### Duas formas de dividir as barras
+
+| Forma | Legenda | Valores | Segmentos |
+|---|---|---|---|
+| Por legenda | 1 campo (ex.: Canal) | 1 medida | um por valor do campo |
+| Por medidas | vazia | 2 ou mais medidas | um por medida |
+
+As duas formas não se misturam, como no gráfico de barras empilhadas nativo: com um campo em Legenda, Valores aceita uma medida só.
+
 ## Recursos
 
-- **Segmentos por legenda:** cada barra é dividida na proporção de cada item da legenda, com cores configuráveis em **Cores da legenda**.
+- **Segmentos por legenda ou por medidas:** cada barra é dividida na proporção de cada item da legenda (ou de cada medida), com cores configuráveis em **Cores da legenda**. Cada medida usa o próprio formato de número.
 - **Conectores** entre as barras com a **taxa de conversão** (% de uma etapa para a seguinte). Na pirâmide, a taxa é calculada de baixo para cima.
 - **Rótulos dentro dos segmentos:** valor, % da barra ou os dois. O texto troca sozinho para escuro ou branco conforme o fundo, e o rótulo some quando não cabe no segmento.
 - **Rótulo do total** à direita da barra:
@@ -55,7 +64,7 @@ Coloque *Faixa etária* em Categoria, *Sexo* em Legenda e a contagem em Valores.
   - espaço entre barras, arredondamento e largura mínima;
   - espessura e cor da borda;
   - opacidade do que não está selecionado.
-- **Cores da legenda:** uma cor para cada item. Sem legenda, uma cor para a medida.
+- **Cores da legenda:** uma cor para cada item da legenda ou para cada medida.
 - **Conectores:** mostrar, cor, opacidade, taxa de conversão (tamanho e cor).
 - **Rótulos das categorias:** mostrar, à esquerda ou acima da barra, tamanho, cor, largura e negrito.
 - **Rótulos de dados:**

@@ -25,6 +25,9 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 interface Series {
     key: string;
     name: string;
+    /** Nome da medida (na dica de ferramenta). */
+    valueName: string;
+    format: (v: PrimitiveValue) => string;
     color: string;
     selectionId: ISelectionId;
     selector: powerbi.data.Selector;
@@ -245,28 +248,56 @@ export class Visual implements IVisual {
         const legendSource = values.source;
         const hasLegend = !!legendSource;
         const groups = values.grouped();
+        const builder = (): powerbi.visuals.ISelectionIdBuilder => this.host.createSelectionIdBuilder();
+        const formatOf = (column: DataViewValueColumn): ((v: PrimitiveValue) => string) => {
+            const f = valueFormatter.create({ format: column.source.format, cultureSelector: locale });
+            return v => f.format(v);
+        };
 
-        const series: Series[] = groups.map((group, k) => {
-            const measure = group.values.find(c => c.source.roles?.["value"]);
-            const tooltips = group.values.filter(c => c.source.roles?.["tooltips"]);
-            const name = hasLegend ? label(group.name, legendSource?.format, locale) : valueColumn.source.displayName;
-            const selectionId = hasLegend
-                ? this.host.createSelectionIdBuilder().withSeries(values, group).createSelectionId()
-                : this.host.createSelectionIdBuilder().withMeasure(valueColumn.source.queryName || "").createSelectionId();
-            const selector: powerbi.data.Selector = hasLegend
-                ? selectionId.getSelector()
-                : { metadata: valueColumn.source.queryName };
-            const objects = hasLegend ? group.objects : valueColumn.source.objects;
-            return {
-                key: hasLegend ? "s" + k + ":" + String(group.name) : "single",
-                name,
-                color: colorOf(objects) || SERIES_PALETTE[k % SERIES_PALETTE.length],
-                selectionId,
-                selector,
-                values: category.values.map((_, i) => toNumber(measure?.values[i])),
-                tooltips
-            };
-        });
+        // Segmentos: um por item da legenda ou, sem legenda, um por medida em Valores.
+        let series: Series[];
+        let segmentIds: (i: number, k: number) => ISelectionId;
+        if (hasLegend) {
+            series = groups.map((group, k) => {
+                const measure = group.values.find(c => c.source.roles?.["value"]) || valueColumn;
+                const selectionId = builder().withSeries(values, group).createSelectionId();
+                return {
+                    key: "s" + k + ":" + String(group.name),
+                    name: label(group.name, legendSource?.format, locale),
+                    valueName: measure.source.displayName,
+                    format: formatOf(measure),
+                    color: colorOf(group.objects) || SERIES_PALETTE[k % SERIES_PALETTE.length],
+                    selectionId,
+                    selector: selectionId.getSelector(),
+                    values: category.values.map((_, i) => toNumber(measure.values[i])),
+                    tooltips: group.values.filter(c => c.source.roles?.["tooltips"])
+                };
+            });
+            segmentIds = (i, k) => builder().withCategory(category, i).withSeries(values, groups[k]).createSelectionId();
+        } else {
+            const columns = groups[0]?.values || Array.from(values);
+            const measures = columns.filter(c => c.source.roles?.["value"]);
+            const tooltips = columns.filter(c => c.source.roles?.["tooltips"]);
+            const queryNames = measures.map(m => m.source.queryName || m.source.displayName);
+            series = measures.map((measure, k) => {
+                const queryName = queryNames[k];
+                return {
+                    key: "m:" + queryName,
+                    name: measure.source.displayName,
+                    valueName: measure.source.displayName,
+                    format: formatOf(measure),
+                    color: colorOf(measure.source.objects) || SERIES_PALETTE[k % SERIES_PALETTE.length],
+                    selectionId: builder().withMeasure(queryName).createSelectionId(),
+                    selector: { metadata: queryName },
+                    values: category.values.map((_, i) => toNumber(measure.values[i])),
+                    tooltips
+                };
+            });
+            segmentIds = (i, k) => builder().withCategory(category, i).withMeasure(queryNames[k]).createSelectionId();
+        }
+        if (series.length === 0) {
+            return undefined;
+        }
 
         const bars: Bar[] = category.values.map((value, i) => {
             const parts = series.map(s => Math.max(0, s.values[i]));
@@ -275,10 +306,7 @@ export class Visual implements IVisual {
                 label: label(value, category.source.format, locale),
                 total: parts.reduce((a, b) => a + b, 0),
                 parts,
-                selectionIds: groups.map(group => {
-                    const builder = this.host.createSelectionIdBuilder().withCategory(category, i);
-                    return (hasLegend ? builder.withSeries(values, group) : builder).createSelectionId();
-                })
+                selectionIds: series.map((_, k) => segmentIds(i, k))
             };
         });
 
@@ -322,7 +350,7 @@ export class Visual implements IVisual {
 
         // ---- legenda
         const legendCard = s.legendCard;
-        const showLegend = legendCard.show.value && model.hasLegend;
+        const showLegend = legendCard.show.value && (model.hasLegend || model.series.length > 1);
         let legendEl: HTMLElement | undefined;
         if (showLegend) {
             legendEl = this.renderLegend(model);
@@ -481,9 +509,9 @@ export class Visual implements IVisual {
 
                 if (segMode !== "none" && value > 0) {
                     const share = bar.total > 0 ? value / bar.total : 0;
-                    const text = segMode === "value" ? model.format(value)
+                    const text = segMode === "value" ? series.format(value)
                         : segMode === "percent" ? this.pct(share)
-                            : `${model.format(value)} (${this.pct(share)})`;
+                            : `${series.format(value)} (${this.pct(share)})`;
                     if (textWidth(text, segSize, font) + 8 <= b - a && segSize + 2 <= barH) {
                         const t = svg("text", {
                             x: (a + b) / 2, y: y + barH / 2, "font-size": segSize,
@@ -599,8 +627,8 @@ export class Visual implements IVisual {
             if (model.hasLegend) {
                 items.push({ displayName: model.legendName, value: series.name, color: series.color });
             }
-            items.push({ displayName: model.valueName, value: model.format(value), color: model.hasLegend ? undefined : series.color });
-            if (model.hasLegend) {
+            items.push({ displayName: series.valueName, value: series.format(value), color: model.hasLegend ? undefined : series.color });
+            if (model.series.length > 1) {
                 items.push({ displayName: "% da barra", value: this.pct(bar.total > 0 ? value / bar.total : 0) });
                 items.push({ displayName: "Total da barra", value: model.format(bar.total) });
             }
@@ -645,14 +673,16 @@ export class Visual implements IVisual {
         const selected = this.selectionManager.getSelectionIds() as ISelectionId[];
         const dim = String(Math.min(100, Math.max(0, this.formattingSettings.barsCard.selectedOpacity.value)) / 100);
         const has = selected.length > 0;
-        const isOn = (id: ISelectionId): boolean => selected.some(sel => sel.equals(id) || id.includes(sel) || sel.includes(id));
-        const seriesOn = model.series.map(series => !has || isOn(series.selectionId)
-            || model.bars.some(bar => selected.some(sel => sel.equals(bar.selectionIds[model.series.indexOf(series)]))));
+        const isSelected = (id: ISelectionId): boolean => selected.some(sel => sel.equals(id));
+        // Um segmento fica aceso se ele mesmo ou o item da legenda dele estiver selecionado.
+        const seriesSelected = model.series.map(series => isSelected(series.selectionId));
+        const segmentOn = (bar: Bar, k: number): boolean => !has || seriesSelected[k] || isSelected(bar.selectionIds[k]);
+        const seriesOn = model.series.map((_, k) => !has || model.bars.some(bar => segmentOn(bar, k)));
 
         this.root.querySelectorAll<SVGElement>(".pz-seg, .pz-seg-label").forEach(node => {
             const bar = model.bars[Number(node.dataset.bar)];
             const k = Number(node.dataset.series);
-            const on = !has || isOn(bar.selectionIds[k]);
+            const on = segmentOn(bar, k);
             node.style.opacity = on ? "1" : dim;
         });
         this.root.querySelectorAll<HTMLElement>(".pz-legend-item").forEach(node => {

@@ -1,5 +1,5 @@
 {
-		"version": "1.0.0.0",
+		"version": "1.1.0.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/piramideSegmentadaBE8E71986FB04C009D1469C42B38D203.pbiviz.json"
 			}
 		],
-		"visual": {"name":"piramideSegmentada","displayName":"Pirâmide Segmentada","guid":"piramideSegmentadaBE8E71986FB04C009D1469C42B38D203","visualClassName":"Visual","version":"1.0.0.0","description":"Gráfico de pirâmide/funil com barras segmentadas por legenda.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"piramideSegmentada","displayName":"Pirâmide Segmentada","guid":"piramideSegmentadaBE8E71986FB04C009D1469C42B38D203","visualClassName":"Visual","version":"1.1.0.0","description":"Gráfico de pirâmide/funil com barras segmentadas por legenda.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"
