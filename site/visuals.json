@@ -46,5 +46,21 @@
       "2-formatacao.png",
       "3-colunas.png"
     ]
+  },
+  {
+    "id": "piramide",
+    "name": "Pirâmide Segmentada",
+    "summary": "Funil/pirâmide como o nativo, com barras divididas em segmentos por um campo de legenda.",
+    "features": [
+      "Barras segmentadas por legenda, com cor por item",
+      "Funil, pirâmide ou pirâmide espelhada (etária)",
+      "Conectores com taxa de conversão e rótulos de total e %",
+      "Filtro cruzado por segmento ou item da legenda"
+    ],
+    "cover": "1-funil.png",
+    "images": [
+      "2-espelhada.png",
+      "3-piramide.png"
+    ]
   }
 ]

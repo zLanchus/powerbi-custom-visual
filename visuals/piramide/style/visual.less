@@ -1,0 +1,127 @@
+// Visual "Pirâmide Segmentada". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (aplicados em visual.ts).
+
+.pz-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    color: #0F2B45;
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.pz-chart {
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.pz-svg {
+    display: block;
+    overflow: visible;
+}
+
+.pz-seg {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.pz-seg:hover {
+    filter: brightness(1.06);
+}
+
+.pz-seg-label,
+.pz-cat-label,
+.pz-total-label,
+.pz-rate {
+    dominant-baseline: central;
+    pointer-events: none;
+}
+
+.pz-seg-label {
+    text-anchor: middle;
+    font-weight: 600;
+    transition: opacity 0.15s ease;
+}
+
+.pz-cat-label {
+    pointer-events: auto;
+}
+
+.pz-total-label {
+    text-anchor: start;
+    font-weight: 600;
+}
+
+.pz-rate {
+    text-anchor: middle;
+}
+
+.pz-axis {
+    stroke: #FFFFFF;
+    stroke-width: 2;
+}
+
+.pz-legend {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 14px;
+    padding: 6px 8px;
+    line-height: 1.2;
+}
+
+.pz-legend-title {
+    font-weight: 600;
+}
+
+.pz-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 2px 8px 2px 4px;
+    border-radius: 999px;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.pz-legend-item:hover {
+    background: #F1F8FD;
+}
+
+.pz-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+}
+
+.pz-empty {
+    margin: auto;
+    max-width: 320px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: #F1F8FD;
+    text-align: center;
+}
+
+.pz-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.pz-empty-text {
+    font-size: 12px;
+    color: #4E6175;
+    line-height: 1.4;
+}
