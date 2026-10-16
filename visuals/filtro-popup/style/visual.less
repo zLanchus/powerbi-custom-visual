@@ -29,6 +29,14 @@
     --fp-clear-fg: #0F2B45;
     --fp-close-bg: #0F2B45;
     --fp-close-fg: #6CBEEB;
+    --fp-cb-size: 18px;
+    --fp-cb-bw: 2px;
+    --fp-cb-radius: 4px;
+    --fp-cb-bg: #FFFFFF;
+    --fp-cb-bc: #0F2B45;
+    --fp-cb-sel-bg: #0F2B45;
+    --fp-cb-sel-bc: #0F2B45;
+    --fp-cb-symbol: #FFFFFF;
 
     position: relative;
     width: 100%;
@@ -491,21 +499,21 @@
 
 .fp-check {
     flex: none;
-    width: 1.15em;
-    height: 1.15em;
+    width: var(--fp-cb-size);
+    height: var(--fp-cb-size);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--fp-popup-fg);
-    border-radius: 4px;
-    background: #fff;
-    transition: background 0.12s ease;
+    border: var(--fp-cb-bw) solid var(--fp-cb-bc);
+    border-radius: var(--fp-cb-radius);
+    background: var(--fp-cb-bg);
+    transition: background 0.12s ease, border-color 0.12s ease;
 
     .fp-icon {
-        width: 0.85em;
-        height: 0.85em;
+        width: 80%;
+        height: 80%;
         stroke-width: 3.2;
-        color: var(--fp-panel-bg);
+        color: var(--fp-cb-symbol);
         visibility: hidden;
     }
 
@@ -514,18 +522,24 @@
     }
 
     .fp-selected & {
-        background: var(--fp-popup-bg);
-        border-color: var(--fp-popup-bg);
+        background: var(--fp-cb-sel-bg);
+        border-color: var(--fp-cb-sel-bc);
 
         .fp-icon {
             visibility: visible;
-            color: #fff;
         }
     }
 
+    // Parcialmente selecionado (filtros aninhados / "Selecionar tudo"): traço no meio.
     .fp-partial & {
-        background: linear-gradient(var(--fp-popup-bg), var(--fp-popup-bg)) center / 55% 2.5px no-repeat, #fff;
+        border-color: var(--fp-cb-sel-bc);
+        background: linear-gradient(var(--fp-cb-sel-bg), var(--fp-cb-sel-bg)) center / 55% 2.5px no-repeat, var(--fp-cb-bg);
     }
+}
+
+.fp-icon-fill {
+    fill: currentColor;
+    stroke: none;
 }
 
 .fp-item-label {

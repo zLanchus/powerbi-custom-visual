@@ -1,7 +1,7 @@
 {
   "name": "filtro-popup-visual",
   "description": "Visual customizado do Power BI: botão \"Abrir Filtros\" que abre um pop-up com slicers.",
-  "version": "1.6.0.0",
+  "version": "1.7.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/zLanchus/powerbi-custom-visual"

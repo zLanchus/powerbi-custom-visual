@@ -53,7 +53,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, t
 }
 
 /** Ícones desenhados em SVG (traço), no estilo do botão de referência. */
-function icon(kind: "funnel" | "chevron" | "close" | "check" | "search" | "eraser", className?: string): SVGSVGElement {
+function icon(kind: "funnel" | "chevron" | "close" | "check" | "search" | "eraser" | "dot" | "square", className?: string): SVGSVGElement {
     const svg = document.createElementNS(SVG_NS, "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
     svg.setAttribute("aria-hidden", "true");
@@ -64,8 +64,14 @@ function icon(kind: "funnel" | "chevron" | "close" | "check" | "search" | "erase
         close: ["M6 6l12 12", "M18 6L6 18"],
         check: ["M5 12.5l4.5 4.5L19 7.5"],
         search: ["M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Z", "M15.5 15.5L20 20"],
-        eraser: ["M8 20h12", "M4.6 15.4l9.8-9.8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 19H8.2L4.6 15.4a1.4 1.4 0 0 1 0-2Z"]
+        eraser: ["M8 20h12", "M4.6 15.4l9.8-9.8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 19H8.2L4.6 15.4a1.4 1.4 0 0 1 0-2Z"],
+        // Símbolos preenchidos da caixa de seleção.
+        dot: ["M12 6.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Z"],
+        square: ["M7 6h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"]
     };
+    if (kind === "dot" || kind === "square") {
+        svg.classList.add("fp-icon-fill");
+    }
     for (const d of paths[kind]) {
         const path = document.createElementNS(SVG_NS, "path");
         path.setAttribute("d", d);
@@ -734,7 +740,10 @@ export class Visual implements IVisual {
         row.setAttribute("aria-selected", String(selected));
         row.classList.toggle("fp-selected", selected);
         const box = el("span", "fp-check");
-        box.appendChild(icon("check"));
+        const symbol = String(this.formattingSettings.checkboxCard.symbol.value?.value || "check");
+        if (symbol !== "none") {
+            box.appendChild(icon(symbol === "x" ? "close" : symbol as "check" | "dot" | "square"));
+        }
         row.append(box, el("span", "fp-item-label", label));
         row.title = label;
         return row;
@@ -910,6 +919,17 @@ export class Visual implements IVisual {
         style.setProperty("--fp-clear-fg", a.clearFontColor.value.value);
         style.setProperty("--fp-close-bg", a.closeFill.value.value);
         style.setProperty("--fp-close-fg", a.closeFontColor.value.value);
+
+        const cb = this.formattingSettings.checkboxCard;
+        const shape = String(cb.shape.value?.value || "rounded");
+        style.setProperty("--fp-cb-size", Math.min(40, Math.max(8, cb.size.value || 18)) + "px");
+        style.setProperty("--fp-cb-bw", border(cb.borderWidth.value));
+        style.setProperty("--fp-cb-radius", shape === "circle" ? "50%" : shape === "square" ? "0px" : "4px");
+        style.setProperty("--fp-cb-bg", cb.fill.value.value);
+        style.setProperty("--fp-cb-bc", cb.borderColor.value.value);
+        style.setProperty("--fp-cb-sel-bg", cb.selectedFill.value.value);
+        style.setProperty("--fp-cb-sel-bc", cb.selectedBorderColor.value.value);
+        style.setProperty("--fp-cb-symbol", cb.symbolColor.value.value);
 
         this.root.classList.toggle("fp-no-icon", !b.showIcon.value);
         this.root.classList.toggle("fp-overlay", p.overlay.value);
