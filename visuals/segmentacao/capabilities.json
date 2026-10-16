@@ -282,6 +282,109 @@
                     }
                 }
             }
+        },
+        "checkbox": {
+            "properties": {
+                "symbol": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "check",
+                                "displayName": "Visto (✓)"
+                            },
+                            {
+                                "value": "x",
+                                "displayName": "Xis (✕)"
+                            },
+                            {
+                                "value": "dot",
+                                "displayName": "Bolinha (●)"
+                            },
+                            {
+                                "value": "square",
+                                "displayName": "Quadrado (■)"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Nenhum (só a cor de fundo)"
+                            }
+                        ]
+                    }
+                },
+                "shape": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "rounded",
+                                "displayName": "Quadrada arredondada"
+                            },
+                            {
+                                "value": "square",
+                                "displayName": "Quadrada"
+                            },
+                            {
+                                "value": "circle",
+                                "displayName": "Redonda"
+                            }
+                        ]
+                    }
+                },
+                "size": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "selectedFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "selectedBorderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "symbolColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [

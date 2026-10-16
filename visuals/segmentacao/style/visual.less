@@ -25,6 +25,14 @@
     --fs-dd-bw: 0px;
     --fs-dd-bc: transparent;
     --fs-dd-panel: #FFFFFF;
+    --fs-cb-size: 16px;
+    --fs-cb-bw: 2px;
+    --fs-cb-radius: 4px;
+    --fs-cb-bg: #FFFFFF;
+    --fs-cb-bc: #0F2B45;
+    --fs-cb-sel-bg: #0F2B45;
+    --fs-cb-sel-bc: #0F2B45;
+    --fs-cb-symbol: #FFFFFF;
 
     position: relative;
     width: 100%;
@@ -156,20 +164,21 @@
 
 .fs-check {
     flex: none;
-    width: 1.15em;
-    height: 1.15em;
+    width: var(--fs-cb-size);
+    height: var(--fs-cb-size);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid currentColor;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.85);
+    border: var(--fs-cb-bw) solid var(--fs-cb-bc);
+    border-radius: var(--fs-cb-radius);
+    background: var(--fs-cb-bg);
+    transition: background 0.12s ease, border-color 0.12s ease;
 
     .fs-icon {
-        width: 0.85em;
-        height: 0.85em;
+        width: 80%;
+        height: 80%;
         stroke-width: 3.2;
-        color: var(--fs-sel-bg);
+        color: var(--fs-cb-symbol);
         visibility: hidden;
     }
 
@@ -178,17 +187,24 @@
     }
 
     .fs-selected & {
-        background: #fff;
-        border-color: #fff;
+        background: var(--fs-cb-sel-bg);
+        border-color: var(--fs-cb-sel-bc);
 
         .fs-icon {
             visibility: visible;
         }
     }
 
+    // "Selecionar tudo" com só parte dos itens marcados: traço no meio.
     .fs-partial & {
-        background: linear-gradient(var(--fs-sel-bg), var(--fs-sel-bg)) center / 55% 2.5px no-repeat, #fff;
+        border-color: var(--fs-cb-sel-bc);
+        background: linear-gradient(var(--fs-cb-sel-bg), var(--fs-cb-sel-bg)) center / 55% 2.5px no-repeat, var(--fs-cb-bg);
     }
+}
+
+.fs-icon-fill {
+    fill: currentColor;
+    stroke: none;
 }
 
 .fs-item-all {

@@ -266,11 +266,58 @@ class DropdownCardSettings extends FormattingSettingsCard {
     ];
 }
 
+export const CHECK_SYMBOL_ITEMS: powerbi.IEnumMember[] = [
+    { value: "check", displayName: "Visto (✓)" },
+    { value: "x", displayName: "Xis (✕)" },
+    { value: "dot", displayName: "Bolinha (●)" },
+    { value: "square", displayName: "Quadrado (■)" },
+    { value: "none", displayName: "Nenhum (só a cor de fundo)" }
+];
+
+const CHECK_SHAPE_ITEMS: powerbi.IEnumMember[] = [
+    { value: "rounded", displayName: "Quadrada arredondada" },
+    { value: "square", displayName: "Quadrada" },
+    { value: "circle", displayName: "Redonda" }
+];
+
+/** Caixinha de seleção ao lado de cada item (quando "Mostrar caixa de seleção" está ligado). */
+class CheckboxCardSettings extends FormattingSettingsCard {
+    symbol = new formattingSettings.ItemDropdown({
+        name: "symbol", displayName: "Símbolo quando selecionado", items: CHECK_SYMBOL_ITEMS, value: CHECK_SYMBOL_ITEMS[0]
+    });
+    shape = new formattingSettings.ItemDropdown({
+        name: "shape", displayName: "Formato", items: CHECK_SHAPE_ITEMS, value: CHECK_SHAPE_ITEMS[0]
+    });
+    size = new formattingSettings.NumUpDown({ name: "size", displayName: "Tamanho (px)", value: 16 });
+    borderWidth = new formattingSettings.NumUpDown({ name: "borderWidth", displayName: "Espessura da borda (px)", value: 2 });
+    fill = new formattingSettings.ColorPicker({ name: "fill", displayName: "Não selecionado: cor de fundo", value: { value: "#FFFFFF" } });
+    borderColor = new formattingSettings.ColorPicker({
+        name: "borderColor", displayName: "Não selecionado: cor da borda", value: { value: DARK }
+    });
+    selectedFill = new formattingSettings.ColorPicker({
+        name: "selectedFill", displayName: "Selecionado: cor de fundo", value: { value: DARK }
+    });
+    selectedBorderColor = new formattingSettings.ColorPicker({
+        name: "selectedBorderColor", displayName: "Selecionado: cor da borda", value: { value: DARK }
+    });
+    symbolColor = new formattingSettings.ColorPicker({
+        name: "symbolColor", displayName: "Selecionado: cor do símbolo", value: { value: "#FFFFFF" }
+    });
+
+    name: string = "checkbox";
+    displayName: string = "Caixa de seleção";
+    slices: Array<FormattingSettingsSlice> = [
+        this.symbol, this.shape, this.size, this.borderWidth, this.fill, this.borderColor,
+        this.selectedFill, this.selectedBorderColor, this.symbolColor
+    ];
+}
+
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     layoutCard = new LayoutCardSettings();
     headerCard = new HeaderCardSettings();
     itemsCard = new ItemsCardSettings();
     dropdownCard = new DropdownCardSettings();
+    checkboxCard = new CheckboxCardSettings();
 
-    cards = [this.layoutCard, this.headerCard, this.itemsCard, this.dropdownCard];
+    cards = [this.layoutCard, this.headerCard, this.itemsCard, this.checkboxCard, this.dropdownCard];
 }
