@@ -8,12 +8,13 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 
 ## Como usar no Power BI
 
-1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.11.0.0.pbiviz`](dist/).
+1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.12.0.0.pbiviz`](dist/).
 2. No Power BI Desktop: painel **Visualizações → `...` → Importar um visual de um arquivo** e selecione o `.pbiviz`.
 3. Insira o visual na página e arraste as colunas para os espaços de dados:
    - **Filtro aninhado 1, 2, 3 e 4** — todas as colunas colocadas no mesmo espaço viram **um único filtro em árvore**, na ordem em que foram adicionadas (a primeira é o nível de cima). Ex.: *Ano* e *Mês* no "Filtro aninhado 1" e *Área* e *Curso* no "Filtro aninhado 2". Sem limite de colunas por espaço.
    - **Filtros sem aninhamento** — cada coluna vira um filtro separado, sem limite de colunas.
    - **Ligação entre tabelas (opcional)** — necessária quando alguma coluna vem de uma **tabela sem relacionamento** com as outras. Veja "Colunas de tabelas diferentes" abaixo.
+   - **Catálogo: Filtro / Coluna / Valor / Tipo / Ordem** — alternativa para **muitos filtros**: em vez das colunas reais, o visual lê uma tabela catálogo pequena e fica leve e completo. Veja "Modo catálogo" abaixo.
 4. Clique no botão para abrir o pop-up.
 
 ### O que tem no pop-up
@@ -35,6 +36,77 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 - **Filtros:** abrir com os filtros retraídos (ligado por padrão), seleção única, caixa de pesquisa, intervalo para números e datas, limite de combinações lidas, espessura e cor da borda de cada bloco de filtro.
 - **Caixa de seleção:** símbolo quando selecionado (visto ✓, xis ✕, bolinha ●, quadrado ■ ou nenhum), formato (quadrada arredondada, quadrada ou redonda), tamanho, espessura da borda, cor de fundo e da borda quando não selecionada, e cor de fundo, da borda e do símbolo quando selecionada.
 - **Títulos dos filtros aninhados:** para cada filtro aninhado em uso, escolha o que aparece no título: todos os níveis (A › B › C), primeiro e último (A › C), só o primeiro, só o último ou um nome personalizado. Para renomear um filtro sem aninhamento, use **Renomear para este visual** no campo.
+
+## Modo catálogo (muitos filtros, leve e completo)
+
+Recomendado quando o visual tem muitos filtros ou campos com muitos valores (matrícula, nome, data).
+
+**Por que existe:** no modo normal, o Power BI manda ao visual as *combinações* entre todas as colunas colocadas nele, e cada coluna nova multiplica esse total. No modo catálogo o visual lê uma tabela pequena do modelo, com uma linha por valor de cada filtro. A consulta fica do tamanho da **soma** dos valores: por exemplo, 36 meses + 5 áreas + 3.000 matrículas = cerca de 3 mil linhas. Todas as listas vêm completas, sem limite, e o filtro escolhido é aplicado na **coluna real** do modelo.
+
+**Manutenção num lugar só:** uma tabela catálogo serve o relatório inteiro. Copie o visual para as outras páginas e, em cada uma, escolha quais filtros mostrar.
+
+### 1. Crie a tabela catálogo
+
+Em **Modelagem → Nova tabela**, adapte este exemplo, com um bloco por filtro:
+
+```DAX
+Catálogo Filtros =
+UNION (
+    -- Filtro simples de texto
+    SELECTCOLUMNS ( VALUES ( 'Dim Funcionário'[Área] ),
+        "Filtro", "Área",
+        "Coluna", "'Dim Funcionário'[Área]",
+        "Valor", 'Dim Funcionário'[Área] & "",
+        "Tipo", "texto",
+        "Ordem", 0 ),
+    -- Filtro de número (o Tipo precisa ser "número" para o filtro funcionar)
+    SELECTCOLUMNS ( VALUES ( 'Dim Funcionário'[Matrícula] ),
+        "Filtro", "Matrícula",
+        "Coluna", "'Dim Funcionário'[Matrícula]",
+        "Valor", FORMAT ( 'Dim Funcionário'[Matrícula], "0" ),
+        "Tipo", "número",
+        "Ordem", 0 ),
+    -- Filtro de data (Valor no formato aaaa-mm-dd)
+    SELECTCOLUMNS ( VALUES ( 'Fato'[Data Admissão] ),
+        "Filtro", "Data de admissão",
+        "Coluna", "Fato[Data Admissão]",
+        "Valor", FORMAT ( 'Fato'[Data Admissão], "yyyy-mm-dd" ),
+        "Tipo", "data",
+        "Ordem", 0 ),
+    -- Filtro aninhado (árvore): colunas, valores e tipos separados por |
+    SELECTCOLUMNS (
+        SUMMARIZE ( 'Calendário', 'Calendário'[Ano], 'Calendário'[Mês], 'Calendário'[Nº Mês] ),
+        "Filtro", "Período",
+        "Coluna", "Calendário[Ano] | Calendário[Mês]",
+        "Valor", 'Calendário'[Ano] & " | " & 'Calendário'[Mês],
+        "Tipo", "número | texto",
+        "Ordem", 'Calendário'[Ano] * 100 + 'Calendário'[Nº Mês] )
+)
+```
+
+| Coluna | O que colocar |
+|---|---|
+| **Filtro** | Nome que aparece no pop-up. |
+| **Coluna** | A coluna real a filtrar, no formato `Tabela[Coluna]`; com espaço no nome da tabela, use `'Dim Funcionário'[Área]`. No filtro aninhado, as colunas de cada nível separadas por `\|`. |
+| **Valor** | O valor em texto. Datas em `aaaa-mm-dd`. No filtro aninhado, os valores de cada nível separados por `\|`. |
+| **Tipo** | `texto`, `número` ou `data`, conforme o tipo da coluna real. Se o tipo estiver errado, o filtro não encontra os valores. |
+| **Ordem** | Número para ordenar (ex.: AnoMês). Com `0`, a ordem é a natural: alfabética para texto e crescente para números e datas. |
+
+- Para incluir um filtro novo, acrescente um bloco `SELECTCOLUMNS` dentro do `UNION`.
+- A tabela catálogo **não deve ter relacionamento** com as outras. Confira na exibição de Modelo e apague, se o Power BI tiver criado algum.
+- Números com casas decimais: `FORMAT ( valor, "0.##########", "en-US" )`.
+
+### 2. Monte o visual
+
+Arraste as colunas da tabela catálogo para **Catálogo: Filtro**, **Catálogo: Coluna**, **Catálogo: Valor**, **Catálogo: Tipo** e **Catálogo: Ordem**. Os espaços normais ("Filtro aninhado 1–4" e "Filtros sem aninhamento") ficam vazios: o visual usa um modo ou o outro.
+
+Em **Formatar → Filtros → Modo catálogo: filtros desta página**, escreva os filtros que a página deve mostrar, na ordem desejada (ex.: `Período, Área, Cargo`). Vazio = todos, em ordem alfabética.
+
+### Observações
+
+- As listas mostram todos os valores do catálogo; elas não encolhem conforme outros filtros da página. A seleção filtra normalmente os outros visuais.
+- O catálogo é atualizado junto com o modelo (é uma tabela calculada).
+- Se uma linha tiver a **Coluna** em formato inválido, aparece um aviso no topo do pop-up.
 
 ## Como funciona o aninhamento
 

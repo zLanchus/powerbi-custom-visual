@@ -34,6 +34,7 @@ import {
 } from "./filters";
 import { NestedGroup, TreeNode, buildTree, buildTreeFilter, treeStateFromFilters } from "./hierarchy";
 import { SegmentAccumulator } from "./accumulator";
+import { CATALOG_GROUP, buildCatalog, isCatalogColumn } from "./catalog";
 
 /** Espaços de dados cujas colunas viram uma árvore, e o espaço de filtros independentes. */
 const NESTED_ROLES = ["nest1", "nest2", "nest3", "nest4"];
@@ -121,6 +122,9 @@ export class Visual implements IVisual {
     private fetchTimer: number | undefined;
     private fieldsKey = "";
     private jsonFilters: Array<IBasicFilter | IAdvancedFilter> = [];
+    /** Modo catálogo (tabela com Filtro/Coluna/Valor em vez das colunas reais). */
+    private catalogMode = false;
+    private catalogInvalid: string[] = [];
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -170,6 +174,7 @@ export class Visual implements IVisual {
             const isData = ((options.type as number) & UPDATE_TYPE_DATA) !== 0;
             if (isData || this.accumulator.rowsRead === 0) {
                 const categories = dataView?.categorical?.categories || [];
+                this.catalogMode = categories.some(isCatalogColumn);
                 const reset = (options.operationKind ?? OPERATION_CREATE) === OPERATION_CREATE;
                 if (reset) {
                     this.truncated = false;
@@ -179,7 +184,8 @@ export class Visual implements IVisual {
                 this.accumulator.add(categories, reset, c => this.treeRoleOf(c, categories));
 
                 if (dataView?.metadata?.segment) {
-                    if (this.accumulator.rowsRead >= this.rowLimit()) {
+                    // O catálogo é pequeno por natureza (soma dos valores): lê sempre até o fim.
+                    if (!this.catalogMode && this.accumulator.rowsRead >= this.rowLimit()) {
                         this.truncated = true;
                     } else if (reset) {
                         // Consulta nova (ex.: uma coluna acabou de ser adicionada): espera um instante antes
@@ -245,17 +251,27 @@ export class Visual implements IVisual {
             this.root.classList.remove("fp-loading");
         }
         // Só refaz os filtros quando os dados ou os títulos mudaram (redimensionar ou formatar não refaz).
-        const fieldsKey = this.accumulator.version + "|" + this.titlesSignature();
+        const fieldsKey = this.accumulator.version + "|" + this.titlesSignature() + "|" + this.catalogMode
+            + "|" + this.formattingSettings.slicerCard.catalogFilters.value;
         if (fieldsKey !== this.fieldsKey) {
             this.fieldsKey = fieldsKey;
-            this.readFields(this.accumulator.categories());
+            if (this.catalogMode) {
+                const only = (this.formattingSettings.slicerCard.catalogFilters.value || "").split(/[,;]/);
+                const catalog = buildCatalog(this.accumulator.categories(), only);
+                this.fields = catalog.fields;
+                this.nested = catalog.nested;
+                this.catalogInvalid = catalog.invalid;
+            } else {
+                this.catalogInvalid = [];
+                this.readFields(this.accumulator.categories());
+            }
         }
         this.syncStateFromHost(this.jsonFilters);
         this.applyStyles();
 
         const signature = this.fields
             .map(f => f.key + "#" + f.displayName + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
-            + "|" + this.useRangeSignature() + "|" + this.truncated;
+            + "|" + this.useRangeSignature() + "|" + this.truncated + "|" + this.catalogInvalid.join(",");
         if (signature !== this.dataSignature) {
             this.dataSignature = signature;
             this.renderBody();
@@ -368,6 +384,10 @@ export class Visual implements IVisual {
 
     /** Papel de filtro aninhado da coluna, quando a árvore tem mais de uma coluna (precisa das combinações). */
     private treeRoleOf(column: DataViewCategoryColumn, all: DataViewCategoryColumn[]): string | undefined {
+        if (isCatalogColumn(column)) {
+            // As colunas do catálogo andam juntas: cada linha é um valor de um filtro.
+            return CATALOG_GROUP;
+        }
         const role = NESTED_ROLES.find(r => column.source.roles?.[r]);
         if (!role) {
             return undefined;
@@ -634,12 +654,22 @@ export class Visual implements IVisual {
             const empty = el("div", "fp-empty");
             empty.append(
                 el("strong", undefined, "Nenhum campo adicionado"),
-                el("span", undefined, "Arraste colunas para \"Filtro aninhado 1–4\" (as colunas de um mesmo espaço viram uma árvore) ou para \"Filtros sem aninhamento\".")
+                el("span", undefined, "Arraste colunas para \"Filtro aninhado 1–4\" (as colunas de um mesmo espaço viram uma árvore) ou para \"Filtros sem aninhamento\". "
+                    + "Com muitos filtros, use o modo catálogo (veja o README do visual).")
             );
             this.popupBody.appendChild(empty);
             return;
         }
 
+        if (this.catalogInvalid.length) {
+            const warning = el("div", "fp-warning");
+            warning.append(
+                el("strong", undefined, "Catálogo: coluna em formato inválido"),
+                el("span", undefined, "Use Tabela[Coluna] (ou Tabela[Ano] | Tabela[Mês] para filtro aninhado). Verifique: "
+                    + this.catalogInvalid.slice(0, 3).join("; "))
+            );
+            this.popupBody.appendChild(warning);
+        }
         if (this.truncated) {
             const warning = el("div", "fp-warning");
             warning.append(

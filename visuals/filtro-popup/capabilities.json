@@ -35,6 +35,36 @@
             "description": "Necessário quando há colunas de tabelas sem relacionamento entre si (ex.: tabela criada no próprio Power BI). Coloque aqui uma medida que use todas as tabelas envolvidas — veja o README do visual.",
             "name": "link",
             "kind": "Measure"
+        },
+        {
+            "displayName": "Catálogo: Filtro",
+            "name": "catName",
+            "kind": "Grouping",
+            "description": "Modo catálogo: coluna com o nome de cada filtro (ex.: \"Área\"). Veja o README."
+        },
+        {
+            "displayName": "Catálogo: Coluna",
+            "name": "catColumn",
+            "kind": "Grouping",
+            "description": "Modo catálogo: coluna com a coluna real a filtrar, no formato Tabela[Coluna] (filtro aninhado: Tabela[Ano] | Tabela[Mês])."
+        },
+        {
+            "displayName": "Catálogo: Valor",
+            "name": "catValue",
+            "kind": "Grouping",
+            "description": "Modo catálogo: coluna com o valor (texto). Filtro aninhado: valores separados por | ."
+        },
+        {
+            "displayName": "Catálogo: Tipo (opcional)",
+            "name": "catType",
+            "kind": "Grouping",
+            "description": "Modo catálogo: texto, número ou data (padrão: texto). Filtro aninhado: tipos separados por | ."
+        },
+        {
+            "displayName": "Catálogo: Ordem (opcional)",
+            "name": "catOrder",
+            "kind": "Grouping",
+            "description": "Modo catálogo: número para ordenar os valores (ex.: AnoMês). Sem ordem, os valores ficam em ordem alfabética."
         }
     ],
     "objects": {
@@ -237,6 +267,11 @@
                 "maxRows": {
                     "type": {
                         "numeric": true
+                    }
+                },
+                "catalogFilters": {
+                    "type": {
+                        "text": true
                     }
                 }
             }
@@ -579,6 +614,31 @@
                             "for": {
                                 "in": "fields"
                             }
+                        },
+                        {
+                            "for": {
+                                "in": "catName"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "catColumn"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "catValue"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "catType"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "catOrder"
+                            }
                         }
                     ],
                     "dataReductionAlgorithm": {
@@ -596,7 +656,66 @@
                         }
                     ]
                 }
-            }
+            },
+            "conditions": [
+                {
+                    "catName": {
+                        "max": 0
+                    },
+                    "catColumn": {
+                        "max": 0
+                    },
+                    "catValue": {
+                        "max": 0
+                    },
+                    "catType": {
+                        "max": 0
+                    },
+                    "catOrder": {
+                        "max": 0
+                    }
+                },
+                {
+                    "nest1": {
+                        "max": 0
+                    },
+                    "nest2": {
+                        "max": 0
+                    },
+                    "nest3": {
+                        "max": 0
+                    },
+                    "nest4": {
+                        "max": 0
+                    },
+                    "fields": {
+                        "max": 0
+                    },
+                    "link": {
+                        "max": 0
+                    },
+                    "catName": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "catColumn": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "catValue": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "catType": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "catOrder": {
+                        "min": 0,
+                        "max": 1
+                    }
+                }
+            ]
         }
     ],
     "sorting": {

@@ -185,6 +185,14 @@ class SlicerCardSettings extends FormattingSettingsCard {
         value: 200
     });
 
+    catalogFilters = new formattingSettings.TextInput({
+        name: "catalogFilters",
+        displayName: "Modo catálogo: filtros desta página",
+        description: "Nomes dos filtros do catálogo a mostrar, separados por vírgula, na ordem desejada. Vazio = todos, em ordem alfabética.",
+        value: "",
+        placeholder: "Ex.: Período, Área, Cargo"
+    });
+
     name: string = "slicer";
     displayName: string = "Filtros";
     startCollapsed = new formattingSettings.ToggleSwitch({
@@ -207,7 +215,7 @@ class SlicerCardSettings extends FormattingSettingsCard {
     });
 
     slices: Array<FormattingSettingsSlice> = [
-        this.startCollapsed, this.singleSelect, this.showSearch, this.rangeForNumbers, this.maxRows, this.borderWidth, this.borderColor
+        this.startCollapsed, this.singleSelect, this.showSearch, this.rangeForNumbers, this.maxRows, this.catalogFilters, this.borderWidth, this.borderColor
     ];
 }
 
