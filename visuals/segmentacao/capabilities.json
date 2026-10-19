@@ -2,8 +2,14 @@
     "dataRoles": [
         {
             "displayName": "Campo",
-            "description": "Coluna cujos valores viram as opções. Com mais de uma coluna, vira uma hierarquia (ex.: Ano › Mês), na ordem em que foram adicionadas.",
+            "description": "Coluna cujos valores viram as opções da segmentação (na hierarquia, é o nível de cima).",
             "name": "field",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Níveis abaixo (hierarquia, opcional)",
+            "description": "Colunas dos níveis de baixo, na ordem em que forem adicionadas (ex.: Campo = Ano, aqui = Mês).",
+            "name": "levels",
             "kind": "Grouping"
         }
     ],
@@ -389,11 +395,54 @@
     },
     "dataViewMappings": [
         {
+            "conditions": [
+                {
+                    "field": {
+                        "max": 1
+                    },
+                    "levels": {
+                        "max": 0
+                    }
+                }
+            ],
             "categorical": {
                 "categories": {
                     "for": {
                         "in": "field"
                     },
+                    "dataReductionAlgorithm": {
+                        "window": {
+                            "count": 30000
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "conditions": [
+                {
+                    "field": {
+                        "max": 1
+                    },
+                    "levels": {
+                        "min": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "categories": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "field"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "levels"
+                            }
+                        }
+                    ],
                     "dataReductionAlgorithm": {
                         "window": {
                             "count": 30000

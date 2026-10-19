@@ -188,7 +188,13 @@ export class Visual implements IVisual {
     }
 
     private readField(dataView: DataView | undefined): FieldModel | undefined {
-        const categories = dataView?.categorical?.categories || [];
+        // Nível de cima ("Campo") primeiro; depois os "Níveis abaixo", na ordem em que foram adicionados.
+        const order = (c: powerbi.DataViewCategoryColumn): number => {
+            const roles = c.source.roles || {};
+            const index = (c.source as unknown as { rolesIndex?: Record<string, number[]> }).rolesIndex?.["levels"]?.[0] ?? 0;
+            return roles["field"] ? -1 : index;
+        };
+        const categories = (dataView?.categorical?.categories || []).slice().sort((a, b) => order(a) - order(b));
         const category = categories[0];
         this.category = category;
         this.rowOf.clear();

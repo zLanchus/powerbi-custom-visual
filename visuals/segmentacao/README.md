@@ -8,14 +8,14 @@ Substituto mais bonito da **segmentação de dados (slicer) nativa** do Power BI
 
 ## Como usar
 
-1. Baixe [`dist/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.1.4.0.0.pbiviz`](dist/).
+1. Baixe [`dist/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.1.4.1.0.pbiviz`](dist/).
 2. No Power BI Desktop: **Visualizações → `…` → Importar um visual de um arquivo**.
-3. Arraste uma coluna para **Campo**. Para uma **hierarquia** (filtro aninhado), arraste mais de uma, na ordem dos níveis: por exemplo, *Ano* e depois *Mês*.
+3. Arraste uma coluna para **Campo**. Para uma **hierarquia** (filtro aninhado), coloque o nível de cima em **Campo** e os de baixo em **Níveis abaixo (hierarquia)**, na ordem: por exemplo, *Ano* em Campo e *Mês* em Níveis abaixo.
 4. Em **Formatar visual → Layout → Estilo**, escolha **Blocos (botões)**, **Lista vertical** ou **Suspenso**.
 
 ## Recursos
 
-- **Hierarquia:** mais de uma coluna em Campo vira uma árvore (lista e suspenso) ou blocos agrupados.
+- **Hierarquia:** Campo + "Níveis abaixo" viram uma árvore (lista e suspenso) ou blocos agrupados.
 - **Três estilos:** blocos lado a lado (com número de colunas automático ou fixo), lista vertical com rolagem, ou caixa suspensa no estilo do botão "Abrir Filtros".
 - **Seleção múltipla** (clique marca/desmarca) ou **seleção única**.
 - **Selecionar tudo** (opcional), **pesquisa** na lista e no suspenso (aparece com mais de 6 valores).
@@ -25,7 +25,7 @@ Substituto mais bonito da **segmentação de dados (slicer) nativa** do Power BI
 
 ## Hierarquia (campos aninhados)
 
-Com mais de uma coluna em **Campo**, a segmentação vira uma hierarquia, como a segmentação nativa com vários campos:
+Com colunas em **Níveis abaixo (hierarquia)**, a segmentação vira uma hierarquia, com o **Campo** como nível de cima, como a segmentação nativa com vários campos:
 
 | Lista vertical | Blocos agrupados |
 |---|---|
@@ -37,6 +37,7 @@ Com mais de uma coluna em **Campo**, a segmentação vira uma hierarquia, como a
 - O filtro é exato: marcar *mar/2025* não filtra *mar/2024*. Só com níveis de cima inteiros marcados, filtra só a coluna de cima (ex.: Ano = 2025).
 - A pesquisa encontra valores de qualquer nível e abre sozinha os níveis com resultado.
 - No suspenso, o texto mostra a seleção pelo caminho (ex.: "2026 › fev") ou "N selecionados".
+- Com só o **Campo** preenchido, o visual funciona exatamente como antes da hierarquia, inclusive com tabelas auxiliares sem relacionamento e parâmetros de campo.
 - Parâmetros de campo (modo seleção) funcionam com uma coluna só; com hierarquia, o visual usa sempre o modo filtro.
 
 ## Parâmetros de campo
