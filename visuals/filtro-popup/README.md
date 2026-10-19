@@ -8,13 +8,13 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 
 ## Como usar no Power BI
 
-1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.12.1.0.pbiviz`](dist/).
+1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.13.0.0.pbiviz`](dist/).
 2. No Power BI Desktop: painel **Visualizações → `...` → Importar um visual de um arquivo** e selecione o `.pbiviz`.
 3. Insira o visual na página e arraste as colunas para os espaços de dados:
    - **Filtro aninhado 1, 2, 3 e 4** — todas as colunas colocadas no mesmo espaço viram **um único filtro em árvore**, na ordem em que foram adicionadas (a primeira é o nível de cima). Ex.: *Ano* e *Mês* no "Filtro aninhado 1" e *Área* e *Curso* no "Filtro aninhado 2". Sem limite de colunas por espaço.
    - **Filtros sem aninhamento** — cada coluna vira um filtro separado, sem limite de colunas.
    - **Ligação entre tabelas (opcional)** — necessária quando alguma coluna vem de uma **tabela sem relacionamento** com as outras. Veja "Colunas de tabelas diferentes" abaixo.
-   - **Catálogo: Filtro / Coluna / Valor / Tipo / Ordem** — alternativa para **muitos filtros**: em vez das colunas reais, o visual lê uma tabela catálogo pequena e fica leve e completo. Veja "Modo catálogo" abaixo.
+   - **Catálogo: Filtro / Coluna / Valor / Tipo / Ordem** (e, opcional, **Catálogo: Existe** para filtros em cascata) — alternativa para **muitos filtros**: em vez das colunas reais, o visual lê uma tabela catálogo pequena e fica leve e completo. Veja "Modo catálogo" abaixo.
 4. Clique no botão para abrir o pop-up.
 
 ### O que tem no pop-up
@@ -102,9 +102,49 @@ Arraste as colunas da tabela catálogo para **Catálogo: Filtro**, **Catálogo: 
 
 Em **Formatar → Filtros → Modo catálogo: filtros desta página**, escreva os filtros que a página deve mostrar, na ordem desejada (ex.: `Período, Área, Cargo`). Vazio = todos, em ordem alfabética.
 
+### 3. (Opcional) Filtros em cascata
+
+Com a cascata, escolher um valor num filtro limita os outros: por exemplo, ao escolher uma especialidade, só aparecem os diretores que têm essa especialidade. Os outros filtros da página também contam. Para ativar, crie esta medida e coloque-a em **Catálogo: Existe (medida opcional)**:
+
+```DAX
+Catálogo Existe =
+VAR Coluna = SELECTEDVALUE ( 'Catálogo Filtros'[Coluna] )
+VAR Valor = SELECTEDVALUE ( 'Catálogo Filtros'[Valor] )
+RETURN
+    SWITCH (
+        Coluna,
+        -- Texto
+        "'Dim Funcionário'[Diretor]",
+            CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Diretor] = Valor ),
+        "'Dim Funcionário'[Especialidade]",
+            CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Especialidade] = Valor ),
+        -- Número
+        "'Dim Funcionário'[Matrícula]",
+            CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Matrícula] = VALUE ( Valor ) ),
+        -- Data (Valor em aaaa-mm-dd)
+        "Fato[Data Admissão]",
+            CALCULATE ( COUNTROWS ( 'Fato' ),
+                'Fato'[Data Admissão] = DATE ( LEFT ( Valor, 4 ), MID ( Valor, 6, 2 ), RIGHT ( Valor, 2 ) ) ),
+        -- Filtro aninhado: um nível por PATHITEM
+        "Calendário[Ano] | Calendário[Mês]",
+            VAR Partes = SUBSTITUTE ( Valor, " | ", "|" )
+            RETURN
+                CALCULATE ( COUNTROWS ( 'Fato' ),
+                    'Calendário'[Ano] = VALUE ( PATHITEM ( Partes, 1 ) ),
+                    'Calendário'[Mês] = PATHITEM ( Partes, 2 ) ),
+        -- Campos sem regra: sempre aparecem
+        1
+    )
+```
+
+- Cada linha do `SWITCH` usa o texto **exatamente igual** ao da coluna **Coluna** do catálogo.
+- A condição `'Tabela'[Coluna] = Valor` dentro do `CALCULATE` faz cada lista ignorar a própria seleção e respeitar a dos outros filtros, como nas segmentações nativas.
+- Filtros com muitos valores (ex.: matrícula) deixam a medida mais lenta. Se não precisar de cascata neles, deixe-os de fora do `SWITCH`: caem no `1` e sempre aparecem.
+- Como funciona: além de filtrar os outros visuais, o visual aplica a seleção a si mesmo ("selfFilter"), para a medida enxergar o que foi escolhido no pop-up. Valores já marcados continuam na lista para poder desmarcar.
+
 ### Observações
 
-- As listas mostram todos os valores do catálogo; elas não encolhem conforme outros filtros da página (nem quando o Power BI devolve o catálogo já filtrado pela própria seleção). A seleção filtra normalmente os outros visuais.
+- Sem a medida "Existe", as listas mostram todos os valores do catálogo e não encolhem conforme os outros filtros. A seleção filtra normalmente os outros visuais.
 - O catálogo é atualizado junto com o modelo (é uma tabela calculada).
 - Se uma linha tiver a **Coluna** em formato inválido, aparece um aviso no topo do pop-up.
 

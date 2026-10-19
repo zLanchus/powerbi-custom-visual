@@ -65,6 +65,12 @@
             "name": "catOrder",
             "kind": "Grouping",
             "description": "Modo catálogo: número para ordenar os valores (ex.: AnoMês). Sem ordem, os valores ficam em ordem alfabética."
+        },
+        {
+            "displayName": "Catálogo: Existe (medida opcional)",
+            "name": "catExists",
+            "kind": "Measure",
+            "description": "Modo catálogo: medida que devolve vazio para valores que não existem com os filtros escolhidos. Com ela, as listas se filtram umas às outras (cascata). Veja o README."
         }
     ],
     "objects": {
@@ -73,6 +79,13 @@
                 "filter": {
                     "type": {
                         "filter": true
+                    }
+                },
+                "selfFilter": {
+                    "type": {
+                        "filter": {
+                            "selfFilter": true
+                        }
                     }
                 }
             }
@@ -653,6 +666,11 @@
                             "for": {
                                 "in": "link"
                             }
+                        },
+                        {
+                            "for": {
+                                "in": "catExists"
+                            }
                         }
                     ]
                 }
@@ -672,6 +690,9 @@
                         "max": 0
                     },
                     "catOrder": {
+                        "max": 0
+                    },
+                    "catExists": {
                         "max": 0
                     }
                 },
@@ -711,6 +732,10 @@
                         "max": 1
                     },
                     "catOrder": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "catExists": {
                         "min": 0,
                         "max": 1
                     }

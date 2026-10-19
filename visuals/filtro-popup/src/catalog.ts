@@ -90,8 +90,23 @@ interface Row {
 /**
  * Monta os filtros a partir das colunas do catálogo.
  * @param only nomes dos filtros a mostrar, na ordem desejada (vazio = todos, em ordem alfabética).
+ * @param allow quando informado, só entram as linhas aceitas (cascata); o filtro aparece mesmo sem valores.
  */
-export function buildCatalog(categories: DataViewCategoryColumn[], only: string[]): CatalogResult {
+/** Chaves (valor ou caminho da árvore) de cada filtro do catálogo, por chave do filtro. */
+export function catalogKeys(result: CatalogResult): Map<string, Set<string>> {
+    const keys = new Map<string, Set<string>>();
+    for (const field of result.fields) {
+        const tree = result.nested.get(field.key);
+        keys.set(field.key, new Set(tree ? Array.from(tree.leafPath.keys()) : field.values.map(v => v.key)));
+    }
+    return keys;
+}
+
+export function buildCatalog(
+    categories: DataViewCategoryColumn[],
+    only: string[],
+    allow?: (fieldKey: string, pathKey: string) => boolean
+): CatalogResult {
     const column = (role: string): PrimitiveValue[] | undefined =>
         categories.find(c => c.source.roles?.[role])?.values as PrimitiveValue[] | undefined;
     const names = column("catName") || [];
@@ -140,7 +155,7 @@ export function buildCatalog(categories: DataViewCategoryColumn[], only: string[
         const valueParts = levels === 1 ? [text(vals[r])] : text(vals[r]).split(LEVEL_SEP).map(v => v.trim());
         const path = group.kinds.map((kind, i) => parseValue(valueParts[i] ?? "", kind));
         const key = path.map(valueKey).join("\u001f");
-        if (group.seen.has(key)) {
+        if (group.seen.has(key) || (allow && !allow("cat:" + name, key))) {
             continue;
         }
         group.seen.add(key);

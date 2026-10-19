@@ -34,7 +34,7 @@ import {
 } from "./filters";
 import { NestedGroup, TreeNode, buildTree, buildTreeFilter, treeStateFromFilters } from "./hierarchy";
 import { SegmentAccumulator } from "./accumulator";
-import { CATALOG_GROUP, buildCatalog, isCatalogColumn } from "./catalog";
+import { CATALOG_GROUP, buildCatalog, catalogKeys, isCatalogColumn } from "./catalog";
 
 /** Espaços de dados cujas colunas viram uma árvore, e o espaço de filtros independentes. */
 const NESTED_ROLES = ["nest1", "nest2", "nest3", "nest4"];
@@ -125,6 +125,10 @@ export class Visual implements IVisual {
     /** Modo catálogo (tabela com Filtro/Coluna/Valor em vez das colunas reais). */
     private catalogMode = false;
     private catalogInvalid: string[] = [];
+    /** Cascata no modo catálogo: linhas disponíveis na consulta atual (com a medida "Existe" preenchida). */
+    private catalogNow = new SegmentAccumulator();
+    private cascading = false;
+    private selfFilterApplied = false;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -185,6 +189,15 @@ export class Visual implements IVisual {
                 // em vez de recomeçar. Assim, se o Power BI devolver o catálogo filtrado pela própria seleção
                 // (ex.: tabela catálogo com relacionamento), os outros filtros não somem do pop-up.
                 this.accumulator.add(categories, reset && !this.catalogMode, c => this.treeRoleOf(c, categories));
+
+                // Cascata: a medida "Existe" diz quais linhas do catálogo valem com os filtros atuais.
+                const exists = dataView?.categorical?.values?.find(v => v.source.roles?.["catExists"]);
+                this.cascading = this.catalogMode && !!exists;
+                if (this.cascading && exists) {
+                    const keep = exists.values.map(v => v !== null && v !== undefined && v !== "" && v !== 0 && v !== false);
+                    const available = categories.map(c => ({ source: c.source, values: c.values.filter((_, i) => keep[i]) } as DataViewCategoryColumn));
+                    this.catalogNow.add(available, reset, c => this.treeRoleOf(c, categories));
+                }
 
                 if (dataView?.metadata?.segment) {
                     // O catálogo é pequeno por natureza (soma dos valores): lê sempre até o fim.
@@ -255,15 +268,27 @@ export class Visual implements IVisual {
         }
         // Só refaz os filtros quando os dados ou os títulos mudaram (redimensionar ou formatar não refaz).
         const fieldsKey = this.accumulator.version + "|" + this.titlesSignature() + "|" + this.catalogMode
-            + "|" + this.formattingSettings.slicerCard.catalogFilters.value;
+            + "|" + this.formattingSettings.slicerCard.catalogFilters.value
+            + (this.cascading ? "|" + this.catalogNow.version + "|" + JSON.stringify(this.jsonFilters) : "");
         if (fieldsKey !== this.fieldsKey) {
             this.fieldsKey = fieldsKey;
             if (this.catalogMode) {
                 const only = (this.formattingSettings.slicerCard.catalogFilters.value || "").split(/[,;]/);
-                const catalog = buildCatalog(this.accumulator.categories(), only);
+                const all = this.accumulator.categories();
+                const catalog = buildCatalog(all, only);
                 this.fields = catalog.fields;
                 this.nested = catalog.nested;
                 this.catalogInvalid = catalog.invalid;
+                if (this.cascading) {
+                    // Cada lista mostra só o que existe com os outros filtros escolhidos, mais o que já está
+                    // marcado nela (para poder desmarcar). Um filtro sem valores continua aparecendo.
+                    this.syncStateFromHost(this.jsonFilters);
+                    const available = catalogKeys(buildCatalog(this.catalogNow.categories(), []));
+                    const filtered = buildCatalog(all, only, (fieldKey, pathKey) =>
+                        !!available.get(fieldKey)?.has(pathKey) || !!this.states.get(fieldKey)?.selected.has(pathKey));
+                    this.fields = filtered.fields;
+                    this.nested = filtered.nested;
+                }
             } else {
                 this.catalogInvalid = [];
                 this.readFields(this.accumulator.categories());
@@ -274,7 +299,8 @@ export class Visual implements IVisual {
 
         const signature = this.fields
             .map(f => f.key + "#" + f.displayName + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
-            + "|" + this.useRangeSignature() + "|" + this.truncated + "|" + this.catalogInvalid.join(",");
+            + "|" + this.useRangeSignature() + "|" + this.truncated + "|" + this.catalogInvalid.join(",")
+            + (this.cascading ? "|" + this.catalogNow.version : "");
         if (signature !== this.dataSignature) {
             this.dataSignature = signature;
             this.renderBody();
@@ -437,6 +463,15 @@ export class Visual implements IVisual {
             this.host.applyJsonFilter(filters, "general", "filter", FilterAction.merge);
         } else {
             this.host.applyJsonFilter(null, "general", "filter", FilterAction.remove);
+        }
+        // Cascata no modo catálogo: o mesmo filtro também vale para o próprio visual, para a medida
+        // "Existe" enxergar as seleções feitas aqui (o filtro normal só atinge os outros visuais).
+        if (this.cascading && filters.length) {
+            this.host.applyJsonFilter(filters, "general", "selfFilter", FilterAction.merge);
+            this.selfFilterApplied = true;
+        } else if (this.cascading || this.selfFilterApplied) {
+            this.host.applyJsonFilter(null, "general", "selfFilter", FilterAction.remove);
+            this.selfFilterApplied = false;
         }
         this.refreshSelection();
         this.refreshButton();
