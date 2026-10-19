@@ -175,7 +175,7 @@ export class Visual implements IVisual {
             this.applyStyles();
 
             const signature = this.fields
-                .map(f => f.key + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
+                .map(f => f.key + "#" + f.displayName + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
                 + "|" + this.useRangeSignature();
             if (signature !== this.dataSignature) {
                 this.dataSignature = signature;
@@ -191,6 +191,11 @@ export class Visual implements IVisual {
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
+        // Só aparecem os filtros aninhados em uso (com mais de uma coluna); o nome só no modo personalizado.
+        this.formattingSettings.nestedTitlesCard.nests.forEach((group, k) => {
+            group.visible = this.nested.has(NESTED_ROLES[k]);
+            group.text.visible = group.mode.value?.value === "custom";
+        });
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }
 
@@ -247,7 +252,7 @@ export class Visual implements IVisual {
                 });
                 const field: FieldModel = {
                     key: role,
-                    displayName: levels.map(l => l.displayName).join(" › "),
+                    displayName: this.nestedTitle(role, levels.map(l => l.displayName)),
                     kind: "text",
                     target: levels[0].target,
                     values: leaves
@@ -259,6 +264,26 @@ export class Visual implements IVisual {
         for (const i of inRole(FLAT_ROLE)) {
             this.fields.push(all[i]);
         }
+    }
+
+    /** Título de um filtro aninhado conforme "Títulos dos filtros aninhados". */
+    private nestedTitle(role: string, names: string[]): string {
+        const group = this.formattingSettings.nestedTitlesCard.nests[NESTED_ROLES.indexOf(role)];
+        const mode = String(group?.mode.value?.value || "all");
+        const custom = (group?.text.value || "").trim();
+        if (mode === "custom" && custom) {
+            return custom;
+        }
+        if (mode === "first") {
+            return names[0];
+        }
+        if (mode === "last") {
+            return names[names.length - 1];
+        }
+        if (mode === "firstLast" && names.length > 2) {
+            return names[0] + " › " + names[names.length - 1];
+        }
+        return names.join(" › ");
     }
 
     /** Papel de filtro aninhado da coluna, quando a árvore tem mais de uma coluna (precisa das combinações). */

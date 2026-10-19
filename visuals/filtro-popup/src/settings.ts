@@ -315,12 +315,47 @@ class CheckboxCardSettings extends FormattingSettingsCard {
     ];
 }
 
+export const TITLE_MODE_ITEMS: powerbi.IEnumMember[] = [
+    { value: "all", displayName: "Todos os níveis (A › B › C)" },
+    { value: "firstLast", displayName: "Primeiro e último (A › C)" },
+    { value: "first", displayName: "Só o primeiro (A)" },
+    { value: "last", displayName: "Só o último (C)" },
+    { value: "custom", displayName: "Nome personalizado" }
+];
+
+/** Como aparece o título de um filtro aninhado (uma árvore com várias colunas). */
+class NestedTitleGroup extends formattingSettings.Group {
+    mode: formattingSettings.ItemDropdown;
+    text: formattingSettings.TextInput;
+
+    constructor(n: number) {
+        const mode = new formattingSettings.ItemDropdown({
+            name: `nest${n}Mode`, displayName: "Mostrar no título", items: TITLE_MODE_ITEMS, value: TITLE_MODE_ITEMS[0]
+        });
+        const text = new formattingSettings.TextInput({
+            name: `nest${n}Text`, displayName: "Nome personalizado", value: "", placeholder: "Ex.: Estrutura"
+        });
+        super({ name: `nest${n}`, displayName: `Filtro aninhado ${n}`, slices: [mode, text] });
+        this.mode = mode;
+        this.text = text;
+    }
+}
+
+class NestedTitlesCardSettings extends formattingSettings.CompositeCard {
+    nests = [1, 2, 3, 4].map(n => new NestedTitleGroup(n));
+
+    name: string = "nestedTitles";
+    displayName: string = "Títulos dos filtros aninhados";
+    groups: Array<formattingSettings.Group> = this.nests;
+}
+
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     buttonCard = new ButtonCardSettings();
     popupCard = new PopupCardSettings();
     slicerCard = new SlicerCardSettings();
     actionsCard = new ActionsCardSettings();
     checkboxCard = new CheckboxCardSettings();
+    nestedTitlesCard = new NestedTitlesCardSettings();
 
-    cards = [this.buttonCard, this.popupCard, this.actionsCard, this.slicerCard, this.checkboxCard];
+    cards = [this.buttonCard, this.popupCard, this.actionsCard, this.slicerCard, this.nestedTitlesCard, this.checkboxCard];
 }

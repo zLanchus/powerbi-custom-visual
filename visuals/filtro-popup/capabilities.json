@@ -415,6 +415,134 @@
                     }
                 }
             }
+        },
+        "nestedTitles": {
+            "properties": {
+                "nest1Mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "all",
+                                "displayName": "Todos os níveis (A › B › C)"
+                            },
+                            {
+                                "value": "firstLast",
+                                "displayName": "Primeiro e último (A › C)"
+                            },
+                            {
+                                "value": "first",
+                                "displayName": "Só o primeiro (A)"
+                            },
+                            {
+                                "value": "last",
+                                "displayName": "Só o último (C)"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Nome personalizado"
+                            }
+                        ]
+                    }
+                },
+                "nest1Text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "nest2Mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "all",
+                                "displayName": "Todos os níveis (A › B › C)"
+                            },
+                            {
+                                "value": "firstLast",
+                                "displayName": "Primeiro e último (A › C)"
+                            },
+                            {
+                                "value": "first",
+                                "displayName": "Só o primeiro (A)"
+                            },
+                            {
+                                "value": "last",
+                                "displayName": "Só o último (C)"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Nome personalizado"
+                            }
+                        ]
+                    }
+                },
+                "nest2Text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "nest3Mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "all",
+                                "displayName": "Todos os níveis (A › B › C)"
+                            },
+                            {
+                                "value": "firstLast",
+                                "displayName": "Primeiro e último (A › C)"
+                            },
+                            {
+                                "value": "first",
+                                "displayName": "Só o primeiro (A)"
+                            },
+                            {
+                                "value": "last",
+                                "displayName": "Só o último (C)"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Nome personalizado"
+                            }
+                        ]
+                    }
+                },
+                "nest3Text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "nest4Mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "all",
+                                "displayName": "Todos os níveis (A › B › C)"
+                            },
+                            {
+                                "value": "firstLast",
+                                "displayName": "Primeiro e último (A › C)"
+                            },
+                            {
+                                "value": "first",
+                                "displayName": "Só o primeiro (A)"
+                            },
+                            {
+                                "value": "last",
+                                "displayName": "Só o último (C)"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Nome personalizado"
+                            }
+                        ]
+                    }
+                },
+                "nest4Text": {
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
