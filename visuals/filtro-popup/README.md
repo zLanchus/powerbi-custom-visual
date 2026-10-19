@@ -8,7 +8,7 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 
 ## Como usar no Power BI
 
-1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.7.0.0.pbiviz`](dist/).
+1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.8.0.0.pbiviz`](dist/).
 2. No Power BI Desktop: painel **Visualizações → `...` → Importar um visual de um arquivo** e selecione o `.pbiviz`.
 3. Insira o visual na página e arraste as colunas para os espaços de dados:
    - **Filtro aninhado 1, 2, 3 e 4** — todas as colunas colocadas no mesmo espaço viram **um único filtro em árvore**, na ordem em que foram adicionadas (a primeira é o nível de cima). Ex.: *Ano* e *Mês* no "Filtro aninhado 1" e *Área* e *Curso* no "Filtro aninhado 2". Sem limite de colunas por espaço.
@@ -81,7 +81,17 @@ Visuais customizados rodam dentro de uma área isolada (iframe) e **não consegu
 Outras observações:
 
 - Use a **coluna de data** diretamente (não a hierarquia automática Ano/Trimestre/Mês) para os filtros de data funcionarem melhor.
-- Os valores listados vêm de até 30.000 combinações de todas as colunas do visual; com volumes maiores o visual busca o restante automaticamente. Muitas colunas com muitos valores aumentam o número de combinações.
+- Os dados chegam em partes de até 30.000 linhas e o visual busca o restante automaticamente (veja "Desempenho e memória").
+
+## Desempenho e memória
+
+O Power BI entrega ao visual as **combinações** entre todas as colunas colocadas nele (não a lista de cada coluna separada, como na segmentação nativa). O visual lê cada parte, guarda só os valores distintos de cada filtro (e os caminhos das árvores) e descarta o resto, sem deixar o Power BI juntar todas as partes num conjunto gigante. Assim a lista continua completa e a memória fica proporcional aos valores distintos.
+
+O que ainda pesa é a **consulta** em si, calculada pelo motor do Power BI (processo *Microsoft SQL Server Analysis Services* / `msmdsrv.exe`). Ela cresce com o número de combinações:
+
+- Com tabelas **relacionadas**, só entram as combinações que existem nos dados.
+- Uma tabela **sem relacionamento** (e a medida em "Ligação entre tabelas" feita para ela) multiplica as combinações pelo número de linhas da tabela solta. Se não precisa dela no filtro, tire a coluna **e** a medida de ligação.
+- Campos com muitos valores (ex.: matrícula, nome, data) multiplicam as combinações dos outros campos do mesmo visual. Se o relatório ficar pesado, divida os filtros em mais de um visual, com poucos campos em cada um.
 
 ## Desenvolvimento
 

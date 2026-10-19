@@ -13,6 +13,7 @@ import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ISelectionId = powerbi.visuals.ISelectionId;
 import DataView = powerbi.DataView;
+import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 import FilterAction = powerbi.FilterAction;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
@@ -32,10 +33,15 @@ import {
     valueKey
 } from "./filters";
 import { NestedGroup, TreeNode, buildTree, buildTreeFilter, treeStateFromFilters } from "./hierarchy";
+import { SegmentAccumulator } from "./accumulator";
 
 /** Espaços de dados cujas colunas viram uma árvore, e o espaço de filtros independentes. */
 const NESTED_ROLES = ["nest1", "nest2", "nest3", "nest4"];
 const FLAT_ROLE = "fields";
+
+/** VisualUpdateType.Data e VisualDataChangeOperationKind.Create (enums "const" não exportados pela API). */
+const UPDATE_TYPE_DATA = 2;
+const OPERATION_CREATE = 0;
 
 /** Quantidade máxima de itens desenhados por lista (o resto aparece pela pesquisa). */
 const MAX_RENDERED_ITEMS = 300;
@@ -107,6 +113,7 @@ export class Visual implements IVisual {
     private collapsed = new Map<string, boolean>();
     private isOpen = false;
     private dataSignature = "";
+    private accumulator = new SegmentAccumulator();
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -150,12 +157,20 @@ export class Visual implements IVisual {
             this.formattingSettings = this.formattingSettingsService
                 .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
 
-            // Volumes grandes chegam em segmentos: pede o restante.
-            if (dataView?.metadata?.segment) {
-                this.host.fetchMoreData(true);
+            // Os dados chegam em partes de até 30.000 linhas. Cada parte é lida e descartada
+            // (só os valores distintos ficam guardados); o restante é pedido em modo
+            // incremental, sem o Power BI juntar todas as partes num conjunto gigante.
+            const categories = dataView?.categorical?.categories || [];
+            const isData = ((options.type as number) & UPDATE_TYPE_DATA) !== 0;
+            if (isData || this.accumulator.rowsRead === 0) {
+                const reset = (options.operationKind ?? OPERATION_CREATE) === OPERATION_CREATE;
+                this.accumulator.add(categories, reset, c => this.treeRoleOf(c, categories));
+            }
+            if (isData && dataView?.metadata?.segment) {
+                this.host.fetchMoreData(false);
             }
 
-            this.readFields(dataView);
+            this.readFields(this.accumulator.categories());
             this.syncStateFromHost((options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>);
             this.applyStyles();
 
@@ -189,8 +204,7 @@ export class Visual implements IVisual {
      * "Filtro aninhado N" viram uma árvore (na ordem em que foram adicionadas);
      * as de "Filtros sem aninhamento" viram um filtro cada.
      */
-    private readFields(dataView: DataView | undefined): void {
-        const categories = dataView?.categorical?.categories || [];
+    private readFields(categories: DataViewCategoryColumn[]): void {
         const all = categories.map((category, index) => {
             const column = category.source;
             const kind = getKind(column);
@@ -245,6 +259,15 @@ export class Visual implements IVisual {
         for (const i of inRole(FLAT_ROLE)) {
             this.fields.push(all[i]);
         }
+    }
+
+    /** Papel de filtro aninhado da coluna, quando a árvore tem mais de uma coluna (precisa das combinações). */
+    private treeRoleOf(column: DataViewCategoryColumn, all: DataViewCategoryColumn[]): string | undefined {
+        const role = NESTED_ROLES.find(r => column.source.roles?.[r]);
+        if (!role) {
+            return undefined;
+        }
+        return all.filter(c => c.source.roles?.[role]).length > 1 ? role : undefined;
     }
 
     /** Mantém o estado em sincronia com os filtros salvos no relatório (persistência/bookmarks). */
