@@ -118,26 +118,30 @@ RETURN
             CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Diretor] = Valor ),
         "'Dim Funcionário'[Especialidade]",
             CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Especialidade] = Valor ),
-        -- Número
+        -- Número (sempre com IFERROR: veja a observação abaixo)
         "'Dim Funcionário'[Matrícula]",
-            CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Matrícula] = VALUE ( Valor ) ),
-        -- Data (Valor em aaaa-mm-dd)
+            VAR Numero = IFERROR ( VALUE ( Valor ), BLANK () )
+            RETURN CALCULATE ( COUNTROWS ( 'Fato' ), 'Dim Funcionário'[Matrícula] = Numero ),
+        -- Data (Valor em aaaa-mm-dd; também com IFERROR)
         "Fato[Data Admissão]",
-            CALCULATE ( COUNTROWS ( 'Fato' ),
-                'Fato'[Data Admissão] = DATE ( LEFT ( Valor, 4 ), MID ( Valor, 6, 2 ), RIGHT ( Valor, 2 ) ) ),
+            VAR Dia = IFERROR ( DATE ( LEFT ( Valor, 4 ), MID ( Valor, 6, 2 ), RIGHT ( Valor, 2 ) ), BLANK () )
+            RETURN CALCULATE ( COUNTROWS ( 'Fato' ), 'Fato'[Data Admissão] = Dia ),
         -- Filtro aninhado: um nível por PATHITEM
         "Calendário[Ano] | Calendário[Mês]",
             VAR Partes = SUBSTITUTE ( Valor, " | ", "|" )
+            VAR Ano = IFERROR ( VALUE ( PATHITEM ( Partes, 1 ) ), BLANK () )
+            VAR Mes = PATHITEM ( Partes, 2 )
             RETURN
                 CALCULATE ( COUNTROWS ( 'Fato' ),
-                    'Calendário'[Ano] = VALUE ( PATHITEM ( Partes, 1 ) ),
-                    'Calendário'[Mês] = PATHITEM ( Partes, 2 ) ),
+                    'Calendário'[Ano] = Ano,
+                    'Calendário'[Mês] = Mes ),
         -- Campos sem regra: sempre aparecem
         1
     )
 ```
 
 - Cada linha do `SWITCH` usa o texto **exatamente igual** ao da coluna **Coluna** do catálogo.
+- **Toda conversão de texto (`VALUE`, `DATE`, `DATEVALUE`) precisa estar dentro de `IFERROR`.** Para ganhar velocidade, o Power BI às vezes calcula os ramos do `SWITCH` antes de escolher o certo. Então `VALUE("Cardiologia")` acaba sendo calculado numa linha de texto, e a consulta inteira falha com *"Erro ao buscar os dados para este visual — Failed to move the data reader to the next row"*.
 - A condição `'Tabela'[Coluna] = Valor` dentro do `CALCULATE` faz cada lista ignorar a própria seleção e respeitar a dos outros filtros, como nas segmentações nativas.
 - Filtros com muitos valores (ex.: matrícula) deixam a medida mais lenta. Se não precisar de cascata neles, deixe-os de fora do `SWITCH`: caem no `1` e sempre aparecem.
 - Como funciona: além de filtrar os outros visuais, o visual aplica a seleção a si mesmo ("selfFilter"), para a medida enxergar o que foi escolhido no pop-up. Valores já marcados continuam na lista para poder desmarcar.
