@@ -177,6 +177,14 @@ class SlicerCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    maxRows = new formattingSettings.NumUpDown({
+        name: "maxRows",
+        displayName: "Limite de combinações lidas (mil)",
+        description: "O Power BI envia as combinações entre todas as colunas do visual. Acima deste limite o visual para de ler "
+            + "(para não travar o Power BI) e avisa que alguma lista pode estar incompleta. Padrão: 200 mil.",
+        value: 200
+    });
+
     name: string = "slicer";
     displayName: string = "Filtros";
     startCollapsed = new formattingSettings.ToggleSwitch({
@@ -199,7 +207,7 @@ class SlicerCardSettings extends FormattingSettingsCard {
     });
 
     slices: Array<FormattingSettingsSlice> = [
-        this.startCollapsed, this.singleSelect, this.showSearch, this.rangeForNumbers, this.borderWidth, this.borderColor
+        this.startCollapsed, this.singleSelect, this.showSearch, this.rangeForNumbers, this.maxRows, this.borderWidth, this.borderColor
     ];
 }
 

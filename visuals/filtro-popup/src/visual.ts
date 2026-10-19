@@ -114,6 +114,8 @@ export class Visual implements IVisual {
     private isOpen = false;
     private dataSignature = "";
     private accumulator = new SegmentAccumulator();
+    /** A leitura parou no limite de combinações (alguma lista pode estar incompleta). */
+    private truncated = false;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -164,11 +166,23 @@ export class Visual implements IVisual {
             const isData = ((options.type as number) & UPDATE_TYPE_DATA) !== 0;
             if (isData || this.accumulator.rowsRead === 0) {
                 const reset = (options.operationKind ?? OPERATION_CREATE) === OPERATION_CREATE;
+                if (reset) {
+                    this.truncated = false;
+                }
                 this.accumulator.add(categories, reset, c => this.treeRoleOf(c, categories));
             }
             if (isData && dataView?.metadata?.segment) {
-                this.host.fetchMoreData(false);
+                const limit = Math.max(10, this.formattingSettings.slicerCard.maxRows.value || 200) * 1000;
+                if (this.accumulator.rowsRead < limit && this.host.fetchMoreData(false)) {
+                    // Ainda vêm mais partes: só monta as listas quando terminar (evita refazer tudo a cada parte).
+                    this.root.classList.add("fp-loading");
+                    this.applyStyles();
+                    this.events?.renderingFinished(options);
+                    return;
+                }
+                this.truncated = true;
             }
+            this.root.classList.remove("fp-loading");
 
             this.readFields(this.accumulator.categories());
             this.syncStateFromHost((options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>);
@@ -176,7 +190,7 @@ export class Visual implements IVisual {
 
             const signature = this.fields
                 .map(f => f.key + "#" + f.displayName + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
-                + "|" + this.useRangeSignature();
+                + "|" + this.useRangeSignature() + "|" + this.truncated;
             if (signature !== this.dataSignature) {
                 this.dataSignature = signature;
                 this.renderBody();
@@ -560,6 +574,16 @@ export class Visual implements IVisual {
             return;
         }
 
+        if (this.truncated) {
+            const warning = el("div", "fp-warning");
+            warning.append(
+                el("strong", undefined, "Muitas combinações entre as colunas deste visual"),
+                el("span", undefined, "Foram lidas " + this.accumulator.rowsRead.toLocaleString("pt-BR")
+                    + " combinações e alguma lista pode estar incompleta. Divida os filtros em mais de um visual "
+                    + "(principalmente campos com muitos valores, como nomes ou datas) ou aumente o limite em Formatar → Filtros.")
+            );
+            this.popupBody.appendChild(warning);
+        }
         for (const field of this.fields) {
             this.popupBody.appendChild(this.renderField(field));
         }

@@ -550,6 +550,25 @@
     text-overflow: ellipsis;
 }
 
+// Enquanto as partes dos dados chegam.
+.fp-loading .fp-button {
+    cursor: progress;
+}
+
+.fp-warning {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+    margin-bottom: var(--fp-gap);
+    padding: 0.6em 0.75em;
+    border-radius: calc(var(--fp-radius) * 0.75);
+    border-left: 4px solid #E0A100;
+    background: #FFF6DB;
+    color: #5C4300;
+    font-size: 0.9em;
+    line-height: 1.35;
+}
+
 .fp-list-note {
     padding: 0.5em 0.4em 0.2em;
     font-size: 0.9em;

@@ -233,6 +233,11 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "maxRows": {
+                    "type": {
+                        "numeric": true
+                    }
                 }
             }
         },
