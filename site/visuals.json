@@ -21,6 +21,7 @@
     "summary": "Substituto mais bonito da segmentação de dados nativa, em três estilos.",
     "features": [
       "Blocos (botões), lista vertical ou suspenso",
+      "Hierarquia com vários campos (ex.: Ano › Mês), em árvore ou blocos agrupados",
       "Seleção única ou múltipla, selecionar tudo e pesquisa",
       "Copiar/colar e sincronização entre páginas",
       "Cores de item normal e selecionado, bordas e fontes configuráveis"
@@ -28,7 +29,8 @@
     "cover": "1-blocos.png",
     "images": [
       "2-lista.png",
-      "3-suspenso.png"
+      "3-suspenso.png",
+      "4-hierarquia-lista.png"
     ]
   },
   {

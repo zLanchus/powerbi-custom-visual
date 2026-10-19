@@ -2,7 +2,7 @@
     "dataRoles": [
         {
             "displayName": "Campo",
-            "description": "Coluna cujos valores viram as opções da segmentação.",
+            "description": "Coluna cujos valores viram as opções. Com mais de uma coluna, vira uma hierarquia (ex.: Ano › Mês), na ordem em que foram adicionadas.",
             "name": "field",
             "kind": "Grouping"
         }
@@ -389,13 +389,6 @@
     },
     "dataViewMappings": [
         {
-            "conditions": [
-                {
-                    "field": {
-                        "max": 1
-                    }
-                }
-            ],
             "categorical": {
                 "categories": {
                     "for": {

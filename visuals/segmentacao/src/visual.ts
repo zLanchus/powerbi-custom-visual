@@ -29,6 +29,7 @@ import {
     stateFromFilter,
     valueKey
 } from "./filters";
+import { NestedGroup, TreeNode, buildTree, buildTreeFilter, coverNodes, treeStateFromFilters } from "./hierarchy";
 
 /** Quantidade máxima de itens desenhados (o resto aparece pela pesquisa). */
 const MAX_RENDERED_ITEMS = 500;
@@ -85,6 +86,9 @@ export class Visual implements IVisual {
     private body: HTMLElement;
 
     private field: FieldModel | undefined;
+    /** Hierarquia quando há mais de uma coluna em "Campo" (ex.: Ano › Mês). Os valores do campo são as folhas. */
+    private tree: NestedGroup | undefined;
+    private expanded = new Set<string>();
     private category: powerbi.DataViewCategoryColumn | undefined;
     /** Primeira linha do data view de cada valor (para criar a seleção). */
     private rowOf = new Map<string, number>();
@@ -152,7 +156,7 @@ export class Visual implements IVisual {
 
             this.field = this.readField(dataView);
             const wasSelectionMode = this.selectionMode;
-            this.selectionMode = !!this.field && this.useSelection();
+            this.selectionMode = !!this.field && !this.tree && this.useSelection();
             if (this.selectionMode) {
                 if (!wasSelectionMode) {
                     // Remove um filtro antigo que tenha ficado do modo "filtro".
@@ -162,9 +166,13 @@ export class Visual implements IVisual {
                 this.restoreSelection();
             } else {
                 const filters = (options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>;
-                const filter = this.field && filters.find(f => f && f.target && !Array.isArray(f.target)
-                    && sameTarget(f.target as IFilterTarget, this.field.target));
-                this.state = this.field && filter ? stateFromFilter(this.field, filter) : emptyState();
+                if (this.tree) {
+                    this.state = treeStateFromFilters(this.tree, filters);
+                } else {
+                    const filter = this.field && filters.find(f => f && f.target && !Array.isArray(f.target)
+                        && sameTarget(f.target as IFilterTarget, this.field.target));
+                    this.state = this.field && filter ? stateFromFilter(this.field, filter) : emptyState();
+                }
             }
 
             this.applyStyles();
@@ -180,22 +188,50 @@ export class Visual implements IVisual {
     }
 
     private readField(dataView: DataView | undefined): FieldModel | undefined {
-        const category = dataView?.categorical?.categories?.[0];
+        const categories = dataView?.categorical?.categories || [];
+        const category = categories[0];
         this.category = category;
         this.rowOf.clear();
+        this.tree = undefined;
         if (!category) {
             return undefined;
         }
+        const levels = categories.map(c => this.levelOf(c));
+        if (levels.length === 1) {
+            category.values.forEach((raw, row) => {
+                const key = valueKey(raw);
+                if (!this.rowOf.has(key)) {
+                    this.rowOf.set(key, row);
+                }
+            });
+            return levels[0];
+        }
+
+        // Várias colunas: uma árvore, na ordem em que as colunas foram adicionadas.
+        const tree = buildTree(levels, categories.map(c => c.values));
+        this.tree = tree;
+        return {
+            key: levels.map(l => l.key).join("|"),
+            displayName: levels.map(l => l.displayName).join(" › "),
+            kind: "text",
+            target: levels[0].target,
+            values: Array.from(tree.leafPath.keys()).map(id => {
+                const node = tree.nodes.get(id);
+                return { key: id, raw: node.item.raw, label: node.item.label };
+            })
+        };
+    }
+
+    private levelOf(category: powerbi.DataViewCategoryColumn): FieldModel {
         const column = category.source;
         const kind = getKind(column);
         const unique = new Map<string, ValueItem>();
-        category.values.forEach((raw, row) => {
+        for (const raw of category.values) {
             const key = valueKey(raw);
             if (!unique.has(key)) {
                 unique.set(key, { key, raw, label: formatValue(raw, kind) });
-                this.rowOf.set(key, row);
             }
-        });
+        }
         return {
             key: column.queryName || column.displayName,
             displayName: column.displayName,
@@ -301,7 +337,9 @@ export class Visual implements IVisual {
             this.applySelection();
             return;
         }
-        const filter = this.field && buildFilter(this.field, this.state, false, this.single);
+        const filter = this.tree
+            ? buildTreeFilter(this.tree, this.state, this.single)
+            : this.field && buildFilter(this.field, this.state, false, this.single);
         if (filter) {
             this.host.applyJsonFilter(filter, "general", "filter", FilterAction.merge);
         } else {
@@ -320,6 +358,26 @@ export class Visual implements IVisual {
             this.state.selected.set(item.key, item.raw);
         }
         if (this.single && this.mode === "dropdown") {
+            this.dropdownOpen = false;
+        }
+        this.applyFilter();
+    }
+
+    /** Marca/desmarca um nó da hierarquia: vale para todas as folhas abaixo dele. */
+    private toggleNode(node: TreeNode): void {
+        const allSelected = node.leafKeys.every(k => this.state.selected.has(k));
+        if (allSelected) {
+            node.leafKeys.forEach(k => this.state.selected.delete(k));
+        } else {
+            if (this.single) {
+                this.state.selected.clear();
+            }
+            node.leafKeys.forEach(k => this.state.selected.set(k, null));
+        }
+        if (this.field && this.state.selected.size === this.field.values.length) {
+            this.state.selected.clear();
+        }
+        if (this.single && this.mode === "dropdown" && !allSelected) {
             this.dropdownOpen = false;
         }
         this.applyFilter();
@@ -348,8 +406,36 @@ export class Visual implements IVisual {
 
     private visibleValues(): ValueItem[] {
         const values = this.field?.values || [];
-        const term = this.search.trim().toLocaleLowerCase("pt-BR");
-        return term ? values.filter(v => v.label.toLocaleLowerCase("pt-BR").includes(term)) : values;
+        const term = this.searchTerm();
+        if (!term) {
+            return values;
+        }
+        if (this.tree) {
+            // Na hierarquia, uma folha aparece se ela ou algum nível acima dela bate com a pesquisa.
+            return values.filter(v => this.pathLabels(v.key).some(label => this.matches(label, term)));
+        }
+        return values.filter(v => this.matches(v.label, term));
+    }
+
+    private searchTerm(): string {
+        return this.search.trim().toLocaleLowerCase("pt-BR");
+    }
+
+    private matches(label: string, term: string): boolean {
+        return label.toLocaleLowerCase("pt-BR").includes(term);
+    }
+
+    /** Rótulos de todos os níveis de uma folha da hierarquia (do mais alto ao mais baixo). */
+    private pathLabels(leafId: string): string[] {
+        const labels: string[] = [];
+        const parts = leafId.split("\u001f");
+        for (let i = 1; i <= parts.length; i++) {
+            const node = this.tree?.nodes.get(parts.slice(0, i).join("\u001f"));
+            if (node) {
+                labels.push(node.item.label);
+            }
+        }
+        return labels;
     }
 
     // ---------------------------------------------------------------- render
@@ -387,6 +473,10 @@ export class Visual implements IVisual {
     }
 
     private renderBlocks(): void {
+        if (this.tree) {
+            this.renderGroupedBlocks(this.tree);
+            return;
+        }
         const grid = el("div", "fs-blocks fs-scroll");
         const columns = Math.max(0, Math.round(this.formattingSettings.layoutCard.columns.value || 0));
         if (columns > 0) {
@@ -403,13 +493,17 @@ export class Visual implements IVisual {
         if (this.formattingSettings.layoutCard.showSearch.value && values.length > 6) {
             container.appendChild(this.renderSearch());
         }
-        const list = el("div", "fs-list fs-scroll");
-        list.setAttribute("role", "listbox");
+        const list = el("div", "fs-list fs-scroll" + (this.tree ? " fs-tree" : ""));
+        list.setAttribute("role", this.tree ? "tree" : "listbox");
         this.fillItems(list, "fs-row");
         container.appendChild(list);
     }
 
     private fillItems(container: HTMLElement, itemClass: string): void {
+        if (this.tree) {
+            this.fillTree(container, this.tree);
+            return;
+        }
         container.replaceChildren();
         const visible = this.visibleValues();
         const showCheck = this.formattingSettings.itemsCard.showCheck.value;
@@ -435,6 +529,163 @@ export class Visual implements IVisual {
             container.appendChild(el("div", "fs-note",
                 "Mostrando " + MAX_RENDERED_ITEMS + " de " + visible.length + ". Use a pesquisa para encontrar os demais."));
         }
+    }
+
+    // --------------------------------------------------------- hierarquia
+
+    /** Lista em árvore: setas para abrir/fechar, recuo por nível e marcação parcial nos níveis de cima. */
+    private fillTree(container: HTMLElement, tree: NestedGroup): void {
+        container.replaceChildren();
+        const term = this.searchTerm();
+        const showCheck = this.formattingSettings.itemsCard.showCheck.value;
+        const visible = this.visibleValues();
+
+        if (!this.single && this.formattingSettings.layoutCard.showSelectAll.value && visible.length > 1) {
+            const allSelected = visible.every(v => this.state.selected.has(v.key));
+            const some = !allSelected && visible.some(v => this.state.selected.has(v.key));
+            const all = this.renderItem("Selecionar tudo", allSelected, "fs-row fs-item-all", showCheck);
+            all.classList.toggle("fs-partial", some);
+            all.addEventListener("click", () => this.toggleAll());
+            container.appendChild(all);
+        }
+
+        const hit = new Map<string, boolean>();
+        const hasHit = (node: TreeNode): boolean => {
+            let h = hit.get(node.id);
+            if (h === undefined) {
+                h = this.matches(node.item.label, term) || node.children.some(hasHit);
+                hit.set(node.id, h);
+            }
+            return h;
+        };
+
+        let rendered = 0;
+        let truncated = false;
+        const walk = (nodes: TreeNode[], ancestorMatch: boolean): void => {
+            for (const node of nodes) {
+                if (rendered >= MAX_RENDERED_ITEMS) {
+                    truncated = true;
+                    return;
+                }
+                const selfMatch = ancestorMatch || !term || this.matches(node.item.label, term);
+                if (!selfMatch && !hasHit(node)) {
+                    continue;
+                }
+                // Na pesquisa, abre sozinho os níveis que têm resultado por dentro.
+                const open = node.children.length > 0 && (this.expanded.has(node.id) || !selfMatch);
+                container.appendChild(this.renderTreeRow(node, open, container, tree));
+                rendered++;
+                if (open) {
+                    walk(node.children, selfMatch && !!term);
+                }
+            }
+        };
+        walk(tree.roots, false);
+
+        if (rendered === 0) {
+            container.appendChild(el("div", "fs-note", "Nenhum valor encontrado"));
+        } else if (truncated) {
+            container.appendChild(el("div", "fs-note",
+                "Mostrando os primeiros " + MAX_RENDERED_ITEMS + " itens. Use a pesquisa para encontrar os demais."));
+        }
+    }
+
+    private renderTreeRow(node: TreeNode, open: boolean, container: HTMLElement, tree: NestedGroup): HTMLElement {
+        const row = el("div", "fs-tree-row");
+        row.style.setProperty("--fs-depth", String(node.level));
+        row.setAttribute("role", "treeitem");
+        if (node.children.length) {
+            row.setAttribute("aria-expanded", String(open));
+            const caret = el("button", "fs-caret" + (open ? " fs-caret-open" : ""));
+            caret.type = "button";
+            caret.title = open ? "Recolher" : "Expandir";
+            caret.setAttribute("aria-label", (open ? "Recolher " : "Expandir ") + node.item.label);
+            caret.appendChild(icon("chevron"));
+            caret.addEventListener("click", () => {
+                if (open) {
+                    this.expanded.delete(node.id);
+                } else {
+                    this.expanded.add(node.id);
+                }
+                const scroll = container.scrollTop;
+                this.fillTree(container, tree);
+                container.scrollTop = scroll;
+            });
+            row.appendChild(caret);
+        } else {
+            row.appendChild(el("span", "fs-caret-spacer"));
+        }
+        const item = this.renderNodeItem(node, "fs-row");
+        row.appendChild(item);
+        return row;
+    }
+
+    /** Botão de um nó: marcado quando todas as folhas abaixo estão marcadas, parcial quando só algumas. */
+    private renderNodeItem(node: TreeNode, className: string, label = node.item.label): HTMLButtonElement {
+        const count = node.leafKeys.filter(k => this.state.selected.has(k)).length;
+        const selected = count > 0 && count === node.leafKeys.length;
+        const showCheck = this.formattingSettings.itemsCard.showCheck.value;
+        const item = this.renderItem(label, selected, className, showCheck);
+        if (node.children.length) {
+            item.classList.remove("fs-radio");
+            item.classList.toggle("fs-partial", count > 0 && !selected);
+            item.appendChild(el("span", "fs-count", String(node.leafKeys.length)));
+        }
+        item.addEventListener("click", () => this.toggleNode(node));
+        return item;
+    }
+
+    /**
+     * Blocos agrupados: cada grupo é o nível logo acima do último (ex.: o ano), com um título
+     * clicável que marca o grupo inteiro, e os blocos do último nível (ex.: os meses) embaixo.
+     */
+    private renderGroupedBlocks(tree: NestedGroup): void {
+        const wrap = el("div", "fs-groups fs-scroll");
+        const term = this.searchTerm();
+        const columns = Math.max(0, Math.round(this.formattingSettings.layoutCard.columns.value || 0));
+        const depth = tree.levels.length;
+        const visible = new Set(this.visibleValues().map(v => v.key));
+        if (this.formattingSettings.layoutCard.showSearch.value && (this.field?.values.length || 0) > 12) {
+            this.body.appendChild(this.renderSearch());
+        }
+
+        // Pais das folhas (nível depth-2), na ordem da árvore.
+        const parents: TreeNode[] = [];
+        const collect = (nodes: TreeNode[]): void => nodes.forEach(n => {
+            if (n.level === depth - 2) {
+                parents.push(n);
+            } else {
+                collect(n.children);
+            }
+        });
+        collect(tree.roots);
+
+        let rendered = 0;
+        for (const parent of parents) {
+            const leaves = parent.children.filter(c => visible.has(c.id));
+            if (!leaves.length || rendered >= MAX_RENDERED_ITEMS) {
+                continue;
+            }
+            const group = el("div", "fs-group");
+            const path = this.pathLabels(parent.id).join(" › ");
+            const head = this.renderNodeItem(parent, "fs-group-head", path);
+            group.appendChild(head);
+            const grid = el("div", "fs-blocks");
+            if (columns > 0) {
+                grid.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+                grid.classList.add("fs-grid");
+            }
+            for (const leaf of leaves) {
+                grid.appendChild(this.renderNodeItem(leaf, "fs-block"));
+                rendered++;
+            }
+            group.appendChild(grid);
+            wrap.appendChild(group);
+        }
+        if (!wrap.childElementCount) {
+            wrap.appendChild(el("div", "fs-note", term ? "Nenhum valor encontrado" : "Sem valores"));
+        }
+        this.body.appendChild(wrap);
     }
 
     private renderItem(label: string, selected: boolean, className: string, showCheck: boolean): HTMLButtonElement {
@@ -468,6 +719,12 @@ export class Visual implements IVisual {
             const list = wrap.parentElement?.querySelector<HTMLElement>(".fs-list");
             if (list) {
                 this.fillItems(list, "fs-row");
+            } else {
+                // Blocos agrupados: redesenha e devolve o foco à pesquisa.
+                this.render();
+                const again = this.body.querySelector<HTMLInputElement>(".fs-search input");
+                again?.focus();
+                again?.setSelectionRange(again.value.length, again.value.length);
             }
         });
         wrap.appendChild(input);
@@ -508,6 +765,11 @@ export class Visual implements IVisual {
         const n = this.state.selected.size;
         if (n === 0) {
             return this.formattingSettings.dropdownCard.placeholder.value || "Todos";
+        }
+        if (this.tree) {
+            // Descreve a seleção pelos nós inteiros marcados (ex.: "2025" ou "2025 › mar").
+            const cover = coverNodes(this.tree.roots, this.state.selected);
+            return cover.length === 1 ? this.pathLabels(cover[0].id).join(" › ") : cover.length + " selecionados";
         }
         if (n === 1) {
             const [key, raw] = this.state.selected.entries().next().value;
