@@ -181,7 +181,10 @@ export class Visual implements IVisual {
                 }
                 // Uma parte nova chegou: qualquer pedido agendado ficou para trás.
                 this.cancelPendingFetch();
-                this.accumulator.add(categories, reset, c => this.treeRoleOf(c, categories));
+                // No modo catálogo a lista é fixa (tabela do modelo): uma consulta nova soma ao que já foi lido
+                // em vez de recomeçar. Assim, se o Power BI devolver o catálogo filtrado pela própria seleção
+                // (ex.: tabela catálogo com relacionamento), os outros filtros não somem do pop-up.
+                this.accumulator.add(categories, reset && !this.catalogMode, c => this.treeRoleOf(c, categories));
 
                 if (dataView?.metadata?.segment) {
                     // O catálogo é pequeno por natureza (soma dos valores): lê sempre até o fim.
