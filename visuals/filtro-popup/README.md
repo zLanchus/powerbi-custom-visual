@@ -8,7 +8,7 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 
 ## Como usar no Power BI
 
-1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.10.0.0.pbiviz`](dist/).
+1. Baixe o arquivo pronto: [`dist/filtroPopup7AA90184E2E143838BC5449850609E02.1.11.0.0.pbiviz`](dist/).
 2. No Power BI Desktop: painel **Visualizações → `...` → Importar um visual de um arquivo** e selecione o `.pbiviz`.
 3. Insira o visual na página e arraste as colunas para os espaços de dados:
    - **Filtro aninhado 1, 2, 3 e 4** — todas as colunas colocadas no mesmo espaço viram **um único filtro em árvore**, na ordem em que foram adicionadas (a primeira é o nível de cima). Ex.: *Ano* e *Mês* no "Filtro aninhado 1" e *Área* e *Curso* no "Filtro aninhado 2". Sem limite de colunas por espaço.
@@ -82,19 +82,38 @@ Visuais customizados rodam dentro de uma área isolada (iframe) e **não consegu
 Outras observações:
 
 - Use a **coluna de data** diretamente (não a hierarquia automática Ano/Trimestre/Mês) para os filtros de data funcionarem melhor.
-- Os dados chegam em partes de até 30.000 linhas e o visual busca o restante automaticamente (veja "Desempenho e memória").
+- Os dados chegam em partes de até 10.000 linhas e o visual busca o restante automaticamente (veja "Desempenho e memória").
 
 ## Desempenho e memória
 
-O Power BI entrega ao visual as **combinações** entre todas as colunas colocadas nele (não a lista de cada coluna separada, como na segmentação nativa). O visual lê cada parte, guarda só os valores distintos de cada filtro (e os caminhos das árvores) e descarta o resto, sem deixar o Power BI juntar todas as partes num conjunto gigante. Assim a lista continua completa e a memória fica proporcional aos valores distintos.
+### Por que este visual pode pesar
 
-O que ainda pesa é a **consulta** em si, calculada pelo motor do Power BI (processo *Microsoft SQL Server Analysis Services* / `msmdsrv.exe`). Ela cresce com o número de combinações:
+Um visual personalizado recebe **uma única consulta** do Power BI com todas as colunas colocadas nele. A segmentação nativa, ao contrário, consulta cada coluna separadamente. Por isso o Power BI entrega as **combinações** entre todas as colunas do visual, e cada coluna nova multiplica esse total:
 
 - Com tabelas **relacionadas**, só entram as combinações que existem nos dados.
-- Uma tabela **sem relacionamento** (e a medida em "Ligação entre tabelas" feita para ela) multiplica as combinações pelo número de linhas da tabela solta. Se não precisa dela no filtro, tire a coluna **e** a medida de ligação.
-- Campos com muitos valores (ex.: matrícula, nome, data) multiplicam as combinações dos outros campos do mesmo visual. Se o relatório ficar pesado, divida os filtros em mais de um visual, com poucos campos em cada um.
+- Uma tabela **sem relacionamento** (e a medida de "Ligação entre tabelas" feita para ela) multiplica as combinações pelo número de linhas da tabela solta.
+- Campos com muitos valores (matrícula, nome, data com dia) multiplicam as combinações de todos os outros campos do mesmo visual.
 
-**Limite de segurança:** em **Formatar → Filtros → Limite de combinações lidas (mil)** (padrão: 200 mil), o visual para de pedir dados quando as combinações passam do limite, para não travar o Power BI. Nesse caso aparece um aviso amarelo no topo do pop-up dizendo que alguma lista pode estar incompleta. Se o aviso aparecer, o melhor é dividir os filtros em mais de um visual; aumentar o limite também funciona, mas deixa o relatório mais pesado. Enquanto as partes dos dados chegam, o visual só monta as listas no final, em vez de refazê-las a cada parte.
+### O que o visual faz para economizar
+
+- **Partes pequenas:** os dados chegam em partes de 10.000 linhas, em modo incremental. O visual lê cada parte, guarda só os valores distintos de cada filtro (e os caminhos das árvores) e descarta o resto. O Power BI não junta as partes num conjunto cada vez maior.
+- **Espera antes de ler o resto:** quando uma consulta nova começa (por exemplo, ao adicionar uma coluna), o visual espera um instante antes de pedir as próximas partes. Se outra coluna for adicionada logo em seguida, a leitura anterior é abandonada em vez de se somar à nova.
+- **Listas montadas uma vez:** enquanto as partes chegam, o visual só junta os valores. Redimensionar ou mudar a formatação não refaz as listas.
+- **Limite de segurança:** em **Formatar → Filtros → Limite de combinações lidas (mil)** (padrão: 200 mil), o visual para de pedir dados quando o limite é atingido e mostra um aviso amarelo no topo do pop-up dizendo que alguma lista pode estar incompleta.
+
+Num teste que simula alguém adicionando 10 colunas seguidas (até 230 milhões de combinações possíveis):
+
+| | Versão 1.10 | Versão 1.11 |
+|---|---|---|
+| Linhas recebidas | 906 mil | 270 mil |
+| Pico de memória do visual | ~310 MB | ~35 MB |
+| Tempo de processamento no visual | 2,2 s | 0,7 s |
+
+### Dicas para o relatório
+
+- Ao montar ou mudar os campos do visual, use **Otimizar → Pausar visuais** no Power BI Desktop e depois **Atualizar visuais**. Assim o Power BI faz uma única consulta, em vez de uma por coluna arrastada.
+- Se o aviso amarelo aparecer, divida os filtros em mais de um visual, principalmente os campos com muitos valores. Cada visual faz a própria consulta, e as combinações deixam de se multiplicar entre eles.
+- Se não precisa de uma tabela sem relacionamento no filtro, tire a coluna **e** a medida de ligação.
 
 ## Desenvolvimento
 

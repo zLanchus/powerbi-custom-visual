@@ -583,7 +583,7 @@
                     ],
                     "dataReductionAlgorithm": {
                         "window": {
-                            "count": 30000
+                            "count": 10000
                         }
                     }
                 },

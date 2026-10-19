@@ -31,6 +31,9 @@ export class SegmentAccumulator {
     private groups: Group[] = [];
     /** Linhas recebidas desde a última consulta nova. */
     public rowsRead = 0;
+    /** Muda sempre que entra um valor ou combinação nova (para o visual saber se precisa refazer as listas). */
+    public version = 0;
+    private cache: DataViewCategoryColumn[] | undefined;
 
     /**
      * Junta uma parte dos dados.
@@ -59,24 +62,50 @@ export class SegmentAccumulator {
                 }
             });
             this.groups = groups;
+            this.version++;
+            this.cache = undefined;
         }
 
+        let changed = false;
         const count = categories[0]?.values.length || 0;
         this.rowsRead += count;
         for (const group of this.groups) {
+            const rows = group.rows;
+            if (group.indexes.length === 1) {
+                // Caminho rápido (filtro simples): sem criar nada para valores repetidos.
+                const column = categories[group.indexes[0]].values;
+                for (let r = 0; r < count; r++) {
+                    const key = valueKey(column[r]);
+                    if (!rows.has(key)) {
+                        rows.set(key, [column[r]]);
+                        changed = true;
+                    }
+                }
+                continue;
+            }
             const columns = group.indexes.map(i => categories[i].values);
             for (let r = 0; r < count; r++) {
-                const values = columns.map(c => c[r]);
-                const key = values.length === 1 ? valueKey(values[0]) : values.map(valueKey).join(SEP);
-                if (!group.rows.has(key)) {
-                    group.rows.set(key, values);
+                let key = "";
+                for (let c = 0; c < columns.length; c++) {
+                    key += (c ? SEP : "") + valueKey(columns[c][r]);
+                }
+                if (!rows.has(key)) {
+                    rows.set(key, columns.map(col => col[r]));
+                    changed = true;
                 }
             }
+        }
+        if (changed) {
+            this.version++;
+            this.cache = undefined;
         }
     }
 
     /** Colunas compactas no mesmo formato do Power BI (cada grupo com as próprias linhas distintas). */
     public categories(): DataViewCategoryColumn[] {
+        if (this.cache) {
+            return this.cache;
+        }
         const result: DataViewCategoryColumn[] = this.sources.map(source => ({ source, values: [] } as DataViewCategoryColumn));
         for (const group of this.groups) {
             const rows = Array.from(group.rows.values());
@@ -84,6 +113,7 @@ export class SegmentAccumulator {
                 (result[index] as { values: PrimitiveValue[] }).values = rows.map(row => row[k]);
             });
         }
+        this.cache = result;
         return result;
     }
 }

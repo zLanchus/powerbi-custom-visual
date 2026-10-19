@@ -42,6 +42,8 @@ const FLAT_ROLE = "fields";
 /** VisualUpdateType.Data e VisualDataChangeOperationKind.Create (enums "const" não exportados pela API). */
 const UPDATE_TYPE_DATA = 2;
 const OPERATION_CREATE = 0;
+/** Espera depois de uma consulta nova antes de pedir as próximas partes (ms). */
+const FETCH_DELAY_MS = 900;
 
 /** Quantidade máxima de itens desenhados por lista (o resto aparece pela pesquisa). */
 const MAX_RENDERED_ITEMS = 300;
@@ -116,6 +118,9 @@ export class Visual implements IVisual {
     private accumulator = new SegmentAccumulator();
     /** A leitura parou no limite de combinações (alguma lista pode estar incompleta). */
     private truncated = false;
+    private fetchTimer: number | undefined;
+    private fieldsKey = "";
+    private jsonFilters: Array<IBasicFilter | IAdvancedFilter> = [];
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -158,50 +163,111 @@ export class Visual implements IVisual {
             const dataView: DataView | undefined = options.dataViews?.[0];
             this.formattingSettings = this.formattingSettingsService
                 .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
+            this.jsonFilters = (options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>;
 
-            // Os dados chegam em partes de até 30.000 linhas. Cada parte é lida e descartada
-            // (só os valores distintos ficam guardados); o restante é pedido em modo
-            // incremental, sem o Power BI juntar todas as partes num conjunto gigante.
-            const categories = dataView?.categorical?.categories || [];
+            // Os dados chegam em partes (janela de linhas definida no capabilities.json). Cada parte é
+            // lida e descartada: só os valores distintos ficam guardados (ver accumulator.ts).
             const isData = ((options.type as number) & UPDATE_TYPE_DATA) !== 0;
             if (isData || this.accumulator.rowsRead === 0) {
+                const categories = dataView?.categorical?.categories || [];
                 const reset = (options.operationKind ?? OPERATION_CREATE) === OPERATION_CREATE;
                 if (reset) {
                     this.truncated = false;
                 }
+                // Uma parte nova chegou: qualquer pedido agendado ficou para trás.
+                this.cancelPendingFetch();
                 this.accumulator.add(categories, reset, c => this.treeRoleOf(c, categories));
-            }
-            if (isData && dataView?.metadata?.segment) {
-                const limit = Math.max(10, this.formattingSettings.slicerCard.maxRows.value || 200) * 1000;
-                if (this.accumulator.rowsRead < limit && this.host.fetchMoreData(false)) {
-                    // Ainda vêm mais partes: só monta as listas quando terminar (evita refazer tudo a cada parte).
-                    this.root.classList.add("fp-loading");
-                    this.applyStyles();
-                    this.events?.renderingFinished(options);
-                    return;
+
+                if (dataView?.metadata?.segment) {
+                    if (this.accumulator.rowsRead >= this.rowLimit()) {
+                        this.truncated = true;
+                    } else if (reset) {
+                        // Consulta nova (ex.: uma coluna acabou de ser adicionada): espera um instante antes
+                        // de pedir o resto. Se outra coluna chegar logo em seguida, esta leitura é abandonada
+                        // em vez de se acumular com a próxima.
+                        this.scheduleFetch();
+                    } else if (this.requestMore()) {
+                        this.events?.renderingFinished(options);
+                        return;
+                    }
                 }
-                this.truncated = true;
             }
-            this.root.classList.remove("fp-loading");
 
-            this.readFields(this.accumulator.categories());
-            this.syncStateFromHost((options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>);
-            this.applyStyles();
-
-            const signature = this.fields
-                .map(f => f.key + "#" + f.displayName + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
-                + "|" + this.useRangeSignature() + "|" + this.truncated;
-            if (signature !== this.dataSignature) {
-                this.dataSignature = signature;
-                this.renderBody();
-            } else {
-                this.refreshSelection();
-            }
-            this.refreshButton();
+            this.present();
             this.events?.renderingFinished(options);
         } catch (e) {
             this.events?.renderingFailed(options, String(e));
         }
+    }
+
+    public destroy(): void {
+        this.cancelPendingFetch();
+    }
+
+    // ------------------------------------------------------------ leitura em partes
+
+    private rowLimit(): number {
+        return Math.max(10, this.formattingSettings.slicerCard.maxRows.value || 200) * 1000;
+    }
+
+    /** Pede a próxima parte. Devolve false quando o Power BI não tem (ou não manda) mais dados. */
+    private requestMore(): boolean {
+        if (this.host.fetchMoreData(false)) {
+            this.root.classList.add("fp-loading");
+            return true;
+        }
+        this.truncated = true;
+        return false;
+    }
+
+    private scheduleFetch(): void {
+        this.cancelPendingFetch();
+        this.root.classList.add("fp-loading");
+        this.fetchTimer = window.setTimeout(() => {
+            this.fetchTimer = undefined;
+            if (!this.requestMore()) {
+                this.present();
+            }
+        }, FETCH_DELAY_MS);
+    }
+
+    private cancelPendingFetch(): void {
+        if (this.fetchTimer !== undefined) {
+            window.clearTimeout(this.fetchTimer);
+            this.fetchTimer = undefined;
+        }
+        this.root.classList.remove("fp-loading");
+    }
+
+    /** Monta (ou só atualiza) o pop-up com o que já foi lido. */
+    private present(): void {
+        if (this.fetchTimer === undefined) {
+            this.root.classList.remove("fp-loading");
+        }
+        // Só refaz os filtros quando os dados ou os títulos mudaram (redimensionar ou formatar não refaz).
+        const fieldsKey = this.accumulator.version + "|" + this.titlesSignature();
+        if (fieldsKey !== this.fieldsKey) {
+            this.fieldsKey = fieldsKey;
+            this.readFields(this.accumulator.categories());
+        }
+        this.syncStateFromHost(this.jsonFilters);
+        this.applyStyles();
+
+        const signature = this.fields
+            .map(f => f.key + "#" + f.displayName + "#" + f.values.length + "#" + (this.nested.get(f.key)?.nodes.size ?? 0)).join("|")
+            + "|" + this.useRangeSignature() + "|" + this.truncated;
+        if (signature !== this.dataSignature) {
+            this.dataSignature = signature;
+            this.renderBody();
+        } else {
+            this.refreshSelection();
+        }
+        this.refreshButton();
+    }
+
+    private titlesSignature(): string {
+        return this.formattingSettings.nestedTitlesCard.nests
+            .map(g => String(g.mode.value?.value) + ":" + g.text.value).join("|");
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
