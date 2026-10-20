@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/barrasRankingA8588BCCC6D14E3E8FC340A9DF9CD332.pbiviz.json"
+			}
+		],
+		"visual": {"name":"barrasRanking","displayName":"Barras com Insight","guid":"barrasRankingA8588BCCC6D14E3E8FC340A9DF9CD332","visualClassName":"Visual","version":"1.0.0.0","description":"Barras horizontais com trilho, valor e detalhe ao lado, top N, ordenação por outro campo e insight automático.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}

@@ -81,5 +81,22 @@
       "2-variacao.png",
       "3-empilhado.png"
     ]
+  },
+  {
+    "id": "barras-ranking",
+    "name": "Barras com Insight",
+    "summary": "Barras horizontais com trilho, valor e detalhe ao lado e uma frase de insight automática.",
+    "features": [
+      "Detalhe ao lado do valor, como 24,2% (18)",
+      "Mostrar apenas o top N (maiores, menores ou primeiros da ordenação)",
+      "Ordenação por outro campo (ex.: ordem do nível)",
+      "Insight automático do maior ou menor valor, com texto editável",
+      "Cor da barra com fx, destaque da maior barra, trilho e título configuráveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-top-destaque.png",
+      "3-fx.png"
+    ]
   }
 ]
