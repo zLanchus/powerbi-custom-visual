@@ -13,6 +13,8 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Matriz Estilizada**](visuals/matriz/) | Matriz com linhas, colunas e valores como a nativa, com seções de colunas configuráveis, hierarquia expansível, subtotais e formatação condicional por célula. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/matriz.pbiviz) |
 | [**Pirâmide Segmentada**](visuals/piramide/) | Funil/pirâmide como o nativo, com as barras divididas em segmentos coloridos por um campo de legenda. Tem modo pirâmide espelhada (etária), conectores com taxa de conversão e rótulos de total e %. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/piramide.pbiviz) |
 | [**Card Comparativo**](visuals/card-comparativo/) | Card de KPI com o valor principal em destaque, o período selecionado (medida do calendário) e até 5 comparações com outras medidas (meta, mês anterior, ano anterior), com diferença ou variação %, cores e setas. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/card-comparativo.pbiviz) |
+| [**Barras com Comparação**](visuals/barras-comparacao/) | Barras por categoria com marcadores de comparação (ano anterior, meta), linha de referência, cor por regra (acima/abaixo, sinalizador, gradiente) e barras de baixa confiança hachuradas. Vertical, horizontal ou modo cartão. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-comparacao.pbiviz) |
+| [**Curvas com Incerteza**](visuals/curvas-incerteza/) | Curvas por coorte (ou qualquer eixo ordenado) em degrau, reta ou suave, com faixa de intervalo, trechos de baixa confiança tracejados, janelas destacadas, marcos com tabela e referência. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/curvas-incerteza.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -38,7 +40,11 @@ powerbi-custom-visual/
 │   ├── segmentacao/
 │   ├── matriz/
 │   ├── piramide/
-│   └── card-comparativo/
+│   ├── card-comparativo/
+│   ├── barras-comparacao/
+│   ├── curvas-incerteza/
+│   ├── common/              # código compartilhado pelos visuais de gráfico (não é um visual)
+│   └── <visual>/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
@@ -60,6 +66,7 @@ Requisitos: Node.js 18 ou superior.
 cd visuals/<nome-do-visual>
 npm install
 npm run lint        # ESLint
+npm test            # testes do modelo de dados (visuais que têm)
 npm run package     # gera dist/*.pbiviz
 npm start           # servidor de desenvolvimento (Developer Visual no Power BI Service)
 ```

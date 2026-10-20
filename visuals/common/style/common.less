@@ -1,0 +1,184 @@
+// Estilos compartilhados pelos visuais de gráfico (Barras com Comparação, Curvas com Incerteza).
+// Cores padrão do repositório (DESIGN.md): mantenha em sincronia com common/src/colors.ts.
+
+@primary: #6CBEEB;
+@dark: #0F2B45;
+@panel: #F1F8FD;
+@white: #FFFFFF;
+@muted: #4E6175;
+@font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+
+.cv-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: @font;
+    color: @dark;
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.cv-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.cv-scroll {
+    position: absolute;
+    overflow: hidden;
+}
+
+.cv-scroll.cv-scroll-x {
+    overflow-x: auto;
+}
+
+.cv-scroll.cv-scroll-y {
+    overflow-y: auto;
+}
+
+.cv-svg {
+    display: block;
+    overflow: visible;
+}
+
+.cv-svg:focus {
+    outline: none;
+}
+
+.cv-axis-svg {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.cv-item {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.cv-focus {
+    fill: none;
+    pointer-events: none;
+}
+
+.cv-legend {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 14px;
+    padding: 6px 8px;
+    line-height: 1.2;
+}
+
+.cv-legend-title {
+    font-weight: 600;
+}
+
+.cv-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px 2px 4px;
+    border-radius: 999px;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.cv-legend-item.cv-clickable {
+    cursor: pointer;
+}
+
+.cv-legend-item.cv-clickable:hover {
+    background: rgba(0, 0, 0, .06);
+}
+
+.cv-legend-icon {
+    flex: 0 0 auto;
+    display: block;
+    overflow: visible;
+}
+
+.cv-note {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    max-width: 70%;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(241, 248, 253, .92);
+    color: @muted;
+    font-size: 11px;
+    text-align: right;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.cv-note:empty {
+    display: none;
+}
+
+.cv-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.cv-empty {
+    margin: auto;
+    max-width: 340px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: @panel;
+    color: @dark;
+    text-align: center;
+}
+
+.cv-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.cv-empty-text {
+    font-size: 12px;
+    color: @muted;
+    line-height: 1.4;
+}
+
+.cv-empty-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.cv-empty-field {
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: @white;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cv-item,
+    .cv-legend-item {
+        transition: none;
+    }
+}

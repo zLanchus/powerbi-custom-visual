@@ -1,0 +1,26 @@
+{
+    "visual": {
+        "name": "curvasIncerteza",
+        "displayName": "Curvas com Incerteza",
+        "guid": "curvasIncerteza983C09C148CF4C8387AEC445521BF4F6",
+        "visualClassName": "Visual",
+        "version": "1.0.0.0",
+        "description": "Curvas por coorte (ou qualquer eixo ordenado) com faixa de intervalo, trechos de baixa confiança, janelas destacadas e marcos.",
+        "supportUrl": "https://github.com/zLanchus/powerbi-custom-visual/issues",
+        "gitHubUrl": "https://github.com/zLanchus/powerbi-custom-visual"
+    },
+    "apiVersion": "5.11.1",
+    "author": {
+        "name": "Artur Marcolino",
+        "email": "73591601+zLanchus@users.noreply.github.com"
+    },
+    "assets": {
+        "icon": "assets/icon.png"
+    },
+    "externalJS": null,
+    "style": "style/visual.less",
+    "capabilities": "capabilities.json",
+    "dependencies": null,
+    "stringResources": [],
+    "version": "1.0.0.0"
+}

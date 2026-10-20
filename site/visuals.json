@@ -81,5 +81,39 @@
       "2-variacao.png",
       "3-empilhado.png"
     ]
+  },
+  {
+    "id": "barras-comparacao",
+    "name": "Barras com Comparação",
+    "summary": "Barras por categoria com marcadores de comparação, linha de referência e cor por regra.",
+    "features": [
+      "Marcadores de comparação (ano anterior, meta) e linha de referência",
+      "Cor acima/abaixo da referência, por sinalizador ou gradiente",
+      "Baixa confiança em cinza hachurado, ordenação e Top N",
+      "Vertical, horizontal ou modo cartão; rolagem com muitas categorias"
+    ],
+    "cover": "1-risco-mensal.png",
+    "images": [
+      "2-cartao.png",
+      "3-horizontal-series.png",
+      "4-top-n.png"
+    ]
+  },
+  {
+    "id": "curvas-incerteza",
+    "name": "Curvas com Incerteza",
+    "summary": "Curvas por coorte (ou qualquer eixo ordenado) com faixa de intervalo e trechos de baixa confiança.",
+    "features": [
+      "Degrau (Kaplan-Meier), reta ou suave; vazio interrompe a curva",
+      "Faixa de intervalo e trechos de baixa confiança tracejados",
+      "Janelas destacadas, marcos com tabela e linha de referência",
+      "Linha-guia com todas as séries no mesmo X, teclado e alto contraste"
+    ],
+    "cover": "1-coortes.png",
+    "images": [
+      "2-baixa-confianca.png",
+      "3-previsao.png",
+      "4-serie-destaque.png"
+    ]
   }
 ]
