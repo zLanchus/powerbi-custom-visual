@@ -11,7 +11,15 @@ import VisualEnumerationInstanceKinds = powerbi.VisualEnumerationInstanceKinds;
 import { ColumnGroup, MatrixModel, Measure, RowItem, cellValue, toNumber } from "./model";
 
 export type Direction = "higherWorse" | "higherBetter" | "neutral";
-export type ReferenceKind = "total" | "average" | "parent" | "fixed";
+export type ReferenceKind = "total" | "average" | "median" | "quartiles" | "rowAverage" | "parent" | "measure" | "fixed";
+/** O que usar quando a medida de referência está vazia na célula (e nas linhas de cima). */
+export type FallbackKind = "total" | "median" | "average" | "parent" | "none";
+
+/** Valor de referência de uma célula e de onde ele veio (ex.: "Meta turnover (Operações)"). */
+export interface ReferenceInfo {
+    value: number | undefined;
+    label: string;
+}
 
 /** Configuração de análise de uma medida exibida (gravada na própria medida, como na matriz nativa). */
 export interface MeasureConfig {
@@ -19,6 +27,11 @@ export interface MeasureConfig {
     direction: Direction;
     reference: ReferenceKind;
     target: number;
+    /** Medida do campo Referência usada por esta medida (quando reference = "measure"). */
+    refMeasure: Measure | undefined;
+    /** Sem valor na célula, procura a referência nas linhas de cima (ex.: a meta da diretoria vale para as áreas). */
+    refInherit: boolean;
+    refFallback: FallbackKind;
     dataBars: boolean;
     delta: boolean;
     /** Mostra as medidas do campo Detalhe ao lado do valor. */
@@ -64,10 +77,21 @@ const DIRECTION_ITEMS: powerbi.IEnumMember[] = [
 ];
 const REFERENCE_ITEMS: powerbi.IEnumMember[] = [
     { value: "auto", displayName: "Automática" },
-    { value: "total", displayName: "Total geral" },
+    { value: "total", displayName: "Total geral (da mesma coluna)" },
+    { value: "median", displayName: "Mediana das linhas do mesmo nível" },
+    { value: "quartiles", displayName: "Faixa típica do nível (1º a 3º quartil)" },
     { value: "average", displayName: "Média das linhas do mesmo nível" },
+    { value: "rowAverage", displayName: "Média da própria linha (nas colunas)" },
     { value: "parent", displayName: "Linha de cima (nível anterior)" },
-    { value: "fixed", displayName: "Valor fixo (meta)" }
+    { value: "measure", displayName: "Medida do campo Referência (ex.: metas)" },
+    { value: "fixed", displayName: "Valor fixo" }
+];
+const FALLBACK_ITEMS: powerbi.IEnumMember[] = [
+    { value: "total", displayName: "Total geral" },
+    { value: "median", displayName: "Mediana do nível" },
+    { value: "average", displayName: "Média do nível" },
+    { value: "parent", displayName: "Linha de cima" },
+    { value: "none", displayName: "Nenhuma (célula sem cor)" }
 ];
 
 function prop<T>(objects: DataViewObjects | undefined, name: string, fallback: T): T {
@@ -84,18 +108,24 @@ export function colorProp(objects: DataViewObjects | undefined, name: string, fa
  * Lê a configuração da medida. "Automático" pensa em indicadores como turnover:
  * porcentagens (e a medida-chave) ganham mapa de calor com "maior é pior" e são comparadas ao total geral;
  * as demais medidas ficam neutras e são comparadas à média das linhas.
+ * Com uma medida no campo Referência, a medida-chave passa a usá-la.
  */
-export function readConfig(measure: Measure, isKey: boolean): MeasureConfig {
+export function readConfig(measure: Measure, isKey: boolean, references: Measure[]): MeasureConfig {
     const o = measure.source.objects;
     const heatmap = prop<string>(o, "heatmap", "auto");
     const direction = prop<string>(o, "direction", "auto");
     const reference = prop<string>(o, "reference", "auto");
     const important = isKey || measure.isPercent;
+    const refQuery = prop<string>(o, "refMeasure", "");
     return {
         heatmap: heatmap === "auto" ? important : heatmap === "on",
         direction: direction === "auto" ? (important ? "higherWorse" : "neutral") : direction as Direction,
-        reference: reference === "auto" ? (measure.isPercent ? "total" : "average") : reference as ReferenceKind,
+        reference: reference !== "auto" ? reference as ReferenceKind
+            : isKey && references.length ? "measure" : measure.isPercent ? "total" : "average",
         target: Number(prop<number>(o, "target", 0)),
+        refMeasure: references.find(r => r.queryName === refQuery) || references[0],
+        refInherit: prop<boolean>(o, "refInherit", true),
+        refFallback: prop<FallbackKind>(o, "refFallback", "total"),
         dataBars: prop<boolean>(o, "dataBars", false),
         delta: prop<boolean>(o, "delta", true),
         // Por padrão o detalhe (ex.: nº de saídas) acompanha só a medida-chave.
@@ -160,6 +190,7 @@ interface Scale {
  */
 export class Analysis {
     private levelValues = new Map<string, number[]>();
+    private rowAverages = new Map<string, number | undefined>();
     private scales = new Map<string, Scale>();
     private ppFormatter: valueFormatter.IValueFormatter;
     private relFormatter: valueFormatter.IValueFormatter;
@@ -262,39 +293,128 @@ export class Analysis {
         return list?.length ? list.reduce((a, b) => a + b, 0) / list.length : undefined;
     }
 
+    /** Quantil (0..1) dos valores do mesmo nível e coluna; 0,5 = mediana. */
+    private quantile(measure: Measure, row: RowItem, group: ColumnGroup, p: number): number | undefined {
+        const list = this.levelValues.get(this.levelKey(measure, row, group));
+        if (!list?.length) {
+            return undefined;
+        }
+        // A lista está em ordem decrescente.
+        const pos = (list.length - 1) * (1 - p);
+        const lo = Math.floor(pos);
+        const hi = Math.ceil(pos);
+        return list[lo] + (list[hi] - list[lo]) * (pos - lo);
+    }
+
+    /** Média da linha nas colunas (sem a de total e sem células com base pequena). */
+    private rowAverage(measure: Measure, row: RowItem): number | undefined {
+        const key = measure.index + "|" + row.id;
+        if (!this.rowAverages.has(key)) {
+            let sum = 0;
+            let n = 0;
+            for (const group of this.model.groups) {
+                const v = this.value(row, group, measure);
+                if (!group.isSubtotal && v !== undefined && !this.isLowBase(row, group)) {
+                    sum += v;
+                    n++;
+                }
+            }
+            this.rowAverages.set(key, n ? sum / n : undefined);
+        }
+        return this.rowAverages.get(key);
+    }
+
     private totalValue(group: ColumnGroup, measure: Measure): number | undefined {
         const total = this.model.grandTotal;
         return total ? this.value(total, group, measure) : undefined;
     }
 
-    /** Valor de comparação da célula (total geral, média, linha de cima ou meta). */
-    public reference(row: RowItem, group: ColumnGroup, measure: Measure): number | undefined {
+    /** Valor de referência da célula e de onde ele veio. */
+    public referenceInfo(row: RowItem, group: ColumnGroup, measure: Measure): ReferenceInfo {
         const cfg = this.configs.get(measure.index);
-        if (!cfg) {
-            return undefined;
-        }
-        if (cfg.reference === "fixed") {
-            return cfg.target;
-        }
-        if (row.isGrandTotal) {
-            return undefined;
-        }
-        let ref: number | undefined;
-        if (cfg.reference === "total") {
-            ref = this.totalValue(group, measure);
-        } else if (cfg.reference === "parent") {
-            ref = row.parent ? this.value(row.parent, group, measure) : this.totalValue(group, measure);
-        }
-        return ref ?? this.average(measure, row, group);
+        return cfg ? this.resolve(cfg.reference, row, group, measure, cfg) : { value: undefined, label: "" };
     }
 
+    private resolve(kind: ReferenceKind | FallbackKind, row: RowItem, group: ColumnGroup, measure: Measure, cfg: MeasureConfig): ReferenceInfo {
+        const none: ReferenceInfo = { value: undefined, label: "" };
+        switch (kind) {
+            case "none":
+                return none;
+            case "fixed":
+                return { value: cfg.target, label: "valor fixo" };
+            case "measure": {
+                const ref = cfg.refMeasure;
+                if (ref) {
+                    // A própria célula; depois (se ligado) as linhas de cima até o total geral.
+                    for (let r: RowItem | undefined = row; r; r = cfg.refInherit ? this.above(r) : undefined) {
+                        const v = this.value(r, group, ref);
+                        if (v !== undefined) {
+                            return { value: v, label: r === row ? ref.name : `${ref.name} de ${r.label}` };
+                        }
+                    }
+                }
+                const fallback = this.resolve(cfg.refFallback, row, group, measure, cfg);
+                return fallback.value === undefined ? none
+                    : { value: fallback.value, label: `${fallback.label}, sem ${ref?.name || "referência"}` };
+            }
+            case "rowAverage":
+                // Na coluna de total, a média da própria linha não se aplica: usa o total geral.
+                return group.isSubtotal
+                    ? this.resolve("total", row, group, measure, cfg)
+                    : { value: this.rowAverage(measure, row), label: "média da própria linha" };
+        }
+        // As referências abaixo comparam linhas entre si: o total geral não tem com quem comparar.
+        if (row.isGrandTotal) {
+            return none;
+        }
+        switch (kind) {
+            case "total": {
+                const v = this.totalValue(group, measure);
+                return v !== undefined ? { value: v, label: "total geral" } : { value: this.average(measure, row, group), label: "média do nível" };
+            }
+            case "parent": {
+                const v = row.parent ? this.value(row.parent, group, measure) : undefined;
+                return v !== undefined ? { value: v, label: (row.parent as RowItem).label } : this.resolve("total", row, group, measure, cfg);
+            }
+            case "median":
+            case "quartiles":
+                return { value: this.quantile(measure, row, group, 0.5), label: "mediana do nível" };
+            default:
+                return { value: this.average(measure, row, group), label: "média do nível" };
+        }
+    }
+
+    /** Linha de cima; acima do primeiro nível vem o total geral. */
+    private above(row: RowItem): RowItem | undefined {
+        return row.isGrandTotal ? undefined : row.parent || this.model.grandTotal;
+    }
+
+    public reference(row: RowItem, group: ColumnGroup, measure: Measure): number | undefined {
+        return this.referenceInfo(row, group, measure).value;
+    }
+
+    /** Faixa típica (1º e 3º quartis) do nível, quando a referência é por quartis. */
+    public typicalRange(row: RowItem, group: ColumnGroup, measure: Measure): [number, number] | undefined {
+        if (this.configs.get(measure.index)?.reference !== "quartiles" || row.isGrandTotal) {
+            return undefined;
+        }
+        const q1 = this.quantile(measure, row, group, 0.25);
+        const q3 = this.quantile(measure, row, group, 0.75);
+        return q1 === undefined || q3 === undefined ? undefined : [q1, q3];
+    }
+
+    /** Descrição curta da referência da medida, para a legenda (ex.: "mediana do nível"). */
     public referenceLabel(measure: Measure): string {
         const cfg = this.configs.get(measure.index);
         switch (cfg?.reference) {
-            case "fixed": return "Meta";
-            case "parent": return "Linha de cima";
-            case "average": return "Média do nível";
-            default: return this.model.grandTotal ? "Total geral" : "Média do nível";
+            case "fixed": return "valor fixo";
+            case "parent": return "linha de cima";
+            case "average": return "média do nível";
+            case "median": return "mediana do nível";
+            case "quartiles": return "faixa típica do nível";
+            case "rowAverage": return "média da própria linha";
+            case "measure": return cfg.refMeasure?.name || "total geral";
+            default: return this.model.grandTotal ? "total geral" : "média do nível";
         }
     }
 
@@ -313,10 +433,35 @@ export class Analysis {
         return this.configs.get(measure.index)?.direction === "higherBetter" ? -dev : dev;
     }
 
+    /**
+     * Valor alto (1), baixo (−1) ou na referência (0), sem olhar o sentido.
+     * Na faixa típica: acima do 3º quartil é alto, abaixo do 1º é baixo e entre eles é típico.
+     */
+    public position(row: RowItem, group: ColumnGroup, measure: Measure): -1 | 0 | 1 | undefined {
+        const v = this.value(row, group, measure);
+        if (v === undefined) {
+            return undefined;
+        }
+        const range = this.typicalRange(row, group, measure);
+        if (range) {
+            return v > range[1] ? 1 : v < range[0] ? -1 : 0;
+        }
+        const dev = this.deviation(row, group, measure);
+        if (dev === undefined) {
+            return undefined;
+        }
+        return this.isZeroDelta(measure, dev) ? 0 : dev > 0 ? 1 : -1;
+    }
+
+    /** Pior (1), melhor (−1) ou na referência (0), já com o sentido da medida (neutras: acima = 1). */
+    public judgement(row: RowItem, group: ColumnGroup, measure: Measure): -1 | 0 | 1 | undefined {
+        const p = this.position(row, group, measure);
+        return p !== undefined && this.configs.get(measure.index)?.direction === "higherBetter" ? -p as -1 | 0 | 1 : p;
+    }
+
     /** A célula está pior que a referência (para neutras: acima dela)? Base pequena nunca conta. */
     public isWorse(row: RowItem, group: ColumnGroup, measure: Measure): boolean {
-        const s = this.signedDeviation(row, group, measure);
-        return s !== undefined && s > 0 && !this.isLowBase(row, group);
+        return this.judgement(row, group, measure) === 1 && !this.isLowBase(row, group);
     }
 
     /** Cor do mapa de calor (ou undefined quando a célula fica sem cor). */
@@ -338,15 +483,27 @@ export class Analysis {
             const t = scale.max === scale.min ? 0.5 : (v - scale.min) / (scale.max - scale.min);
             return mix(o.neutral, o.scale, Math.min(1, Math.max(0, t)) * o.intensity);
         }
+        const worse = this.judgement(row, group, measure);
+        if (!worse || (worse < 0 && !o.colorBetter)) {
+            return undefined;
+        }
+        const target = worse > 0 ? o.worse : o.better;
+        const range = this.typicalRange(row, group, measure);
+        if (range) {
+            // Fora da faixa típica a célula sempre ganha cor; quanto mais longe, mais forte.
+            const span = v > range[1] ? scale.max - range[1] : range[0] - scale.min;
+            const t = span > 0 ? Math.min(1, (v > range[1] ? v - range[1] : range[0] - v) / span) : 1;
+            return mix(o.neutral, target, (0.3 + 0.7 * Math.pow(t, 0.85)) * o.intensity);
+        }
         const s = this.signedDeviation(row, group, measure);
         if (s === undefined || scale.maxDev <= 0) {
             return undefined;
         }
-        const t = Math.max(-1, Math.min(1, s / scale.maxDev));
-        if (Math.abs(t) < 0.05 || (t < 0 && !o.colorBetter)) {
+        const t = Math.min(1, Math.abs(s) / scale.maxDev);
+        if (t < 0.05) {
             return undefined;
         }
-        return mix(o.neutral, t > 0 ? o.worse : o.better, (0.12 + 0.88 * Math.pow(Math.abs(t), 0.85)) * o.intensity);
+        return mix(o.neutral, target, (0.12 + 0.88 * Math.pow(t, 0.85)) * o.intensity);
     }
 
     /** Tamanho da barra de dados (0..1) em relação ao maior valor do nível. */
@@ -394,7 +551,7 @@ export class Analysis {
         return (rel > 0 ? "+" : rel < 0 ? "−" : "") + this.relFormatter.format(Math.abs(rel));
     }
 
-    /** As células que mais se afastam da referência no sentido ruim. */
+    /** As células piores que a referência, das mais distantes para as mais próximas. */
     public hotspots(measure: Measure, count: number, scope: string, level: string, rank: string): Hotspot[] {
         const model = this.model;
         const groups = scope === "rowTotal" && model.totalGroup
@@ -412,7 +569,7 @@ export class Analysis {
             for (const group of groups) {
                 const value = this.value(row, group, measure);
                 const s = this.signedDeviation(row, group, measure);
-                if (value === undefined || s === undefined || s <= 0 || this.isLowBase(row, group)) {
+                if (value === undefined || s === undefined || !this.isWorse(row, group, measure)) {
                     continue;
                 }
                 const base = this.baseValue(row, group);
@@ -435,7 +592,9 @@ export class Analysis {
  * Cartão "Medidas": um grupo por medida exibida, com mapa de calor, referência,
  * barras de dados e as cores com o botão fx (avaliadas por célula, como na matriz nativa).
  */
-export function buildMeasureCard(values: Measure[], configs: Map<number, MeasureConfig>, hasDetails: boolean): formattingSettings.CompositeCard {
+export function buildMeasureCard(values: Measure[], configs: Map<number, MeasureConfig>, hasDetails: boolean,
+    references: Measure[]): formattingSettings.CompositeCard {
+    const refItems: powerbi.IEnumMember[] = references.map(r => ({ value: r.queryName, displayName: r.name }));
     const pick = (items: powerbi.IEnumMember[], value: string): powerbi.IEnumMember =>
         items.find(i => i.value === value) || items[0];
 
@@ -466,16 +625,34 @@ export function buildMeasureCard(values: Measure[], configs: Map<number, Measure
                 description: auto("direction", cfg?.direction || "")
             }),
             new formattingSettings.ItemDropdown({
-                name: "reference", displayName: "Comparar com", items: REFERENCE_ITEMS,
+                name: "reference", displayName: "Referência (o que é alto ou baixo)", items: REFERENCE_ITEMS,
                 value: pick(REFERENCE_ITEMS, reference), selector,
                 description: auto("reference", cfg?.reference || "")
             })
         ];
-        if (reference === "fixed") {
+        if (cfg?.reference === "fixed") {
             slices.push(new formattingSettings.NumUpDown({
-                name: "target", displayName: "Meta", value: Number(prop<number>(o, "target", 0)), selector,
+                name: "target", displayName: "Valor de referência", value: Number(prop<number>(o, "target", 0)), selector,
                 description: "Para porcentagens, use o valor decimal (8% = 0,08)."
             }));
+        }
+        if (cfg?.reference === "measure") {
+            if (refItems.length > 1) {
+                slices.push(new formattingSettings.ItemDropdown({
+                    name: "refMeasure", displayName: "Medida de referência", items: refItems,
+                    value: pick(refItems, cfg.refMeasure?.queryName || ""), selector
+                }));
+            }
+            slices.push(
+                new formattingSettings.ToggleSwitch({
+                    name: "refInherit", displayName: "Sem valor, usar o da linha de cima", value: cfg.refInherit, selector,
+                    description: "Ex.: a meta definida para a diretoria vale para as áreas dela. No fim da cadeia vem o total geral."
+                }),
+                new formattingSettings.ItemDropdown({
+                    name: "refFallback", displayName: "Sem valor em nenhum nível, usar", items: FALLBACK_ITEMS,
+                    value: pick(FALLBACK_ITEMS, cfg.refFallback), selector
+                })
+            );
         }
         if (hasDetails) {
             slices.push(new formattingSettings.ToggleSwitch({
@@ -519,7 +696,7 @@ export function buildMeasureCard(values: Measure[], configs: Map<number, Measure
     class MeasureCard extends formattingSettings.CompositeCard {
         name = OBJECT;
         displayName = "Medidas";
-        description = "Mapa de calor, referência e cores de cada medida em Valores.";
+        description = "Mapa de calor, referência (o que é alto ou baixo) e cores de cada medida em Valores.";
         groups = groups;
     }
     return new MeasureCard();

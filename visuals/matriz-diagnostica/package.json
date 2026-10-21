@@ -1,7 +1,7 @@
 {
   "name": "matriz-diagnostica-visual",
   "description": "Matriz para explorar e diagnosticar padrões (ex.: turnover) com mapa de calor, desvio, base mínima, tendência e pontos de atenção.",
-  "version": "1.1.0.0",
+  "version": "1.2.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/zLanchus/powerbi-custom-visual"

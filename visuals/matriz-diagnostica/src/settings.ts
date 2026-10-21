@@ -40,7 +40,7 @@ export const INITIAL_SORT_ITEMS = enumItems(
 );
 export const HOTSPOT_SCOPE_ITEMS = enumItems(["rowTotal", "Total de cada linha"], ["cells", "Cada célula (linha × coluna)"]);
 export const HOTSPOT_LEVEL_ITEMS = enumItems(["deepest", "Nível mais detalhado"], ["top", "Primeiro nível"], ["all", "Todos os níveis"]);
-export const HOTSPOT_RANK_ITEMS = enumItems(["deviation", "Desvio da referência"], ["impact", "Impacto (desvio × base)"]);
+export const HOTSPOT_RANK_ITEMS = enumItems(["deviation", "Distância acima da referência"], ["impact", "Impacto (distância × base)"]);
 export const TREND_POSITION_ITEMS = enumItems(["end", "No fim"], ["start", "Logo depois das linhas"]);
 export const TREND_WHEN_ITEMS = enumItems(
     ["time", "Só quando as colunas são datas ou períodos"],
@@ -129,7 +129,7 @@ class HotspotsCard extends FormattingSettingsCard {
     scope = dropdown("scope", "Comparar", HOTSPOT_SCOPE_ITEMS);
     level = dropdown("level", "Linhas consideradas", HOTSPOT_LEVEL_ITEMS);
     rank = dropdown("rank", "Ordenar por", HOTSPOT_RANK_ITEMS, 0,
-        "Impacto = desvio × base: mostra onde o problema atinge mais gente (precisa do campo Base).");
+        "Impacto = distância × base: mostra onde o problema atinge mais gente (precisa do campo Base).");
     fill = color("fill", "Cor de fundo", PANEL);
     fontColor = color("fontColor", "Cor do texto", DARK);
     fontSize = num("fontSize", "Tamanho da fonte", 12);

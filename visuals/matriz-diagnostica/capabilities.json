@@ -25,6 +25,12 @@
             "description": "Medida mostrada ao lado do valor, entre parênteses (ex.: nº de saídas → 24,2% (18)). Com mais de uma, aparecem separadas por ·."
         },
         {
+            "displayName": "Referência (ex.: metas)",
+            "name": "reference",
+            "kind": "Measure",
+            "description": "Opcional: medida com o valor de referência de cada célula (ex.: meta de turnover de cada diretoria). Onde ela estiver vazia, o visual usa o valor da linha de cima e, se não houver, a alternativa escolhida em Formatar visual → Medidas."
+        },
+        {
             "displayName": "Base (volume)",
             "name": "base",
             "kind": "Measure",
@@ -335,11 +341,11 @@
                         "enumeration": [
                             {
                                 "value": "deviation",
-                                "displayName": "Desvio da referência"
+                                "displayName": "Distância acima da referência"
                             },
                             {
                                 "value": "impact",
-                                "displayName": "Impacto (desvio × base)"
+                                "displayName": "Impacto (distância × base)"
                             }
                         ]
                     }
@@ -502,19 +508,35 @@
                             },
                             {
                                 "value": "total",
-                                "displayName": "Total geral"
+                                "displayName": "Total geral (da mesma coluna)"
+                            },
+                            {
+                                "value": "median",
+                                "displayName": "Mediana das linhas do mesmo nível"
+                            },
+                            {
+                                "value": "quartiles",
+                                "displayName": "Faixa típica do nível (1º a 3º quartil)"
                             },
                             {
                                 "value": "average",
                                 "displayName": "Média das linhas do mesmo nível"
                             },
                             {
+                                "value": "rowAverage",
+                                "displayName": "Média da própria linha (nas colunas)"
+                            },
+                            {
                                 "value": "parent",
                                 "displayName": "Linha de cima (nível anterior)"
                             },
                             {
+                                "value": "measure",
+                                "displayName": "Medida do campo Referência (ex.: metas)"
+                            },
+                            {
                                 "value": "fixed",
-                                "displayName": "Valor fixo (meta)"
+                                "displayName": "Valor fixo"
                             }
                         ]
                     }
@@ -555,6 +577,42 @@
                 "detail": {
                     "type": {
                         "bool": true
+                    }
+                },
+                "refMeasure": {
+                    "type": {
+                        "enumeration": []
+                    }
+                },
+                "refInherit": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "refFallback": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "total",
+                                "displayName": "Total geral"
+                            },
+                            {
+                                "value": "median",
+                                "displayName": "Mediana do nível"
+                            },
+                            {
+                                "value": "average",
+                                "displayName": "Média do nível"
+                            },
+                            {
+                                "value": "parent",
+                                "displayName": "Linha de cima"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Nenhuma (célula sem cor)"
+                            }
+                        ]
                     }
                 }
             }
@@ -940,6 +998,9 @@
                     },
                     "detail": {
                         "max": 3
+                    },
+                    "reference": {
+                        "max": 5
                     }
                 }
             ],
@@ -974,6 +1035,11 @@
                         {
                             "for": {
                                 "in": "detail"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "reference"
                             }
                         },
                         {

@@ -20,6 +20,9 @@ import { Analysis, Hotspot, MeasureConfig, alpha, buildMeasureCard, colorProp, r
 import { Cell, Sheet, buildXlsx } from "./xlsx";
 
 const MAX_RENDERED_ROWS = 5000;
+const FALLBACK_LABELS: Record<string, string> = {
+    total: "total geral", median: "mediana do nível", average: "média do nível", parent: "linha de cima", none: ""
+};
 const SVG_NS = "http://www.w3.org/2000/svg";
 const PATH_SEP = " › ";
 
@@ -372,7 +375,7 @@ export class Visual implements IVisual {
         const cards = settings.cards.slice();
         if (model?.values.length) {
             const index = cards.indexOf(settings.trendCard);
-            settings.cards = cards.slice(0, index + 1).concat(buildMeasureCard(model.values, this.configs, model.details.length > 0), cards.slice(index + 1));
+            settings.cards = cards.slice(0, index + 1).concat(buildMeasureCard(model.values, this.configs, model.details.length > 0, model.references), cards.slice(index + 1));
         }
         const formattingModel = this.formattingSettingsService.buildFormattingModel(settings);
         settings.cards = cards;
@@ -394,7 +397,7 @@ export class Visual implements IVisual {
         this.keyQuery = String(dataView?.metadata?.objects?.analysis?.keyMeasure ?? "");
         this.keyMeasure = model.values.find(m => m.queryName === this.keyQuery) || model.values[0];
         for (const m of model.values) {
-            this.configs.set(m.index, readConfig(m, m === this.keyMeasure));
+            this.configs.set(m.index, readConfig(m, m === this.keyMeasure, model.references));
         }
         const a = this.formattingSettings.analysisCard;
         this.analysis = new Analysis(model, this.configs, {
@@ -1104,7 +1107,9 @@ export class Visual implements IVisual {
                 if (detail) {
                     chip.appendChild(el("span", "md-chip-detail", detail));
                 }
-                chip.appendChild(el("span", "md-chip-delta", analysis.formatDelta(key, h.deviation)));
+                chip.appendChild(this.deltaOn
+                    ? el("span", "md-chip-delta", analysis.formatDelta(key, h.deviation))
+                    : el("span", "md-chip-ref", this.cellReferenceText(h.row, h.group, key)));
                 chip.title = "Mostrar na tabela";
                 chip.addEventListener("click", (e: MouseEvent) => {
                     e.stopPropagation();
@@ -1162,14 +1167,27 @@ export class Visual implements IVisual {
     /** "ref.: total geral 7,9%". */
     private referenceText(model: MatrixModel, key: Measure, cfg: MeasureConfig): string {
         const analysis = this.analysis as Analysis;
-        const label = analysis.referenceLabel(key).toLowerCase();
+        const label = analysis.referenceLabel(key);
         let value: number | undefined;
         if (cfg.reference === "fixed") {
             value = cfg.target;
         } else if (cfg.reference === "total" && model.grandTotal && model.totalGroup) {
             value = analysis.value(model.grandTotal, model.totalGroup, key);
         }
-        return `ref.: ${label}` + (value !== undefined ? ` ${key.format(value)}` : "");
+        const text = `ref.: ${label}` + (value !== undefined ? ` ${key.format(value)}` : "");
+        return cfg.reference === "measure" && cfg.refMeasure && cfg.refFallback !== "none"
+            ? text + ` (sem valor: ${FALLBACK_LABELS[cfg.refFallback]})` : text;
+    }
+
+    /** Referência curta de uma célula, para os pontos de atenção (ex.: "ref. 19,2%" ou "típico até 12,0%"). */
+    private cellReferenceText(row: RowItem, group: ColumnGroup, measure: Measure): string {
+        const analysis = this.analysis as Analysis;
+        const range = analysis.typicalRange(row, group, measure);
+        if (range) {
+            return "típico até " + measure.format(range[1]);
+        }
+        const ref = analysis.reference(row, group, measure);
+        return ref === undefined ? "" : "ref. " + measure.format(ref);
     }
 
     /** Abre a hierarquia até a linha do ponto de atenção, rola até ela e pisca a célula. */
@@ -1244,18 +1262,34 @@ export class Visual implements IVisual {
 
         const cfg = this.configs.get(measure.index);
         if (cfg && !hide) {
-            const ref = analysis.reference(row, group, measure);
+            const info = analysis.referenceInfo(row, group, measure);
+            const ref = info.value;
             const dev = analysis.deviation(row, group, measure);
-            if (ref !== undefined) {
-                add(`Referência (${analysis.referenceLabel(measure).toLowerCase()})`, measure.format(ref));
+            const range = analysis.typicalRange(row, group, measure);
+            if (range) {
+                add("Faixa típica do nível (1º a 3º quartil)", `${measure.format(range[0])} a ${measure.format(range[1])}`);
+            } else if (ref !== undefined) {
+                add(`Referência (${info.label})`, measure.format(ref));
             }
-            if (dev !== undefined && ref !== undefined && !lowBase) {
+            const position = lowBase ? undefined : analysis.position(row, group, measure);
+            if (position !== undefined) {
+                const judged = analysis.judgement(row, group, measure);
+                const a = s.analysisCard;
+                const color = cfg.direction === "neutral" || !judged ? undefined
+                    : judged > 0 ? a.worseColor.value.value : a.betterColor.value.value;
+                const text = range
+                    ? (position > 0 ? "Alto (acima da faixa típica)" : position < 0 ? "Baixo (abaixo da faixa típica)" : "Típico (dentro da faixa)")
+                    : (position > 0 ? "Alto (acima da referência)" : position < 0 ? "Baixo (abaixo da referência)" : "Na referência");
+                add("Situação", text, color);
+            }
+            // O tamanho da diferença só aparece com o botão Desvio ligado.
+            if (this.deltaOn && dev !== undefined && ref !== undefined && !lowBase) {
                 const signed = analysis.signedDeviation(row, group, measure) as number;
                 const a = s.analysisCard;
                 const color = cfg.direction === "neutral" || analysis.isZeroDelta(measure, dev) ? undefined
                     : signed > 0 ? a.worseColor.value.value : a.betterColor.value.value;
                 const rel = analysis.formatRelative(dev, ref);
-                add("Desvio", analysis.formatDelta(measure, dev) + (rel ? ` (${rel})` : ""), color);
+                add(range ? "Desvio da mediana" : "Desvio", analysis.formatDelta(measure, dev) + (rel ? ` (${rel})` : ""), color);
                 if (model.base && measure.isPercent) {
                     const base = analysis.baseValue(row, group);
                     if (base !== undefined) {

@@ -11,10 +11,10 @@ import DataViewHierarchyLevel = powerbi.DataViewHierarchyLevel;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
 /**
- * Papéis da medida: exibida na tabela, detalhe entre parênteses, base (volume) para a amostra mínima
- * ou só na dica de ferramenta. A mesma medida pode estar em mais de um campo.
+ * Papéis da medida: exibida na tabela, detalhe entre parênteses, referência (ex.: metas), base (volume)
+ * para a amostra mínima ou só na dica de ferramenta. A mesma medida pode estar em mais de um campo.
  */
-export type MeasureRole = "values" | "detail" | "base" | "tooltips";
+export type MeasureRole = "values" | "detail" | "reference" | "base" | "tooltips";
 
 export interface Measure {
     index: number;
@@ -62,6 +62,8 @@ export interface MatrixModel {
     values: Measure[];
     /** Medidas mostradas entre parênteses ao lado do valor (campo Detalhe). */
     details: Measure[];
+    /** Medidas com o valor de referência de cada célula (campo Referência, ex.: metas por diretoria). */
+    references: Measure[];
     base: Measure | undefined;
     tooltips: Measure[];
     groups: ColumnGroup[];
@@ -80,7 +82,7 @@ export interface MatrixModel {
     leafIndex: Map<string, number>;
 }
 
-const ROLES: MeasureRole[] = ["values", "detail", "base", "tooltips"];
+const ROLES: MeasureRole[] = ["values", "detail", "reference", "base", "tooltips"];
 
 function hasRole(measure: Measure, role: MeasureRole): boolean {
     const roles = measure.source.roles;
@@ -271,6 +273,7 @@ export function buildModel(dataView: DataView | undefined, locale: string, total
         measures,
         values,
         details: measures.filter(m => hasRole(m, "detail")),
+        references: measures.filter(m => hasRole(m, "reference")),
         base: measures.find(m => hasRole(m, "base")),
         // Uma medida que já está em Valores não se repete na dica de ferramenta.
         tooltips: measures.filter(m => hasRole(m, "tooltips") && !hasRole(m, "values")),
