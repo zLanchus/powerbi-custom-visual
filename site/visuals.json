@@ -105,9 +105,10 @@
     "summary": "Matriz como a nativa, feita para explorar e diagnosticar padrões (ex.: turnover) com linhas e colunas por parâmetro de campo.",
     "features": [
       "Mapa de calor contra a referência (total geral, média, linha de cima ou meta)",
+      "Nº de saídas entre parênteses ao lado da taxa, como 24,2% (18)",
       "Desvio em p.p., pontos de atenção clicáveis e filtro \"acima da referência\"",
       "Base mínima: marca ou oculta grupos pequenos demais para concluir",
-      "Tendência (minigráfico), pesquisa, ordenação por clique e barras de dados",
+      "Tendência quando as colunas são meses, pesquisa, ordenação por clique e barras de dados",
       "Hierarquia, totais, parâmetros de campo, filtro cruzado, fx e exportar para Excel"
     ],
     "cover": "1-mapa-de-calor.png",

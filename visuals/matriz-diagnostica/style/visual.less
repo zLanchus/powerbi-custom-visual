@@ -46,6 +46,9 @@
     --md-parent-weight: 650;
     --md-val-fg: #0F2B45;
     --md-val-size: 13px;
+    --md-detail-size: 11px;
+    --md-detail-fg: #4E6175;
+    --md-detail-weight: 400;
     --md-total-bg: #F1F8FD;
     --md-total-fg: #0F2B45;
     --md-divider: color-mix(in srgb, var(--md-grid) 55%, #8FA7BC);
@@ -345,6 +348,12 @@
 
 .md-chip-value {
     font-weight: 700;
+    white-space: nowrap;
+}
+
+.md-chip-detail {
+    color: var(--md-detail-fg);
+    font-size: 0.92em;
     white-space: nowrap;
 }
 
@@ -682,6 +691,25 @@
     line-height: 1.15;
 }
 
+// Valor com o detalhe ao lado: 24,2% (18).
+.md-line {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.md-detail {
+    color: var(--md-detail-fg);
+    font-size: var(--md-detail-size);
+    font-weight: var(--md-detail-weight);
+
+    .md-colored & {
+        color: inherit;
+        opacity: 0.85;
+    }
+}
+
 .md-delta {
     color: var(--md-head-fg);
     font-size: 0.74em;
@@ -718,7 +746,8 @@
 }
 
 // Amostra pequena: valor esmaecido e (opcional) hachura.
-.md-lowbase .md-val {
+.md-lowbase .md-val,
+.md-lowbase .md-detail {
     font-style: italic;
     opacity: 0.5;
 }

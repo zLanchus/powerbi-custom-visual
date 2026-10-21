@@ -21,6 +21,8 @@ export interface MeasureConfig {
     target: number;
     dataBars: boolean;
     delta: boolean;
+    /** Mostra as medidas do campo Detalhe ao lado do valor. */
+    detail: boolean;
     /** Cores do botão fx (fixas ou por regra) para a coluna inteira. */
     fill: string;
     fontColor: string;
@@ -96,6 +98,8 @@ export function readConfig(measure: Measure, isKey: boolean): MeasureConfig {
         target: Number(prop<number>(o, "target", 0)),
         dataBars: prop<boolean>(o, "dataBars", false),
         delta: prop<boolean>(o, "delta", true),
+        // Por padrão o detalhe (ex.: nº de saídas) acompanha só a medida-chave.
+        detail: prop<boolean>(o, "detail", isKey),
         fill: colorProp(o, "fill"),
         fontColor: colorProp(o, "fontColor")
     };
@@ -431,7 +435,7 @@ export class Analysis {
  * Cartão "Medidas": um grupo por medida exibida, com mapa de calor, referência,
  * barras de dados e as cores com o botão fx (avaliadas por célula, como na matriz nativa).
  */
-export function buildMeasureCard(values: Measure[], configs: Map<number, MeasureConfig>): formattingSettings.CompositeCard {
+export function buildMeasureCard(values: Measure[], configs: Map<number, MeasureConfig>, hasDetails: boolean): formattingSettings.CompositeCard {
     const pick = (items: powerbi.IEnumMember[], value: string): powerbi.IEnumMember =>
         items.find(i => i.value === value) || items[0];
 
@@ -471,6 +475,11 @@ export function buildMeasureCard(values: Measure[], configs: Map<number, Measure
             slices.push(new formattingSettings.NumUpDown({
                 name: "target", displayName: "Meta", value: Number(prop<number>(o, "target", 0)), selector,
                 description: "Para porcentagens, use o valor decimal (8% = 0,08)."
+            }));
+        }
+        if (hasDetails) {
+            slices.push(new formattingSettings.ToggleSwitch({
+                name: "detail", displayName: "Mostrar detalhe ao lado (campo Detalhe)", value: cfg?.detail ?? false, selector
             }));
         }
         slices.push(

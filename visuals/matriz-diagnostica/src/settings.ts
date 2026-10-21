@@ -42,6 +42,11 @@ export const HOTSPOT_SCOPE_ITEMS = enumItems(["rowTotal", "Total de cada linha"]
 export const HOTSPOT_LEVEL_ITEMS = enumItems(["deepest", "Nível mais detalhado"], ["top", "Primeiro nível"], ["all", "Todos os níveis"]);
 export const HOTSPOT_RANK_ITEMS = enumItems(["deviation", "Desvio da referência"], ["impact", "Impacto (desvio × base)"]);
 export const TREND_POSITION_ITEMS = enumItems(["end", "No fim"], ["start", "Logo depois das linhas"]);
+export const TREND_WHEN_ITEMS = enumItems(
+    ["time", "Só quando as colunas são datas ou períodos"],
+    ["always", "Sempre que houver colunas"]
+);
+export const DETAIL_STYLE_ITEMS = enumItems(["paren", "Entre parênteses: (18)"], ["dot", "Após um ponto: · 18"], ["plain", "Sem separador: 18"]);
 export const TOTAL_POSITION_ITEMS = enumItems(["bottom", "Embaixo"], ["top", "Em cima"]);
 
 class ToolbarCard extends FormattingSettingsCard {
@@ -142,7 +147,9 @@ class HotspotsCard extends FormattingSettingsCard {
 
 class TrendCard extends FormattingSettingsCard {
     show = toggle("show", "Mostrar coluna de tendência", true,
-        "Minigráfico da medida-chave ao longo das colunas (ex.: meses). Aparece quando há campos em Colunas.");
+        "Minigráfico da medida-chave ao longo das colunas (ex.: meses).");
+    when = dropdown("when", "Quando mostrar", TREND_WHEN_ITEMS, 0,
+        "Com campos que não são tempo nas colunas (ex.: Tempo de casa, Senioridade), uma linha de tendência não faz sentido e a coluna some sozinha.");
     title = text("title", "Título da coluna", "Tendência", "Tendência");
     position = dropdown("position", "Posição", TREND_POSITION_ITEMS);
     lineColor = color("lineColor", "Cor da linha", DARK);
@@ -151,7 +158,7 @@ class TrendCard extends FormattingSettingsCard {
 
     name = "trend";
     displayName = "Tendência";
-    slices: FormattingSettingsSlice[] = [this.show, this.title, this.position, this.lineColor, this.markWorse, this.width];
+    slices: FormattingSettingsSlice[] = [this.show, this.when, this.title, this.position, this.lineColor, this.markWorse, this.width];
 }
 
 class TableCard extends FormattingSettingsCard {
@@ -219,6 +226,19 @@ class ValuesCard extends FormattingSettingsCard {
     slices: FormattingSettingsSlice[] = [this.fontColor, this.fontSize, this.emptyText, this.barColor];
 }
 
+class DetailCard extends FormattingSettingsCard {
+    show = toggle("show", "Mostrar detalhe", true,
+        "Medidas do campo Detalhe ao lado do valor (ex.: 24,2% (18)). Em Medidas, escolha em quais colunas ele aparece.");
+    style = dropdown("style", "Estilo", DETAIL_STYLE_ITEMS);
+    fontSize = num("fontSize", "Tamanho da fonte", 11);
+    fontColor = color("fontColor", "Cor do texto", MUTED);
+    bold = toggle("bold", "Negrito", false);
+
+    name = "detailLabels";
+    displayName = "Detalhe";
+    slices: FormattingSettingsSlice[] = [this.show, this.style, this.fontSize, this.fontColor, this.bold];
+}
+
 class TotalsCard extends FormattingSettingsCard {
     rowSubtotals = toggle("rowSubtotals", "Subtotais nas linhas com filhos", true);
     columnSubtotals = toggle("columnSubtotals", "Coluna de total", true);
@@ -255,12 +275,13 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     columnHeaderCard = new ColumnHeaderCard();
     rowHeadersCard = new RowHeadersCard();
     valuesCard = new ValuesCard();
+    detailCard = new DetailCard();
     totalsCard = new TotalsCard();
     exportCard = new ExportCard();
 
     cards: Array<formattingSettings.Cards> = [
         this.toolbarCard, this.analysisCard, this.smallBaseCard, this.hotspotsCard, this.trendCard, this.tableCard,
-        this.columnHeaderCard, this.rowHeadersCard, this.valuesCard, this.totalsCard, this.exportCard
+        this.columnHeaderCard, this.rowHeadersCard, this.valuesCard, this.detailCard, this.totalsCard, this.exportCard
     ];
 }
 

@@ -366,12 +366,13 @@ export class Visual implements IVisual {
         settings.tableCard.zebraColor.visible = settings.tableCard.zebra.value;
         settings.smallBaseCard.visible = !!model?.base;
         settings.trendCard.visible = !!model && model.columnLevelNames.length > 0;
+        settings.detailCard.visible = !!model?.details.length;
         settings.hotspotsCard.rank.visible = !!model?.base;
 
         const cards = settings.cards.slice();
         if (model?.values.length) {
             const index = cards.indexOf(settings.trendCard);
-            settings.cards = cards.slice(0, index + 1).concat(buildMeasureCard(model.values, this.configs), cards.slice(index + 1));
+            settings.cards = cards.slice(0, index + 1).concat(buildMeasureCard(model.values, this.configs, model.details.length > 0), cards.slice(index + 1));
         }
         const formattingModel = this.formattingSettingsService.buildFormattingModel(settings);
         settings.cards = cards;
@@ -618,9 +619,33 @@ export class Visual implements IVisual {
         this.scroller.scrollLeft = scrollLeft;
     }
 
+    /** A tendência só aparece com colunas de tempo (meses, trimestres…), a não ser que o autor peça "sempre". */
     private showTrend(model: MatrixModel): boolean {
-        return this.formattingSettings.trendCard.show.value && !!this.keyMeasure
+        const t = this.formattingSettings.trendCard;
+        return t.show.value && !!this.keyMeasure
+            && (model.columnIsTime || enumValue(t.when) === "always")
             && model.groups.filter(g => !g.isSubtotal).length > 1;
+    }
+
+    /** Texto das medidas de Detalhe na célula (ex.: "(18)"); vazio quando não há nada a mostrar. */
+    private detailText(model: MatrixModel, row: RowItem, group: ColumnGroup): string {
+        const parts: string[] = [];
+        for (const m of model.details) {
+            const v = cellValue(model, row, group.key, m.index)?.value;
+            if (v !== null && v !== undefined && v !== "") {
+                parts.push(m.format(v));
+            }
+        }
+        if (!parts.length) {
+            return "";
+        }
+        const text = parts.join(" · ");
+        const style = enumValue(this.formattingSettings.detailCard.style);
+        return style === "dot" ? "· " + text : style === "plain" ? text : "(" + text + ")";
+    }
+
+    private showDetail(model: MatrixModel, measure: Measure): boolean {
+        return model.details.length > 0 && this.formattingSettings.detailCard.show.value && !!this.configs.get(measure.index)?.detail;
     }
 
     private renderTable(model: MatrixModel, view: ViewNode[]): void {
@@ -914,7 +939,15 @@ export class Visual implements IVisual {
         const content = el("div", "md-cv");
         const valueText = hide ? "•••" : empty ? (s.valuesCard.emptyText.value ?? "–") : c.measure.format(raw);
         const valueEl = el("span", "md-val" + (empty && !hide ? " md-empty-value" : ""), valueText);
-        content.appendChild(valueEl);
+        const detail = !hide && this.showDetail(model, c.measure) ? this.detailText(model, row, c.group) : "";
+        if (detail) {
+            // Valor e detalhe na mesma linha: 24,2% (18).
+            const line = el("span", "md-line");
+            line.append(valueEl, el("span", "md-detail", detail));
+            content.appendChild(line);
+        } else {
+            content.appendChild(valueEl);
+        }
 
         // Cores: fx do Power BI > mapa de calor > barras de dados.
         const fxFill = colorProp(cell?.objects, "fill") || cfg?.fill || "";
@@ -1065,9 +1098,13 @@ export class Visual implements IVisual {
                 chip.append(
                     el("span", "md-chip-dot"),
                     el("span", "md-chip-label", where),
-                    el("strong", "md-chip-value", key.format(h.value)),
-                    el("span", "md-chip-delta", analysis.formatDelta(key, h.deviation))
+                    el("strong", "md-chip-value", key.format(h.value))
                 );
+                const detail = this.showDetail(model, key) ? this.detailText(model, h.row, h.group) : "";
+                if (detail) {
+                    chip.appendChild(el("span", "md-chip-detail", detail));
+                }
+                chip.appendChild(el("span", "md-chip-delta", analysis.formatDelta(key, h.deviation)));
                 chip.title = "Mostrar na tabela";
                 chip.addEventListener("click", (e: MouseEvent) => {
                     e.stopPropagation();
@@ -1238,7 +1275,12 @@ export class Visual implements IVisual {
                 add(m.name, fmt(m, cellValue(model, row, group.key, m.index)?.value));
             }
         }
-        if (model.base) {
+        for (const m of model.details) {
+            if (!model.values.includes(m) && !hide) {
+                add(m.name, fmt(m, cellValue(model, row, group.key, m.index)?.value));
+            }
+        }
+        if (model.base && !model.values.includes(model.base)) {
             add(model.base.name, fmt(model.base, cellValue(model, row, group.key, model.base.index)?.value));
         }
         for (const m of model.tooltips) {
@@ -1541,6 +1583,11 @@ export class Visual implements IVisual {
         const v = s.valuesCard;
         st.setProperty("--md-val-fg", v.fontColor.value.value);
         st.setProperty("--md-val-size", px(v.fontSize.value, 6));
+
+        const d = s.detailCard;
+        st.setProperty("--md-detail-size", px(d.fontSize.value, 6));
+        st.setProperty("--md-detail-fg", d.fontColor.value.value);
+        st.setProperty("--md-detail-weight", d.bold.value ? "700" : "400");
 
         const tt = s.totalsCard;
         st.setProperty("--md-total-bg", tt.fill.value.value);

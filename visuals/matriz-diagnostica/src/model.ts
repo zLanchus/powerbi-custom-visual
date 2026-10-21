@@ -10,15 +10,17 @@ import DataViewMatrixNodeValue = powerbi.DataViewMatrixNodeValue;
 import DataViewHierarchyLevel = powerbi.DataViewHierarchyLevel;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
-/** Papel da medida: exibida na tabela, base (volume) para a amostra mínima ou só na dica de ferramenta. */
-export type MeasureRole = "values" | "base" | "tooltips";
+/**
+ * Papéis da medida: exibida na tabela, detalhe entre parênteses, base (volume) para a amostra mínima
+ * ou só na dica de ferramenta. A mesma medida pode estar em mais de um campo.
+ */
+export type MeasureRole = "values" | "detail" | "base" | "tooltips";
 
 export interface Measure {
     index: number;
     source: DataViewMetadataColumn;
     name: string;
     queryName: string;
-    role: MeasureRole;
     /** Formato de porcentagem (o desvio aparece em pontos percentuais). */
     isPercent: boolean;
     format: (value: PrimitiveValue) => string;
@@ -58,6 +60,8 @@ export interface MatrixModel {
     measures: Measure[];
     /** Medidas exibidas (campo Valores). */
     values: Measure[];
+    /** Medidas mostradas entre parênteses ao lado do valor (campo Detalhe). */
+    details: Measure[];
     base: Measure | undefined;
     tooltips: Measure[];
     groups: ColumnGroup[];
@@ -66,6 +70,8 @@ export interface MatrixModel {
     columns: ValueColumn[];
     columnLevels: DataViewHierarchyLevel[];
     columnLevelNames: string[];
+    /** As colunas são datas ou períodos (meses, trimestres…), em que a tendência faz sentido. */
+    columnIsTime: boolean;
     rowLevels: DataViewHierarchyLevel[];
     rowLevelNames: string[];
     rows: RowItem[];
@@ -74,10 +80,28 @@ export interface MatrixModel {
     leafIndex: Map<string, number>;
 }
 
-const ROLES: MeasureRole[] = ["values", "base", "tooltips"];
+const ROLES: MeasureRole[] = ["values", "detail", "base", "tooltips"];
 
-function roleOf(source: DataViewMetadataColumn): MeasureRole {
-    return ROLES.find(r => source.roles?.[r]) || "values";
+function hasRole(measure: Measure, role: MeasureRole): boolean {
+    const roles = measure.source.roles;
+    // Sem papel conhecido, a medida é tratada como valor exibido.
+    return role === "values" && !ROLES.some(r => roles?.[r]) ? true : !!roles?.[role];
+}
+
+/** Palavras que indicam um campo de tempo (sem acentos, em minúsculas). */
+const TIME_WORDS = new Set([
+    "data", "date", "dia", "day", "semana", "week", "mes", "month", "bimestre", "trimestre", "quarter",
+    "semestre", "ano", "year", "periodo", "period", "competencia", "anomes", "mesano", "yearmonth"
+]);
+
+/** Campo de data, ou com nome de período (Mês, Ano, Trimestre, AnoMês…). "Tempo de casa (anos)" não conta. */
+function isTimeSource(source: DataViewMetadataColumn): boolean {
+    if (source.type?.dateTime) {
+        return true;
+    }
+    const words = (source.displayName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().split(/[^a-z]+/);
+    return words.some(w => TIME_WORDS.has(w));
 }
 
 function isPercentFormat(format: string | undefined): boolean {
@@ -119,18 +143,18 @@ export function buildModel(dataView: DataView | undefined, locale: string, total
             source,
             name: source.displayName,
             queryName: source.queryName || source.displayName,
-            role: roleOf(source),
             isPercent: isPercentFormat(source.format),
             format: (v: PrimitiveValue) => formatter.format(v)
         };
     });
-    const values = measures.filter(m => m.role === "values");
+    const values = measures.filter(m => hasRole(m, "values"));
 
     // ---- colunas: percorre a hierarquia e guarda o índice de cada folha
     const columnLevels = matrix.columns?.levels || [];
     const lastIsMeasure = columnLevels.length > 0 && !!columnLevels[columnLevels.length - 1].sources?.[0]?.isMeasure;
     const memberLevelCount = lastIsMeasure ? columnLevels.length - 1 : columnLevels.length;
     const columnLevelNames = columnLevels.slice(0, memberLevelCount).map(l => l.sources.map(s => s.displayName).join(" / "));
+    const columnIsTime = columnLevels.slice(0, memberLevelCount).some(l => l.sources.some(isTimeSource));
 
     const groups: ColumnGroup[] = [];
     const groupByKey = new Map<string, ColumnGroup>();
@@ -246,13 +270,16 @@ export function buildModel(dataView: DataView | undefined, locale: string, total
     return {
         measures,
         values,
-        base: measures.find(m => m.role === "base"),
-        tooltips: measures.filter(m => m.role === "tooltips"),
+        details: measures.filter(m => hasRole(m, "detail")),
+        base: measures.find(m => hasRole(m, "base")),
+        // Uma medida que já está em Valores não se repete na dica de ferramenta.
+        tooltips: measures.filter(m => hasRole(m, "tooltips") && !hasRole(m, "values")),
         groups,
         totalGroup,
         columns,
         columnLevels,
         columnLevelNames,
+        columnIsTime,
         rowLevels,
         rowLevelNames,
         rows,

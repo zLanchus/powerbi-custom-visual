@@ -1,5 +1,5 @@
 {
-		"version": "1.0.0.0",
+		"version": "1.1.0.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/matrizDiagnostica2E4F2050D5474936BAC0619F7AFC5427.pbiviz.json"
 			}
 		],
-		"visual": {"name":"matrizDiagnostica","displayName":"Matriz Diagnóstica","guid":"matrizDiagnostica2E4F2050D5474936BAC0619F7AFC5427","visualClassName":"Visual","version":"1.0.0.0","description":"Matriz para explorar padrões (ex.: turnover): mapa de calor contra a referência, desvio, base mínima, tendência, pontos de atenção, pesquisa e ordenação.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"matrizDiagnostica","displayName":"Matriz Diagnóstica","guid":"matrizDiagnostica2E4F2050D5474936BAC0619F7AFC5427","visualClassName":"Visual","version":"1.1.0.0","description":"Matriz para explorar padrões (ex.: turnover): mapa de calor contra a referência, desvio, base mínima, tendência, pontos de atenção, pesquisa e ordenação.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"

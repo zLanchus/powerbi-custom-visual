@@ -19,6 +19,12 @@
             "description": "Medidas exibidas (ex.: Turnover %, Desligamentos, Headcount)."
         },
         {
+            "displayName": "Detalhe (entre parênteses)",
+            "name": "detail",
+            "kind": "Measure",
+            "description": "Medida mostrada ao lado do valor, entre parênteses (ex.: nº de saídas → 24,2% (18)). Com mais de uma, aparecem separadas por ·."
+        },
+        {
             "displayName": "Base (volume)",
             "name": "base",
             "kind": "Measure",
@@ -428,6 +434,20 @@
                     "type": {
                         "numeric": true
                     }
+                },
+                "when": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "time",
+                                "displayName": "Só quando as colunas são datas ou períodos"
+                            },
+                            {
+                                "value": "always",
+                                "displayName": "Sempre que houver colunas"
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -530,6 +550,11 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "detail": {
+                    "type": {
+                        "bool": true
                     }
                 }
             }
@@ -751,6 +776,54 @@
                 }
             }
         },
+        "detailLabels": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "style": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "paren",
+                                "displayName": "Entre parênteses: (18)"
+                            },
+                            {
+                                "value": "dot",
+                                "displayName": "Após um ponto: · 18"
+                            },
+                            {
+                                "value": "plain",
+                                "displayName": "Sem separador: 18"
+                            }
+                        ]
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "totals": {
             "properties": {
                 "rowSubtotals": {
@@ -864,6 +937,9 @@
                     },
                     "base": {
                         "max": 1
+                    },
+                    "detail": {
+                        "max": 3
                     }
                 }
             ],
@@ -893,6 +969,11 @@
                         {
                             "for": {
                                 "in": "values"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "detail"
                             }
                         },
                         {
