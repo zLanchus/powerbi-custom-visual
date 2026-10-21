@@ -114,5 +114,21 @@
       "2-estilos.png",
       "3-hover.png"
     ]
+  },
+  {
+    "id": "popup-explicativo",
+    "name": "Pop-up Explicativo",
+    "summary": "Botão que abre um pop-up grande (até a tela inteira) com um texto explicativo.",
+    "features": [
+      "Pop-up por cima do relatório inteiro, independente do tamanho do visual",
+      "Títulos, listas, destaques, negrito e itálico no texto",
+      "Texto fixo no painel ou dinâmico por medida",
+      "Mesmo botão caprichado do Botão de Navegação (ícones, hover, clique)"
+    ],
+    "cover": "2-popup.png",
+    "images": [
+      "1-botao.png",
+      "3-dentro-do-visual.png"
+    ]
   }
 ]
