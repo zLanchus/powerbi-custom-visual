@@ -1,0 +1,980 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Linhas",
+            "name": "rows",
+            "kind": "Grouping",
+            "description": "Campos das linhas (ou um parâmetro de campo). Com mais de um campo, as linhas viram uma hierarquia que abre ao clicar."
+        },
+        {
+            "displayName": "Colunas",
+            "name": "columns",
+            "kind": "Grouping",
+            "description": "Campos das colunas (opcional), como na matriz nativa. Com um campo de tempo (ex.: Mês), aparece a coluna de tendência."
+        },
+        {
+            "displayName": "Valores",
+            "name": "values",
+            "kind": "Measure",
+            "description": "Medidas exibidas (ex.: Turnover %, Desligamentos, Headcount)."
+        },
+        {
+            "displayName": "Base (volume)",
+            "name": "base",
+            "kind": "Measure",
+            "description": "Opcional: medida de volume (ex.: Headcount médio). Células com base abaixo da base mínima são marcadas como amostra pequena e ficam fora do mapa de calor e dos pontos de atenção."
+        },
+        {
+            "displayName": "Dicas de ferramenta",
+            "name": "tooltips",
+            "kind": "Measure",
+            "description": "Medidas extras mostradas só ao passar o mouse."
+        }
+    ],
+    "objects": {
+        "toolbar": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "title": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "titleSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "titleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showFields": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showSearch": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showExpand": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showHeatmap": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showDelta": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showFocus": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showExport": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "activeFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "activeFontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "analysis": {
+            "properties": {
+                "keyMeasure": {
+                    "type": {
+                        "enumeration": []
+                    }
+                },
+                "heatmapOn": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "deltaOn": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "focusOn": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "initialSort": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "model",
+                                "displayName": "Ordem do Power BI"
+                            },
+                            {
+                                "value": "keyDesc",
+                                "displayName": "Medida-chave (maior primeiro)"
+                            },
+                            {
+                                "value": "keyAsc",
+                                "displayName": "Medida-chave (menor primeiro)"
+                            },
+                            {
+                                "value": "label",
+                                "displayName": "Nome (A–Z)"
+                            }
+                        ]
+                    }
+                },
+                "worseColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "neutralColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "betterColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "colorBetter": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "scaleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "intensity": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "smallBase": {
+            "properties": {
+                "minBase": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "hideValues": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "pattern": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "hotspots": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "title": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "count": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "scope": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "rowTotal",
+                                "displayName": "Total de cada linha"
+                            },
+                            {
+                                "value": "cells",
+                                "displayName": "Cada célula (linha × coluna)"
+                            }
+                        ]
+                    }
+                },
+                "level": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "deepest",
+                                "displayName": "Nível mais detalhado"
+                            },
+                            {
+                                "value": "top",
+                                "displayName": "Primeiro nível"
+                            },
+                            {
+                                "value": "all",
+                                "displayName": "Todos os níveis"
+                            }
+                        ]
+                    }
+                },
+                "rank": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "deviation",
+                                "displayName": "Desvio da referência"
+                            },
+                            {
+                                "value": "impact",
+                                "displayName": "Impacto (desvio × base)"
+                            }
+                        ]
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "trend": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "title": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "position": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "end",
+                                "displayName": "No fim"
+                            },
+                            {
+                                "value": "start",
+                                "displayName": "Logo depois das linhas"
+                            }
+                        ]
+                    }
+                },
+                "lineColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "markWorse": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "width": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "measure": {
+            "properties": {
+                "heatmap": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "on",
+                                "displayName": "Ligado"
+                            },
+                            {
+                                "value": "off",
+                                "displayName": "Desligado"
+                            }
+                        ]
+                    }
+                },
+                "direction": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "higherWorse",
+                                "displayName": "Maior é pior (ex.: turnover)"
+                            },
+                            {
+                                "value": "higherBetter",
+                                "displayName": "Maior é melhor (ex.: retenção)"
+                            },
+                            {
+                                "value": "neutral",
+                                "displayName": "Neutro (escala simples)"
+                            }
+                        ]
+                    }
+                },
+                "reference": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automática"
+                            },
+                            {
+                                "value": "total",
+                                "displayName": "Total geral"
+                            },
+                            {
+                                "value": "average",
+                                "displayName": "Média das linhas do mesmo nível"
+                            },
+                            {
+                                "value": "parent",
+                                "displayName": "Linha de cima (nível anterior)"
+                            },
+                            {
+                                "value": "fixed",
+                                "displayName": "Valor fixo (meta)"
+                            }
+                        ]
+                    }
+                },
+                "target": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "delta": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "dataBars": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "table": {
+            "properties": {
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "rowHeight": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "zebra": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "zebraColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "hoverColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "gridColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "columnHeader": {
+            "properties": {
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "memberColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "uppercase": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "wrap": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "minWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "rowHeaders": {
+            "properties": {
+                "title": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "width": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "indent": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "parentBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "expandLevel": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "values": {
+            "properties": {
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "emptyText": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "barColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "totals": {
+            "properties": {
+                "rowSubtotals": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnSubtotals": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showGrandTotal": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "position": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "bottom",
+                                "displayName": "Embaixo"
+                            },
+                            {
+                                "value": "top",
+                                "displayName": "Em cima"
+                            }
+                        ]
+                    }
+                },
+                "label": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "rowSubtotalsPerLevel": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnSubtotalsPerLevel": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "levelSubtotalEnabled": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "rowSubtotalsType": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Top",
+                                "displayName": "Em cima"
+                            },
+                            {
+                                "value": "Bottom",
+                                "displayName": "Embaixo"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "export": {
+            "properties": {
+                "fileName": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "allRows": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "rows": {
+                        "min": 0
+                    },
+                    "columns": {
+                        "min": 0,
+                        "max": 4
+                    },
+                    "base": {
+                        "max": 1
+                    }
+                }
+            ],
+            "matrix": {
+                "rows": {
+                    "for": {
+                        "in": "rows"
+                    },
+                    "dataReductionAlgorithm": {
+                        "window": {
+                            "count": 30000
+                        }
+                    }
+                },
+                "columns": {
+                    "for": {
+                        "in": "columns"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {
+                            "count": 100
+                        }
+                    }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "values"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "base"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "tooltips"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "subtotals": {
+        "matrix": {
+            "rowSubtotals": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "rowSubtotals"
+                },
+                "defaultValue": true
+            },
+            "rowSubtotalsPerLevel": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "rowSubtotalsPerLevel"
+                },
+                "defaultValue": false
+            },
+            "columnSubtotals": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "columnSubtotals"
+                },
+                "defaultValue": true
+            },
+            "columnSubtotalsPerLevel": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "columnSubtotalsPerLevel"
+                },
+                "defaultValue": false
+            },
+            "levelSubtotalEnabled": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "levelSubtotalEnabled"
+                },
+                "defaultValue": true
+            },
+            "rowSubtotalsType": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "rowSubtotalsType"
+                },
+                "defaultValue": "Bottom"
+            }
+        }
+    },
+    "sorting": {
+        "default": {}
+    },
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": true
+        },
+        "roles": [
+            "tooltips"
+        ]
+    },
+    "suppressDefaultTitle": true,
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "privileges": [
+        {
+            "name": "ExportContent",
+            "essential": false
+        }
+    ]
+}

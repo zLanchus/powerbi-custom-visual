@@ -1,0 +1,873 @@
+// Visual "Matriz Diagnóstica". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação via variáveis CSS (applyStyles em visual.ts).
+
+.md-root {
+    --md-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --md-bg: #FFFFFF;
+    --md-row-h: 34px;
+    --md-zebra: #F8FBFE;
+    --md-hover: #F1F8FD;
+    --md-grid: #E4EDF5;
+    --md-radius: 12px;
+    --md-bw: 1px;
+    --md-bc: #E4EDF5;
+    --md-title-size: 15px;
+    --md-title-fg: #0F2B45;
+    --md-btn-size: 12px;
+    --md-btn-bg: #F1F8FD;
+    --md-btn-fg: #0F2B45;
+    --md-btn-on-bg: #6CBEEB;
+    --md-btn-on-fg: #0F2B45;
+    --md-btn-h: 32px;
+    --md-btn-radius: 10px;
+    --md-btn-bw: 0px;
+    --md-btn-bc: #E4EDF5;
+    --md-worse: #E5534B;
+    --md-better: #3FAE6A;
+    --md-chip-bg: #F1F8FD;
+    --md-chip-fg: #0F2B45;
+    --md-chip-size: 12px;
+    --md-chip-radius: 10px;
+    --md-chip-bw: 0px;
+    --md-chip-bc: #E4EDF5;
+    --md-trend-w: 120px;
+    --md-head-bg: #FFFFFF;
+    --md-head-fg: #4E6175;
+    --md-member-fg: #0F2B45;
+    --md-head-size: 12px;
+    --md-head-case: none;
+    --md-head-wrap: normal;
+    --md-col-w: 84px;
+    --md-row-bg: #FFFFFF;
+    --md-row-fg: #0F2B45;
+    --md-row-size: 13px;
+    --md-row-w: 240px;
+    --md-indent: 18px;
+    --md-parent-weight: 650;
+    --md-val-fg: #0F2B45;
+    --md-val-size: 13px;
+    --md-total-bg: #F1F8FD;
+    --md-total-fg: #0F2B45;
+    --md-divider: color-mix(in srgb, var(--md-grid) 55%, #8FA7BC);
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--md-bw) solid var(--md-bc);
+    border-radius: var(--md-radius);
+    background: var(--md-bg);
+    font-family: var(--md-font);
+    color: var(--md-val-fg);
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.md-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+// ------------------------------------------------------------------- barra
+
+.md-bar {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 12px 8px;
+}
+
+.md-heading {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.md-title {
+    color: var(--md-title-fg);
+    font-size: var(--md-title-size);
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.md-fields {
+    margin-top: 2px;
+    color: var(--md-head-fg);
+    font-size: 11.5px;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    strong {
+        color: var(--md-member-fg);
+        font-weight: 600;
+    }
+}
+
+.md-field + .md-field::before {
+    content: "·";
+    margin: 0 6px;
+    opacity: 0.6;
+}
+
+.md-count {
+    color: var(--md-head-fg);
+    font-size: 11.5px;
+    font-style: italic;
+    white-space: nowrap;
+}
+
+.md-tools {
+    flex: 0 1 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.md-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--md-btn-h);
+    min-width: var(--md-btn-h);
+    padding: 0 11px;
+    border: var(--md-btn-bw) solid var(--md-btn-bc);
+    border-radius: var(--md-btn-radius);
+    background: var(--md-btn-bg);
+    color: var(--md-btn-fg);
+    font-family: inherit;
+    font-size: var(--md-btn-size);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+
+    &:hover {
+        filter: brightness(0.97);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+    }
+
+    &.md-on {
+        background: var(--md-btn-on-bg);
+        color: var(--md-btn-on-fg);
+    }
+}
+
+.md-icon-only,
+.md-compact .md-btn {
+    padding: 0;
+    width: var(--md-btn-h);
+}
+
+.md-compact .md-btn-label {
+    display: none;
+}
+
+.md-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 190px;
+    height: var(--md-btn-h);
+    padding: 0 6px 0 10px;
+    border: 1px solid var(--md-grid);
+    border-radius: var(--md-btn-radius);
+    background: #FFFFFF;
+    color: var(--md-head-fg);
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus-within {
+        border-color: var(--md-btn-on-bg);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-btn-on-bg) 25%, transparent);
+    }
+}
+
+.md-tiny .md-search {
+    width: 130px;
+}
+
+.md-search-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--md-btn-fg);
+    font-family: inherit;
+    font-size: var(--md-btn-size);
+    user-select: text;
+
+    &::placeholder {
+        color: var(--md-head-fg);
+        opacity: 0.75;
+    }
+}
+
+.md-search-clear {
+    display: none;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    .md-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    &:hover {
+        background: rgba(15, 43, 69, 0.08);
+    }
+
+    .md-has-text & {
+        display: inline-flex;
+    }
+}
+
+// ------------------------------------------------- pontos de atenção e legenda
+
+.md-insights {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 0 12px 10px;
+}
+
+// Uma linha só: se não couber, rola para o lado (a legenda desce quando sobra pouco espaço).
+.md-hotspots {
+    flex: 1 1 420px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 2px 0 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    // Quando não cabe, a ponta direita some aos poucos (indica que dá para rolar).
+    &.md-overflow {
+        mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+    }
+}
+
+
+.md-hot-title {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 2px;
+    color: var(--md-chip-fg);
+    font-size: var(--md-chip-size);
+    font-weight: 700;
+}
+
+.md-hot-icon {
+    width: 15px;
+    height: 15px;
+    color: var(--md-worse);
+}
+
+.md-chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    padding: 4px 10px;
+    border: var(--md-chip-bw) solid var(--md-chip-bc);
+    border-radius: var(--md-chip-radius);
+    background: var(--md-chip-bg);
+    color: var(--md-chip-fg);
+    font-family: inherit;
+    font-size: var(--md-chip-size);
+    line-height: 1.3;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.15s ease, filter 0.15s ease;
+
+    &:hover {
+        filter: brightness(0.97);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+    }
+}
+
+.md-chip-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--md-worse);
+}
+
+.md-chip-label {
+    min-width: 0;
+    max-width: 280px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.md-chip-value {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.md-chip-delta {
+    color: var(--md-worse);
+    font-size: 0.92em;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.md-legend {
+    flex: none;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    color: var(--md-head-fg);
+    font-size: 11px;
+}
+
+.md-ramp {
+    width: 84px;
+    height: 8px;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px rgba(15, 43, 69, 0.08);
+}
+
+.md-legend-ref {
+    margin-left: 6px;
+}
+
+.md-legend-low {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 6px;
+}
+
+.md-legend-hatch {
+    width: 16px;
+    height: 10px;
+    border-radius: 3px;
+    border: 1px solid var(--md-grid);
+    background-image: repeating-linear-gradient(135deg, rgba(15, 43, 69, 0.16) 0 2px, transparent 2px 5px);
+}
+
+// ------------------------------------------------------------------ tabela
+
+.md-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+}
+
+.md-table {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.md-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.md-table th {
+    font-weight: 600;
+}
+
+.md-corner {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    width: var(--md-row-w);
+    min-width: var(--md-row-w);
+    max-width: var(--md-row-w);
+    padding: 8px 12px;
+    vertical-align: bottom;
+    text-align: left;
+    background: var(--md-head-bg);
+    color: var(--md-head-fg);
+    font-size: var(--md-head-size);
+    text-transform: var(--md-head-case);
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--md-divider);
+    border-right: 1px solid var(--md-grid);
+}
+
+.md-corner-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.md-corner-cols {
+    align-self: flex-end;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.md-corner-rows {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--md-member-fg);
+}
+
+.md-member {
+    padding: 7px 10px;
+    text-align: center;
+    background: var(--md-head-bg);
+    color: var(--md-member-fg);
+    font-size: var(--md-head-size);
+    white-space: var(--md-head-wrap);
+    border-bottom: 1px solid var(--md-grid);
+
+    &.md-leafhead {
+        min-width: var(--md-col-w);
+        border-bottom-color: var(--md-divider);
+    }
+}
+
+.md-measure {
+    min-width: var(--md-col-w);
+    max-width: 200px;
+    padding: 8px 12px;
+    text-align: right;
+    vertical-align: bottom;
+    background: var(--md-head-bg);
+    color: var(--md-head-fg);
+    font-size: var(--md-head-size);
+    text-transform: var(--md-head-case);
+    letter-spacing: 0.02em;
+    white-space: var(--md-head-wrap);
+    border-bottom: 1px solid var(--md-divider);
+}
+
+.md-nowrap {
+    white-space: nowrap;
+}
+
+.md-sortable {
+    cursor: pointer;
+
+    &:hover {
+        color: var(--md-member-fg);
+    }
+}
+
+.md-sort-desc,
+.md-sort-asc {
+    color: var(--md-member-fg);
+}
+
+.md-leafhead.md-sort-desc::after,
+.md-sort-desc .md-corner-rows::after {
+    content: " ↓";
+}
+
+.md-leafhead.md-sort-asc::after,
+.md-sort-asc .md-corner-rows::after {
+    content: " ↑";
+}
+
+.md-group-start {
+    border-left: 1px solid var(--md-divider);
+}
+
+.md-trend-head {
+    width: var(--md-trend-w);
+    min-width: var(--md-trend-w);
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: bottom;
+    background: var(--md-head-bg);
+    color: var(--md-head-fg);
+    font-size: var(--md-head-size);
+    text-transform: var(--md-head-case);
+    border-bottom: 1px solid var(--md-divider);
+    white-space: nowrap;
+}
+
+.md-trend-title,
+.md-trend-measure {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.md-trend-measure {
+    margin-top: 1px;
+    font-size: 0.88em;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+// ------------------------------------------------------------------ linhas
+
+.md-table tbody tr,
+.md-table tfoot tr,
+.md-table .md-total-top {
+    height: var(--md-row-h);
+}
+
+.md-zebra tbody tr:nth-child(even) > * {
+    background-color: var(--md-zebra);
+}
+
+.md-zebra tbody tr:nth-child(even) > .md-cell.md-col-total {
+    background-color: color-mix(in srgb, var(--md-total-bg) 55%, var(--md-zebra));
+}
+
+.md-rowhead {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: var(--md-row-w);
+    min-width: var(--md-row-w);
+    max-width: var(--md-row-w);
+    padding: 0 10px 0 calc(8px + var(--md-level, 0) * var(--md-indent));
+    text-align: left;
+    background: var(--md-row-bg);
+    color: var(--md-row-fg);
+    font-size: var(--md-row-size);
+    font-weight: 400;
+    border-bottom: 1px solid var(--md-grid);
+    border-right: 1px solid var(--md-grid);
+    cursor: pointer;
+
+    .md-has-children & {
+        font-weight: var(--md-parent-weight);
+    }
+}
+
+.md-rowhead-inner {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.md-label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.md-mark {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--md-btn-on-bg) 45%, transparent);
+    color: inherit;
+}
+
+.md-flag {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    margin-left: 2px;
+    border-radius: 50%;
+    background: var(--md-worse);
+}
+
+.md-toggle,
+.md-toggle-spacer {
+    flex: none;
+    width: 22px;
+    height: 22px;
+}
+
+.md-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(15, 43, 69, 0.08);
+    }
+}
+
+.md-chevron {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.15s ease;
+
+    .md-open & {
+        transform: rotate(90deg);
+    }
+}
+
+.md-cell {
+    min-width: var(--md-col-w);
+    padding: 0 12px;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--md-val-fg);
+    font-size: var(--md-val-size);
+    border-bottom: 1px solid var(--md-grid);
+    cursor: pointer;
+
+    .md-has-children & {
+        font-weight: var(--md-parent-weight);
+    }
+}
+
+.md-cv {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1px;
+    padding: 3px 0;
+    line-height: 1.15;
+}
+
+.md-delta {
+    color: var(--md-head-fg);
+    font-size: 0.74em;
+    font-weight: 600;
+
+    &.md-worse {
+        color: var(--md-worse);
+    }
+
+    &.md-better {
+        color: var(--md-better);
+    }
+
+    .md-colored & {
+        color: inherit;
+        opacity: 0.85;
+    }
+}
+
+.md-colored {
+    font-weight: 600;
+}
+
+.md-col-total {
+    font-weight: 700;
+}
+
+.md-cell.md-col-total {
+    background-color: color-mix(in srgb, var(--md-total-bg) 55%, var(--md-bg));
+}
+
+.md-empty-value {
+    color: color-mix(in srgb, var(--md-val-fg) 40%, transparent);
+}
+
+// Amostra pequena: valor esmaecido e (opcional) hachura.
+.md-lowbase .md-val {
+    font-style: italic;
+    opacity: 0.5;
+}
+
+.md-hatch {
+    background-image: repeating-linear-gradient(135deg, rgba(15, 43, 69, 0.07) 0 3px, transparent 3px 7px);
+}
+
+.md-trend {
+    width: var(--md-trend-w);
+    min-width: var(--md-trend-w);
+    padding: 0 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--md-grid);
+}
+
+.md-spark {
+    display: block;
+    margin: 0 auto;
+    overflow: visible;
+}
+
+.md-spark-line {
+    fill: none;
+    stroke: var(--md-spark);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.md-spark-last {
+    fill: var(--md-spark);
+}
+
+.md-spark-worse {
+    fill: var(--md-spark-worse);
+}
+
+// Destaque ao passar o mouse: linhas em cima e embaixo, sem apagar o mapa de calor.
+.md-table tbody tr:hover > td {
+    box-shadow: inset 0 1px 0 var(--md-divider), inset 0 -1px 0 var(--md-divider);
+}
+
+.md-table tbody tr:hover > .md-rowhead {
+    background: var(--md-hover);
+    box-shadow: none;
+}
+
+// Seleção: o que não está selecionado fica esmaecido, como na matriz nativa.
+.md-has-selection tbody td:not(.md-sel) {
+    opacity: 0.38;
+}
+
+.md-has-selection tbody .md-rowhead:not(.md-sel) {
+    color: color-mix(in srgb, var(--md-row-fg) 45%, transparent);
+}
+
+.md-has-selection tbody .md-rowhead.md-sel {
+    box-shadow: inset 3px 0 0 var(--md-btn-on-bg);
+}
+
+// Linha revelada a partir de um ponto de atenção.
+@keyframes md-flash {
+    0%,
+    100% {
+        box-shadow: inset 0 0 0 9999px transparent;
+    }
+
+    25% {
+        box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--md-btn-on-bg) 35%, transparent);
+    }
+}
+
+.md-flash > * {
+    animation: md-flash 1.6s ease;
+}
+
+.md-flash-cell {
+    outline: 2px solid var(--md-worse);
+    outline-offset: -2px;
+}
+
+.md-noresult td {
+    padding: 18px 14px;
+    text-align: left;
+    color: var(--md-head-fg);
+    font-size: 13px;
+    font-style: italic;
+}
+
+// ------------------------------------------------------------------- total
+
+.md-table tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+}
+
+.md-total > *,
+.md-total > .md-cell.md-col-total {
+    background: var(--md-total-bg);
+    color: var(--md-total-fg);
+    font-weight: 700;
+    border-top: 1px solid var(--md-divider);
+    border-bottom: none;
+    cursor: default;
+}
+
+.md-total > .md-rowhead {
+    background: var(--md-total-bg);
+    color: var(--md-total-fg);
+}
+
+.md-total-top > * {
+    border-top: none;
+    border-bottom: 1px solid var(--md-divider);
+}
+
+// ------------------------------------------------------------ vazio e aviso
+
+.md-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 24px;
+    text-align: center;
+    color: #4E6175;
+    font-size: 13px;
+
+    strong {
+        color: #0F2B45;
+        font-size: 15px;
+    }
+}
+
+.md-toast {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    max-width: calc(100% - 32px);
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #0F2B45;
+    color: #FFFFFF;
+    font-size: 13px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}

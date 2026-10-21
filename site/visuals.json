@@ -98,5 +98,23 @@
       "2-top-destaque.png",
       "3-fx.png"
     ]
+  },
+  {
+    "id": "matriz-diagnostica",
+    "name": "Matriz Diagnóstica",
+    "summary": "Matriz como a nativa, feita para explorar e diagnosticar padrões (ex.: turnover) com linhas e colunas por parâmetro de campo.",
+    "features": [
+      "Mapa de calor contra a referência (total geral, média, linha de cima ou meta)",
+      "Desvio em p.p., pontos de atenção clicáveis e filtro \"acima da referência\"",
+      "Base mínima: marca ou oculta grupos pequenos demais para concluir",
+      "Tendência (minigráfico), pesquisa, ordenação por clique e barras de dados",
+      "Hierarquia, totais, parâmetros de campo, filtro cruzado, fx e exportar para Excel"
+    ],
+    "cover": "1-mapa-de-calor.png",
+    "images": [
+      "2-desvio-foco.png",
+      "3-parametro.png",
+      "4-barras-desvio.png"
+    ]
   }
 ]
