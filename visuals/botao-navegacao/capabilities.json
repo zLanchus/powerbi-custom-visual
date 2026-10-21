@@ -1,0 +1,427 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Texto",
+            "name": "label",
+            "kind": "Measure",
+            "description": "Opcional: medida de texto que substitui o texto do botão (ex.: \"Base nominal (\" & [Qtd] & \")\")."
+        },
+        {
+            "displayName": "Subtítulo",
+            "name": "subtitle",
+            "kind": "Measure",
+            "description": "Opcional: medida de texto mostrada embaixo do texto."
+        },
+        {
+            "displayName": "Link",
+            "name": "url",
+            "kind": "Measure",
+            "description": "Opcional: medida que devolve o link (https) aberto ao clicar. Tem prioridade sobre o link do painel de formatação."
+        }
+    ],
+    "objects": {
+        "button": {
+            "properties": {
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "gradient": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "layout": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "spread",
+                                "displayName": "Texto à esquerda, seta na ponta"
+                            },
+                            {
+                                "value": "left",
+                                "displayName": "Tudo à esquerda"
+                            },
+                            {
+                                "value": "center",
+                                "displayName": "Tudo centralizado"
+                            }
+                        ]
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "padding": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "gap": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "shadow": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "none",
+                                "displayName": "Sem sombra"
+                            },
+                            {
+                                "value": "soft",
+                                "displayName": "Leve"
+                            },
+                            {
+                                "value": "medium",
+                                "displayName": "Média"
+                            },
+                            {
+                                "value": "strong",
+                                "displayName": "Forte"
+                            }
+                        ]
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "label": {
+            "properties": {
+                "text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "uppercase": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "subtitle": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "subtitleSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "subtitleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "icon": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "icon": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "chart",
+                                "displayName": "Gráfico"
+                            },
+                            {
+                                "value": "page",
+                                "displayName": "Página"
+                            },
+                            {
+                                "value": "table",
+                                "displayName": "Tabela"
+                            },
+                            {
+                                "value": "people",
+                                "displayName": "Pessoas"
+                            },
+                            {
+                                "value": "home",
+                                "displayName": "Início"
+                            },
+                            {
+                                "value": "filter",
+                                "displayName": "Filtro"
+                            },
+                            {
+                                "value": "calendar",
+                                "displayName": "Calendário"
+                            },
+                            {
+                                "value": "money",
+                                "displayName": "Dinheiro"
+                            },
+                            {
+                                "value": "target",
+                                "displayName": "Meta"
+                            },
+                            {
+                                "value": "back",
+                                "displayName": "Voltar"
+                            }
+                        ]
+                    }
+                },
+                "size": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "color": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "arrow": {
+            "properties": {
+                "type": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "arrow",
+                                "displayName": "Seta →"
+                            },
+                            {
+                                "value": "chevron",
+                                "displayName": "Chevron ›"
+                            },
+                            {
+                                "value": "badge",
+                                "displayName": "Seta em círculo"
+                            },
+                            {
+                                "value": "external",
+                                "displayName": "Abrir fora ↗"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Nenhuma"
+                            }
+                        ]
+                    }
+                },
+                "size": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "color": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "animate": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "divider": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "dividerColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "effects": {
+            "properties": {
+                "hover": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático (escurece ou clareia)"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Cores próprias"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Sem mudança de cor"
+                            }
+                        ]
+                    }
+                },
+                "hoverBackground": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "hoverColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lift": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "shine": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "press": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "ripple": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "action": {
+            "properties": {
+                "url": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "tooltip": {
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "label": {
+                        "max": 1
+                    },
+                    "subtitle": {
+                        "max": 1
+                    },
+                    "url": {
+                        "max": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "values": {
+                    "select": [
+                        {
+                            "bind": {
+                                "to": "label"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "subtitle"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "url"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "suppressDefaultTitle": true,
+    "privileges": []
+}

@@ -14,6 +14,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Pirâmide Segmentada**](visuals/piramide/) | Funil/pirâmide como o nativo, com as barras divididas em segmentos coloridos por um campo de legenda. Tem modo pirâmide espelhada (etária), conectores com taxa de conversão e rótulos de total e %. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/piramide.pbiviz) |
 | [**Card Comparativo**](visuals/card-comparativo/) | Card de KPI com o valor principal em destaque, o período selecionado (medida do calendário) e até 5 comparações com outras medidas (meta, mês anterior, ano anterior), com diferença ou variação %, cores e setas. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/card-comparativo.pbiviz) |
 | [**Barras com Insight**](visuals/barras-ranking/) | Barras horizontais com trilho no estilo de ranking: valor e detalhe ao lado (ex.: 24,2% (18)), top N, ordenação por outro campo (ex.: ordem do nível), cor com fx e frase de insight automática (maior ou menor valor). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-ranking.pbiviz) |
+| [**Botão de Navegação**](visuals/botao-navegacao/) | Botão bonito para ir a outra página ou abrir um link: ícone, texto e subtítulo, seta animada, degradê, sombras, efeitos de hover e clique, texto e link dinâmicos por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/botao-navegacao.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -40,7 +41,8 @@ powerbi-custom-visual/
 │   ├── matriz/
 │   ├── piramide/
 │   ├── card-comparativo/
-│   └── barras-ranking/
+│   ├── barras-ranking/
+│   └── botao-navegacao/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone

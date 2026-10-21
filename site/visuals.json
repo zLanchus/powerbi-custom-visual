@@ -98,5 +98,21 @@
       "2-top-destaque.png",
       "3-fx.png"
     ]
+  },
+  {
+    "id": "botao-navegacao",
+    "name": "Botão de Navegação",
+    "summary": "Botão caprichado para ir a outra página do relatório ou abrir um link.",
+    "features": [
+      "Ícone, texto, subtítulo, divisória e seta (seta, chevron, em círculo)",
+      "Hover com elevação, brilho e seta que desliza; clique que afunda com onda",
+      "Degradê sutil, sombras em camadas, borda e formato pílula",
+      "Texto e link dinâmicos por medida; teclado e foco acessíveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-estilos.png",
+      "3-hover.png"
+    ]
   }
 ]
