@@ -98,5 +98,22 @@
       "2-top-destaque.png",
       "3-fx.png"
     ]
+  },
+  {
+    "id": "colunas-linha",
+    "name": "Colunas Empilhadas e Linha",
+    "summary": "Colunas empilhadas e linha como o nativo, com legenda interativa para mostrar e esconder séries.",
+    "features": [
+      "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
+      "Linha calculada na categoria inteira, com eixo Y secundário",
+      "Rótulos de segmento, total da pilha e das linhas, sem sobreposição",
+      "Linhas retas, suaves ou em degraus, com marcadores e área",
+      "Eixos, grade, unidades, cores e rolagem horizontal configuráveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-legenda-interativa.png",
+      "3-medidas-rotulos.png"
+    ]
   }
 ]
