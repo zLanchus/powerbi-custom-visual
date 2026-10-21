@@ -18,12 +18,13 @@ import { DARK, VisualFormattingSettingsModel, enumValue } from "./settings";
 import { ColumnGroup, MatrixModel, Measure, RowItem, ValueColumn, buildModel, cellValue, rowPath } from "./model";
 import { Analysis, Hotspot, MeasureConfig, alpha, buildMeasureCard, colorProp, readConfig, readableText } from "./analysis";
 import { Cell, Sheet, buildXlsx } from "./xlsx";
+import { ICONS, SVG_NS, el, icon } from "./dom";
+import { buildHelp } from "./help";
 
 const MAX_RENDERED_ROWS = 5000;
 const FALLBACK_LABELS: Record<string, string> = {
     total: "total geral", median: "mediana do nível", average: "média do nível", parent: "linha de cima", none: ""
 };
-const SVG_NS = "http://www.w3.org/2000/svg";
 const PATH_SEP = " › ";
 
 /** Linha visível depois da pesquisa, do filtro "acima da referência" e da ordenação. */
@@ -40,46 +41,9 @@ interface SortState {
     dir: 1 | -1;
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
-    const node = document.createElement(tag);
-    if (className) {
-        node.className = className;
-    }
-    if (text !== undefined) {
-        node.textContent = text;
-    }
-    return node;
-}
-
-function icon(paths: string[], className = "md-icon"): SVGSVGElement {
-    const svg = document.createElementNS(SVG_NS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("class", className);
-    for (const d of paths) {
-        const path = document.createElementNS(SVG_NS, "path");
-        path.setAttribute("d", d);
-        svg.appendChild(path);
-    }
-    return svg;
-}
-
-const ICONS = {
-    search: ["M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 1 1 0-13z", "M20 20l-4.6-4.6"],
-    expand: ["M4 5h16v14H4z", "M12 9v6", "M9 12h6"],
-    collapse: ["M4 5h16v14H4z", "M9 12h6"],
-    heat: ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"],
-    delta: ["M12 5l8 14H4z"],
-    focus: ["M3 17l6-6 4 4 8-8", "M15 7h6v6"],
-    download: ["M12 4v11", "M7 10.5l5 5 5-5", "M5 20h14"],
-    chevron: ["M9 6l6 6-6 6"],
-    clear: ["M7 7l10 10", "M17 7L7 17"],
-    alert: ["M12 4l9 16H3z", "M12 10v4", "M12 17.2v.3"]
-};
-
 /** Texto sem acentos e em minúsculas, para a pesquisa. */
 function normalize(text: string): string {
-    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 /** Converte a string de formato do Power BI para o Excel (são quase sempre compatíveis). */
@@ -117,6 +81,11 @@ export class Visual implements IVisual {
     private deltaBtn: HTMLButtonElement;
     private focusBtn: HTMLButtonElement;
     private exportBtn: HTMLButtonElement;
+    private helpBtn: HTMLButtonElement;
+    /** Painel "Como ler a referência" aberto (e a medida explicada). */
+    private helpOpen = false;
+    private helpQuery = "";
+    private helpLayer: HTMLElement | undefined;
     private insights: HTMLElement;
     private scroller: HTMLElement;
 
@@ -172,6 +141,12 @@ export class Visual implements IVisual {
         this.scroller.addEventListener("click", (e: MouseEvent) => {
             if (!(e.target as HTMLElement).closest("tbody tr, tfoot tr, thead")) {
                 this.clearSelection();
+            }
+        });
+        // Esc fecha o painel de explicação.
+        document.addEventListener("keydown", (e: KeyboardEvent) => {
+            if (e.key === "Escape" && this.helpOpen) {
+                this.closeHelp();
             }
         });
         this.selectionManager.registerOnSelectCallback(() => {
@@ -257,10 +232,11 @@ export class Visual implements IVisual {
             this.renderBody();
         });
         this.exportBtn = this.button(ICONS.download, "", "Exportar para Excel", () => this.exportExcel());
+        this.helpBtn = this.button(ICONS.info, "", "Entenda a referência: o que é, como é calculada e como ler as cores", () => this.openHelp());
         for (const b of [this.heatBtn, this.deltaBtn, this.focusBtn]) {
             b.classList.add("md-switch");
         }
-        tools.append(this.countEl, this.searchBox, this.expandBtn, this.collapseBtn, this.heatBtn, this.deltaBtn, this.focusBtn, this.exportBtn);
+        tools.append(this.countEl, this.searchBox, this.expandBtn, this.collapseBtn, this.heatBtn, this.deltaBtn, this.focusBtn, this.helpBtn, this.exportBtn);
         this.bar.append(heading, tools);
     }
 
@@ -293,6 +269,7 @@ export class Visual implements IVisual {
         show(this.deltaBtn, t.showDelta.value);
         show(this.focusBtn, t.showFocus.value && !!this.keyMeasure && (model?.rows.length || 0) > 0);
         show(this.exportBtn, t.showExport.value);
+        show(this.helpBtn, this.formattingSettings.helpCard.show.value && !!model?.values.length);
         this.refreshToggles();
     }
 
@@ -602,6 +579,7 @@ export class Visual implements IVisual {
 
         const model = this.model;
         if (!model || model.columns.length === 0) {
+            this.closeHelp();
             this.insights.style.display = "none";
             const empty = el("div", "md-empty");
             empty.append(
@@ -617,9 +595,73 @@ export class Visual implements IVisual {
         this.renderTable(model, view);
         this.renderInsights(model);
         this.updateFields();
+        if (this.helpOpen) {
+            this.renderHelp();
+        }
 
         this.scroller.scrollTop = scrollTop;
         this.scroller.scrollLeft = scrollLeft;
+    }
+
+    // ------------------------------------------------- explicação da referência
+
+    private openHelp(measure?: Measure): void {
+        this.helpOpen = true;
+        this.helpQuery = (measure || this.keyMeasure)?.queryName || "";
+        this.renderHelp();
+    }
+
+    private closeHelp(): void {
+        this.helpOpen = false;
+        this.helpLayer?.remove();
+        this.helpLayer = undefined;
+    }
+
+    private renderHelp(): void {
+        const model = this.model;
+        const analysis = this.analysis;
+        const measure = model?.values.find(m => m.queryName === this.helpQuery) || this.keyMeasure;
+        if (!model || !analysis || !measure || !this.configs.get(measure.index)) {
+            this.closeHelp();
+            return;
+        }
+        const s = this.formattingSettings;
+        const a = s.analysisCard;
+        const h = s.helpCard;
+        // Mantém a rolagem quando o painel é redesenhado com a mesma medida (ex.: após um filtro).
+        const scroll = this.helpLayer?.dataset.query === measure.queryName
+            ? this.helpLayer.querySelector(".md-help-body")?.scrollTop || 0 : 0;
+        const layer = buildHelp({
+            model,
+            analysis,
+            configs: this.configs,
+            measure,
+            keyMeasure: this.keyMeasure,
+            hotspot: this.hotspotList[0],
+            colors: {
+                worse: a.worseColor.value.value,
+                better: a.betterColor.value.value,
+                neutral: a.neutralColor.value.value,
+                scale: a.scaleColor.value.value,
+                accent: h.accent.value.value,
+                colorBetter: a.colorBetter.value
+            },
+            minBase: model.base ? Math.max(0, s.smallBaseCard.minBase.value || 0) : 0,
+            hatch: s.smallBaseCard.pattern.value,
+            note: h.note.value || "",
+            totalLabel: s.totalsCard.label.value || "Total",
+            locale: this.locale,
+            onClose: () => this.closeHelp(),
+            onSelect: m => this.openHelp(m)
+        });
+        layer.dataset.query = measure.queryName;
+        this.helpLayer?.remove();
+        this.helpLayer = layer;
+        this.root.appendChild(layer);
+        const body = layer.querySelector(".md-help-body");
+        if (body) {
+            body.scrollTop = scroll;
+        }
     }
 
     /** A tendência só aparece com colunas de tempo (meses, trimestres…), a não ser que o autor peça "sempre". */
@@ -1149,8 +1191,19 @@ export class Visual implements IVisual {
                 el("span", "md-legend-end", neutral ? "Maior" : "Pior")
             );
             if (refText && !neutral) {
-                const ref = el("span", "md-legend-ref", refText);
-                ref.title = `${key.name} comparado com ${analysis.referenceLabel(key).toLowerCase()}`;
+                // Com a explicação ligada, o texto da referência abre o painel "Como ler a referência".
+                const canHelp = s.helpCard.show.value;
+                const ref = el(canHelp ? "button" : "span", "md-legend-ref" + (canHelp ? " md-legend-link" : ""));
+                ref.appendChild(el("span", undefined, refText));
+                if (canHelp) {
+                    (ref as HTMLButtonElement).type = "button";
+                    ref.appendChild(icon(ICONS.info, "md-icon md-legend-info"));
+                    ref.addEventListener("click", (e: MouseEvent) => {
+                        e.stopPropagation();
+                        this.openHelp();
+                    });
+                }
+                ref.title = canHelp ? "Entenda a referência" : `${key.name} comparado com ${analysis.referenceLabel(key).toLowerCase()}`;
                 legend.appendChild(ref);
             }
             if (model.base && this.formattingSettings.smallBaseCard.minBase.value > 0 && s.smallBaseCard.pattern.value) {
@@ -1596,6 +1649,15 @@ export class Visual implements IVisual {
         st.setProperty("--md-chip-bc", h.borderColor.value.value);
 
         st.setProperty("--md-trend-w", px(s.trendCard.width.value, 60));
+
+        const hp = s.helpCard;
+        st.setProperty("--md-help-bg", hp.fill.value.value);
+        st.setProperty("--md-help-fg", hp.fontColor.value.value);
+        st.setProperty("--md-help-accent", hp.accent.value.value);
+        st.setProperty("--md-help-size", px(hp.fontSize.value, 8));
+        st.setProperty("--md-help-radius", px(hp.radius.value));
+        st.setProperty("--md-help-bw", px(hp.borderWidth.value));
+        st.setProperty("--md-help-bc", hp.borderColor.value.value);
 
         const ch = s.columnHeaderCard;
         st.setProperty("--md-head-bg", ch.fill.value.value);

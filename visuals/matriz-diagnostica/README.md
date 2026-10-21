@@ -9,14 +9,14 @@ Na tabela, cada valor é comparado com uma **referência**, que serve de base pa
 | ![Mapa de calor](docs/1-mapa-de-calor.png) | ![Desvio](docs/2-desvio-foco.png) |
 | **Outra visão pelo parâmetro (Gestor × Tempo de casa)** | **Sem colunas: barras de dados e desvio** |
 | ![Parâmetro](docs/3-parametro.png) | ![Barras](docs/4-barras-desvio.png) |
-| **Referência por metas (só algumas diretorias têm meta)** | |
-| ![Metas](docs/5-metas.png) | |
+| **Referência por metas (só algumas diretorias têm meta)** | **Botão ⓘ: explicação da referência** |
+| ![Metas](docs/5-metas.png) | ![Explicação](docs/6-explicacao.png) |
 
 > Quer só uma matriz mais bonita, com seções de colunas (ex.: Mensal × YTD)? Use a [Matriz Estilizada](../matriz/). A Matriz Diagnóstica é voltada para análise.
 
 ## Como usar
 
-1. Baixe [`dist/matrizDiagnostica2E4F2050D5474936BAC0619F7AFC5427.1.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/matrizDiagnostica2E4F2050D5474936BAC0619F7AFC5427.1.3.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
    - **Linhas**: campos ou um parâmetro de campo. Com mais de um campo, vira hierarquia (clique na linha para abrir e fechar).
    - **Colunas** (opcional): campos ou um parâmetro de campo (ex.: Mês, Tempo de casa).
@@ -45,7 +45,7 @@ A coluna **Total** e o **total geral** são calculados pelo próprio Power BI, c
 
 ## Referência: o que é alto e o que é baixo
 
-A referência é a base de comparação de cada medida: acima dela o valor é **alto**, abaixo é **baixo**. O mapa de calor, os pontos de atenção, o botão *Acima da ref.*, os pontos da tendência e a linha *Situação* da dica de ferramenta seguem essa classificação. Escolha em **Formatar visual → Medidas → Referência (o que é alto ou baixo)**:
+A referência é a base de comparação de cada medida: acima dela o valor é **alto**, abaixo é **baixo**. Quem usa o relatório pode clicar no botão **ⓘ** (ou no texto *ref.:* da legenda) para ver essa explicação dentro do visual, com um exemplo tirado da própria tabela. O mapa de calor, os pontos de atenção, o botão *Acima da ref.*, os pontos da tendência e a linha *Situação* da dica de ferramenta seguem essa classificação. Escolha em **Formatar visual → Medidas → Referência (o que é alto ou baixo)**:
 
 | Opção | Cada valor é comparado com | Quando usar |
 |---|---|---|
@@ -79,6 +79,7 @@ A dica de ferramenta diz de onde veio cada referência, por exemplo *Referência
 ## Recursos para diagnóstico
 
 - **Mapa de calor contra a [referência](#referência-o-que-é-alto-e-o-que-é-baixo):** com *maior é pior*, valores altos ficam em vermelho, baixos em verde e os que estão na referência (ou na faixa típica) sem cor. Quanto mais longe, mais forte a cor, sempre em relação ao mesmo nível: diretorias são comparadas entre si, áreas entre si, e a coluna de total tem a escala própria dela. Dá para colorir só o lado pior.
+- **Explicação da referência (botão ⓘ):** abre um painel que explica, para a medida-chave (e para as outras, em abas): o que é a referência; como ela é calculada, passo a passo, para o método escolhido; um **exemplo real da tabela**, com uma régua que mostra o menor e o maior valor do nível, a referência (ou a faixa típica) e onde a célula está; como ler as cores e a hachura; o que é a **diferença em p.p.**, a variação relativa e o impacto (ex.: *13,6 p.p. × 64 pessoas ≈ 8,7 a mais*); e os cuidados na leitura (comparação por nível e coluna, filtros, amostra pequena). Também abre clicando no texto *ref.:* da legenda. Fecha no X, clicando fora ou com Esc. Em **Formatar visual → Explicação da referência** dá para pôr uma observação no topo (ex.: de onde vieram as metas) e mudar cores e fonte.
 - **Sentido** de cada medida: *maior é pior* (turnover, absenteísmo), *maior é melhor* (retenção) ou *neutro* (escala simples, ex.: headcount). No *Automático*, porcentagens e a medida-chave ficam como "maior é pior" e as demais como neutras.
 - **Desvio** (botão, desligado por padrão): mostra embaixo de cada valor o tamanho da diferença para a referência, em **pontos percentuais** para porcentagens (ex.: `+4,2 p.p.`) e no formato da medida para o resto. Com ele desligado, nenhum número de desvio aparece: a dica de ferramenta mostra a referência e a situação (alto, baixo ou na referência), e os pontos de atenção mostram o valor e a referência.
 - **Base mínima (amostra pequena):** quando a medida de **Base** fica abaixo do mínimo (padrão 10), a célula fica hachurada e esmaecida e sai do mapa de calor, das médias e dos pontos de atenção. Um grupo de 3 pessoas com 1 saída dá 33% e assusta, mas não diz muito. Opcional: **ocultar** esses valores, para não expor grupos muito pequenos de pessoas.
@@ -111,6 +112,7 @@ Os botões, a pesquisa e a ordenação são de quem está usando o relatório e 
 
 - **Barra de ferramentas:** mostrar, título, campos escolhidos, quais botões aparecem, fonte, cores normal e ligado, altura, arredondamento, espessura e cor da borda.
 - **Análise:** medida-chave, estado inicial dos botões (mapa de calor, desvio, acima da referência), ordenação inicial, cores pior / referência / melhor, colorir também o lado melhor, cor da escala das medidas neutras e intensidade máxima.
+- **Explicação da referência:** mostrar o botão ⓘ, observação no topo, cor de fundo, cor do texto, cor de destaque, tamanho da fonte, arredondamento, espessura e cor da borda.
 - **Base mínima:** valor mínimo, ocultar valores e hachura (aparece quando há medida em Base).
 - **Pontos de atenção:** mostrar, título, quantidade, comparar (total da linha ou célula), linhas consideradas, ordenar por (desvio ou impacto), cores, fonte, arredondamento e borda.
 - **Tendência:** mostrar, quando mostrar (só com datas/períodos ou sempre), título, posição, cor da linha, marcar pontos piores e largura.

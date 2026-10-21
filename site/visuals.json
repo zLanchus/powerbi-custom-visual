@@ -104,7 +104,7 @@
     "name": "Matriz Diagnóstica",
     "summary": "Matriz como a nativa, feita para explorar e diagnosticar padrões (ex.: turnover) com linhas e colunas por parâmetro de campo.",
     "features": [
-      "Referência para dizer o que é alto ou baixo: total geral, mediana, faixa típica (quartis), média da própria linha ou metas",
+      "Referência para dizer o que é alto ou baixo (total geral, mediana, faixa típica, média da própria linha ou metas), com botão ⓘ que explica o cálculo",
       "Metas só para algumas diretorias: herda da linha de cima ou usa uma alternativa",
       "Nº de saídas entre parênteses ao lado da taxa, como 24,2% (18)",
       "Pontos de atenção clicáveis, filtro \"acima da referência\" e base mínima para grupos pequenos",
@@ -116,6 +116,7 @@
       "2-desvio-foco.png",
       "3-parametro.png",
       "5-metas.png",
+      "6-explicacao.png",
       "4-barras-desvio.png"
     ]
   }

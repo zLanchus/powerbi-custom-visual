@@ -51,6 +51,13 @@
     --md-detail-weight: 400;
     --md-total-bg: #F1F8FD;
     --md-total-fg: #0F2B45;
+    --md-help-bg: #FFFFFF;
+    --md-help-fg: #0F2B45;
+    --md-help-accent: #6CBEEB;
+    --md-help-size: 13px;
+    --md-help-radius: 14px;
+    --md-help-bw: 0px;
+    --md-help-bc: #E4EDF5;
     --md-divider: color-mix(in srgb, var(--md-grid) 55%, #8FA7BC);
 
     position: relative;
@@ -390,6 +397,30 @@
 
 .md-legend-ref {
     margin-left: 6px;
+}
+
+// Texto da referência na legenda: abre a explicação.
+.md-legend-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(15, 43, 69, 0.06);
+        color: var(--md-member-fg);
+    }
+}
+
+.md-legend-info {
+    width: 13px;
+    height: 13px;
 }
 
 .md-legend-low {
@@ -905,4 +936,430 @@
     font-size: 13px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     z-index: 10;
+}
+
+// ------------------------------------------------ explicação da referência
+
+@keyframes md-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes md-pop {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+}
+
+.md-help-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(15, 43, 69, 0.28);
+    animation: md-fade 0.15s ease;
+}
+
+.md-help {
+    --md-help-soft: rgba(108, 190, 235, 0.2);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(600px, 100%);
+    max-height: 100%;
+    overflow: hidden;
+    border: var(--md-help-bw) solid var(--md-help-bc);
+    border-radius: var(--md-help-radius);
+    background: var(--md-help-bg);
+    color: var(--md-help-fg);
+    font-size: var(--md-help-size);
+    line-height: 1.55;
+    box-shadow: 0 12px 40px rgba(15, 43, 69, 0.28);
+    animation: md-pop 0.18s ease;
+
+    // Faixa colorida no topo, como nas seções da matriz.
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--md-help-accent);
+    }
+
+    p {
+        margin: 0 0 8px;
+    }
+
+    strong {
+        font-weight: 650;
+    }
+}
+
+.md-help-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 16px 12px 18px;
+}
+
+.md-help-badge {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--md-help-soft);
+
+    .md-icon {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.md-help-titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.md-help-title {
+    font-size: 1.25em;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.md-help-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.92em;
+    opacity: 0.78;
+}
+
+.md-help-close {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(15, 43, 69, 0.08);
+    }
+}
+
+.md-help-tabs {
+    flex: none;
+    display: flex;
+    gap: 6px;
+    padding: 0 18px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.md-help-tab {
+    flex: none;
+    height: 28px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--md-btn-bg);
+    color: var(--md-help-fg);
+    font-family: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.md-on {
+        background: var(--md-help-accent);
+        color: var(--md-btn-on-fg);
+    }
+}
+
+.md-help-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 2px 18px 16px;
+    scrollbar-width: thin;
+}
+
+.md-help-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--md-help-soft);
+}
+
+.md-help-note-icon {
+    margin-top: 2px;
+}
+
+.md-help-section {
+    padding: 14px 0 6px;
+    border-top: 1px solid var(--md-grid);
+
+    &:first-child,
+    .md-help-note + & {
+        border-top: none;
+        padding-top: 6px;
+    }
+}
+
+.md-help-h {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.md-help-h-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.md-help-muted {
+    font-size: 0.92em;
+    opacity: 0.72;
+}
+
+.md-help-pill {
+    display: inline-block;
+    margin-bottom: 8px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background: var(--md-help-soft);
+    font-size: 0.9em;
+    font-weight: 650;
+}
+
+// Passos numerados.
+.md-help-steps {
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+    counter-reset: md-step;
+
+    li {
+        position: relative;
+        margin: 6px 0;
+        padding-left: 30px;
+        counter-increment: md-step;
+
+        &::before {
+            content: counter(md-step);
+            position: absolute;
+            left: 0;
+            top: 1px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--md-help-accent);
+            color: var(--md-btn-on-fg);
+            font-size: 0.78em;
+            font-weight: 700;
+        }
+    }
+}
+
+.md-help-example {
+    margin: 10px 0 8px;
+    padding: 12px 14px 10px;
+    border: 1px solid var(--md-grid);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--md-btn-bg) 70%, var(--md-help-bg));
+}
+
+.md-help-example-title {
+    font-size: 0.92em;
+}
+
+.md-help-verdict {
+    margin-top: 10px;
+}
+
+.md-help-verdict-colored strong {
+    color: var(--md-verdict);
+}
+
+// Régua do exemplo: referência em cima, valor embaixo.
+.md-scale {
+    margin: 8px 0 4px;
+}
+
+.md-scale-row {
+    position: relative;
+    height: 34px;
+}
+
+.md-scale-tag {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+    font-size: 0.82em;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    span {
+        opacity: 0.75;
+    }
+
+    &.md-at-start {
+        align-items: flex-start;
+        transform: translateX(-6px);
+    }
+
+    &.md-at-end {
+        align-items: flex-end;
+        transform: translateX(calc(-100% + 6px));
+    }
+}
+
+.md-scale-tag-ref {
+    bottom: 4px;
+}
+
+.md-scale-tag-value {
+    top: 4px;
+}
+
+.md-scale-track {
+    position: relative;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--md-grid);
+}
+
+.md-scale-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--md-help-accent) 50%, transparent);
+}
+
+.md-scale-ref {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: var(--md-help-fg);
+}
+
+.md-scale-dot {
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border: 2px solid var(--md-help-bg);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.md-scale-ends {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.78em;
+    opacity: 0.6;
+}
+
+.md-scale-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 0.8em;
+    opacity: 0.75;
+}
+
+.md-scale-note-band {
+    width: 16px;
+    height: 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--md-help-accent) 50%, transparent);
+}
+
+// Legenda das cores.
+.md-help-legend {
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin: 7px 0;
+    }
+}
+
+.md-help-swatch {
+    flex: none;
+    width: 22px;
+    height: 16px;
+    margin-top: 3px;
+    border-radius: 5px;
+}
+
+.md-help-swatch-line,
+.md-help-swatch-hatch {
+    box-shadow: inset 0 0 0 1px var(--md-grid);
+}
+
+.md-help-swatch-hatch {
+    background-image: repeating-linear-gradient(135deg, rgba(15, 43, 69, 0.22) 0 2px, transparent 2px 5px);
+}
+
+.md-help-swatch-ramp {
+    width: 38px;
+}
+
+.md-help-callout {
+    margin: 2px 0 10px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--md-help-accent);
+    border-radius: 0 10px 10px 0;
+    background: var(--md-help-soft);
+}
+
+.md-help-bullets {
+    margin: 0;
+    padding-left: 18px;
+
+    li {
+        margin: 6px 0;
+    }
 }

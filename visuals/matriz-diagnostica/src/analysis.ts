@@ -15,10 +15,23 @@ export type ReferenceKind = "total" | "average" | "median" | "quartiles" | "rowA
 /** O que usar quando a medida de referência está vazia na célula (e nas linhas de cima). */
 export type FallbackKind = "total" | "median" | "average" | "parent" | "none";
 
-/** Valor de referência de uma célula e de onde ele veio (ex.: "Meta turnover (Operações)"). */
+/** Valor de referência de uma célula e de onde ele veio (ex.: "Meta turnover de Operações"). */
 export interface ReferenceInfo {
     value: number | undefined;
     label: string;
+    /** Da própria célula, herdado de uma linha de cima, da alternativa ou calculado pelo método escolhido. */
+    source: "own" | "inherited" | "fallback" | "method";
+}
+
+/** Resumo dos valores das linhas de um nível numa coluna (base pequena fica de fora). */
+export interface LevelStats {
+    count: number;
+    min: number;
+    max: number;
+    mean: number;
+    q1: number;
+    median: number;
+    q3: number;
 }
 
 /** Configuração de análise de uma medida exibida (gravada na própria medida, como na matriz nativa). */
@@ -332,16 +345,17 @@ export class Analysis {
     /** Valor de referência da célula e de onde ele veio. */
     public referenceInfo(row: RowItem, group: ColumnGroup, measure: Measure): ReferenceInfo {
         const cfg = this.configs.get(measure.index);
-        return cfg ? this.resolve(cfg.reference, row, group, measure, cfg) : { value: undefined, label: "" };
+        return cfg ? this.resolve(cfg.reference, row, group, measure, cfg) : { value: undefined, label: "", source: "method" };
     }
 
     private resolve(kind: ReferenceKind | FallbackKind, row: RowItem, group: ColumnGroup, measure: Measure, cfg: MeasureConfig): ReferenceInfo {
-        const none: ReferenceInfo = { value: undefined, label: "" };
+        const none: ReferenceInfo = { value: undefined, label: "", source: "method" };
+        const method = (value: number | undefined, label: string): ReferenceInfo => ({ value, label, source: "method" });
         switch (kind) {
             case "none":
                 return none;
             case "fixed":
-                return { value: cfg.target, label: "valor fixo" };
+                return method(cfg.target, "valor fixo");
             case "measure": {
                 const ref = cfg.refMeasure;
                 if (ref) {
@@ -349,19 +363,21 @@ export class Analysis {
                     for (let r: RowItem | undefined = row; r; r = cfg.refInherit ? this.above(r) : undefined) {
                         const v = this.value(r, group, ref);
                         if (v !== undefined) {
-                            return { value: v, label: r === row ? ref.name : `${ref.name} de ${r.label}` };
+                            return r === row
+                                ? { value: v, label: ref.name, source: "own" }
+                                : { value: v, label: `${ref.name} de ${r.label}`, source: "inherited" };
                         }
                     }
                 }
                 const fallback = this.resolve(cfg.refFallback, row, group, measure, cfg);
                 return fallback.value === undefined ? none
-                    : { value: fallback.value, label: `${fallback.label}, sem ${ref?.name || "referência"}` };
+                    : { value: fallback.value, label: `${fallback.label}, sem ${ref?.name || "referência"}`, source: "fallback" };
             }
             case "rowAverage":
                 // Na coluna de total, a média da própria linha não se aplica: usa o total geral.
                 return group.isSubtotal
                     ? this.resolve("total", row, group, measure, cfg)
-                    : { value: this.rowAverage(measure, row), label: "média da própria linha" };
+                    : method(this.rowAverage(measure, row), "média da própria linha");
         }
         // As referências abaixo comparam linhas entre si: o total geral não tem com quem comparar.
         if (row.isGrandTotal) {
@@ -370,18 +386,51 @@ export class Analysis {
         switch (kind) {
             case "total": {
                 const v = this.totalValue(group, measure);
-                return v !== undefined ? { value: v, label: "total geral" } : { value: this.average(measure, row, group), label: "média do nível" };
+                return v !== undefined ? method(v, "total geral") : method(this.average(measure, row, group), "média do nível");
             }
             case "parent": {
                 const v = row.parent ? this.value(row.parent, group, measure) : undefined;
-                return v !== undefined ? { value: v, label: (row.parent as RowItem).label } : this.resolve("total", row, group, measure, cfg);
+                return v !== undefined ? method(v, (row.parent as RowItem).label) : this.resolve("total", row, group, measure, cfg);
             }
             case "median":
             case "quartiles":
-                return { value: this.quantile(measure, row, group, 0.5), label: "mediana do nível" };
+                return method(this.quantile(measure, row, group, 0.5), "mediana do nível");
             default:
-                return { value: this.average(measure, row, group), label: "média do nível" };
+                return method(this.average(measure, row, group), "média do nível");
         }
+    }
+
+    /** Menor, maior, média e quartis das linhas do mesmo nível na coluna (para a explicação da referência). */
+    public levelStats(row: RowItem, group: ColumnGroup, measure: Measure): LevelStats | undefined {
+        const list = this.levelValues.get(this.levelKey(measure, row, group));
+        if (!list?.length) {
+            return undefined;
+        }
+        const q = (p: number): number => this.quantile(measure, row, group, p) as number;
+        return {
+            count: list.length,
+            min: list[list.length - 1],
+            max: list[0],
+            mean: list.reduce((a, b) => a + b, 0) / list.length,
+            q1: q(0.25),
+            median: q(0.5),
+            q3: q(0.75)
+        };
+    }
+
+    /** Quantas células usaram a medida de referência na própria célula, herdaram de cima ou caíram na alternativa. */
+    public referenceCoverage(measure: Measure): Record<ReferenceInfo["source"] | "none", number> {
+        const count = { own: 0, inherited: 0, fallback: 0, method: 0, none: 0 };
+        this.eachRow(row => {
+            for (const group of this.model.groups) {
+                if (this.value(row, group, measure) === undefined) {
+                    continue;
+                }
+                const info = this.referenceInfo(row, group, measure);
+                count[info.value === undefined ? "none" : info.source]++;
+            }
+        });
+        return count;
     }
 
     /** Linha de cima; acima do primeiro nível vem o total geral. */

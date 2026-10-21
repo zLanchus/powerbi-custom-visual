@@ -110,6 +110,25 @@ class AnalysisCard extends FormattingSettingsCard {
     ];
 }
 
+class HelpCard extends FormattingSettingsCard {
+    show = toggle("show", "Mostrar botão de explicação (ⓘ)", true,
+        "Abre um painel que explica a referência: o que é, como é calculada, como ler as cores e a diferença.");
+    note = text("note", "Observação no topo (opcional)", "", "Ex.: metas aprovadas pelo comitê de RH em jan/26");
+    fill = color("fill", "Cor de fundo", "#FFFFFF");
+    fontColor = color("fontColor", "Cor do texto", DARK);
+    accent = color("accent", "Cor de destaque", PRIMARY);
+    fontSize = num("fontSize", "Tamanho da fonte", 13);
+    radius = num("radius", "Arredondamento (px)", 14);
+    borderWidth = num("borderWidth", "Espessura da borda (px)", 0);
+    borderColor = color("borderColor", "Cor da borda", GRID);
+
+    name = "help";
+    displayName = "Explicação da referência";
+    slices: FormattingSettingsSlice[] = [
+        this.show, this.note, this.fill, this.fontColor, this.accent, this.fontSize, this.radius, this.borderWidth, this.borderColor
+    ];
+}
+
 class SmallBaseCard extends FormattingSettingsCard {
     minBase = num("minBase", "Base mínima", 10,
         "Células em que a medida do campo \"Base (volume)\" fica abaixo deste valor são marcadas como amostra pequena. 0 = desligado.");
@@ -268,6 +287,7 @@ class ExportCard extends FormattingSettingsCard {
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     toolbarCard = new ToolbarCard();
     analysisCard = new AnalysisCard();
+    helpCard = new HelpCard();
     smallBaseCard = new SmallBaseCard();
     hotspotsCard = new HotspotsCard();
     trendCard = new TrendCard();
@@ -280,7 +300,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     exportCard = new ExportCard();
 
     cards: Array<formattingSettings.Cards> = [
-        this.toolbarCard, this.analysisCard, this.smallBaseCard, this.hotspotsCard, this.trendCard, this.tableCard,
+        this.toolbarCard, this.analysisCard, this.helpCard, this.smallBaseCard, this.hotspotsCard, this.trendCard, this.tableCard,
         this.columnHeaderCard, this.rowHeadersCard, this.valuesCard, this.detailCard, this.totalsCard, this.exportCard
     ];
 }
