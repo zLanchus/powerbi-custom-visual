@@ -236,10 +236,16 @@ class ColumnsCard extends FormattingSettingsCompositeCard {
     borderWidth = num("borderWidth", "Espessura da borda (px)", 0);
     borderColor = color("borderColor", "Cor da borda", WHITE);
     hoverBrightness = num("hoverBrightness", "Clarear ao passar o mouse (%)", 8);
+    alwaysBelow = toggle("alwaysBelow", "Colunas sempre abaixo das linhas", false,
+        "As colunas ficam na parte de baixo do gráfico e as linhas na de cima, sem se cruzarem. Vale mesmo com \"Usar a escala das colunas\" ligado.");
+    belowShare = num("belowShare", "Altura máxima das colunas (%)", 60);
+    belowGap = num("belowGap", "Espaço entre colunas e linhas (%)", 6);
 
     name = "columns";
     displayName = "Colunas";
+    groupBelow = group("columnsBelowLines", "Posição em relação às linhas", [this.alwaysBelow, this.belowShare, this.belowGap]);
     groups: FormattingSettingsGroup[] = [
+        this.groupBelow,
         group("columnsShape", "Forma", [
             this.spacing, this.maxWidth, this.radius, this.radiusBase, this.roundEachSegment, this.segmentGap
         ]),
@@ -343,10 +349,6 @@ class ValueAxisCard extends FormattingSettingsCompositeCard {
     gridStyle = dropdown("gridStyle", "Estilo", GRID_STYLE_ITEMS, 1);
 
     sameScale = toggle("sameScale", "Usar a escala das colunas", false, "Linhas e colunas na mesma escala (sem eixo secundário).");
-    columnsBelow = toggle("columnsBelow", "Colunas sempre abaixo das linhas", false,
-        "As colunas ficam na parte de baixo do gráfico e as linhas na de cima, sem se cruzarem.");
-    columnsShare = num("columnsShare", "Altura máxima das colunas (%)", 60);
-    belowGap = num("belowGap", "Espaço entre colunas e linhas (%)", 6);
     topLevelSlice = this.show;
     name = "";
     displayName = "";
@@ -359,7 +361,7 @@ class ValueAxisCard extends FormattingSettingsCompositeCard {
         const sameScale = this.sameScale;
         this.groups = [
             group(name + "Scale", "Escala", secondary
-                ? [sameScale, this.min, this.max, this.tickCount, this.columnsBelow, this.columnsShare, this.belowGap]
+                ? [sameScale, this.min, this.max, this.tickCount]
                 : [this.min, this.max, this.tickCount]),
             group(name + "Labels", "Rótulos", [this.font.control, this.fontColor, this.units, this.decimals]),
             group(name + "Title", "Título", [this.showTitle, this.titleText, this.titleFont.control, this.titleColor]),

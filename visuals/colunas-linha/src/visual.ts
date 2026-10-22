@@ -486,10 +486,13 @@ export class Visual implements IVisual {
             axis.gridColor.visible = axis.gridOpacity.visible = axis.gridWidth.visible = axis.gridStyle.visible = axis.showGrid.value;
         }
         const y2 = s.y2AxisCard;
-        const own = !y2.sameScale.value;
+        // Com "colunas sempre abaixo", as linhas sempre têm escala própria.
+        const own = !y2.sameScale.value || (s.columnsCard.alwaysBelow.value && (!model || (model.columns.length > 0 && model.lines.length > 0)));
         y2.groups.slice(1).forEach(grp => { grp.visible = own; });
-        y2.min.visible = y2.max.visible = y2.tickCount.visible = y2.columnsBelow.visible = own;
-        y2.columnsShare.visible = y2.belowGap.visible = own && y2.columnsBelow.value;
+        y2.min.visible = y2.max.visible = y2.tickCount.visible = own;
+        // "Colunas sempre abaixo das linhas" só aparece quando há linhas no visual.
+        c.groupBelow.visible = !model || model.lines.length > 0;
+        c.belowShare.visible = c.belowGap.visible = c.alwaysBelow.value;
         s.linesCard.laneGap.visible = enumValue(s.linesCard.separate) === "lanes";
 
         const cl = s.columnLabelsCard;
@@ -1141,7 +1144,9 @@ export class Visual implements IVisual {
 
         const cols = this.columnsOn ? model.columns.filter(c => !this.hidden.has(c.key)) : [];
         const lns = this.linesOn ? model.lines.filter(l => !this.hidden.has(l.key)) : [];
-        const sameScale = y2s.sameScale.value;
+        // Colunas embaixo e linhas em cima: as linhas ganham a parte de cima do gráfico (e a escala própria delas).
+        const below = s.columnsCard.alwaysBelow.value && cols.length > 0 && lns.length > 0;
+        const sameScale = y2s.sameScale.value && !below;
 
         // ---- pilhas (positivos para cima, negativos para baixo)
         const stackPos = new Array<number>(n).fill(0);
@@ -1167,10 +1172,8 @@ export class Visual implements IVisual {
         const fixed1 = { min: model.bounds.y1Min ?? parseNumber(ys.min.value), max: model.bounds.y1Max ?? parseNumber(ys.max.value) };
         const fixed2 = { min: model.bounds.y2Min ?? parseNumber(y2s.min.value), max: model.bounds.y2Max ?? parseNumber(y2s.max.value) };
         const lanes = enumValue(s.linesCard.separate) === "lanes" && lns.length > 1;
-        // Colunas embaixo e linhas em cima: as linhas ganham a parte de cima do gráfico.
-        const below = y2s.columnsBelow.value && !sameScale && cols.length > 0 && lns.length > 0;
-        const colShare = clamp(y2s.columnsShare.value, 10, 95) / 100;
-        const belowGap = clamp(y2s.belowGap.value, 0, 50) / 100;
+        const colShare = clamp(s.columnsCard.belowShare.value, 10, 95) / 100;
+        const belowGap = clamp(s.columnsCard.belowGap.value, 0, 50) / 100;
         const domain = (values: number[], fixed: { min?: number; max?: number }, includeZero = true): [number, number] | undefined => {
             if (values.length === 0) {
                 return undefined;

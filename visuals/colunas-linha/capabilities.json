@@ -600,6 +600,21 @@
         },
         "columns": {
             "properties": {
+                "alwaysBelow": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "belowShare": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "belowGap": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "spacing": {
                     "type": {
                         "numeric": true
@@ -1280,21 +1295,6 @@
                     }
                 },
                 "tickCount": {
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "columnsBelow": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "columnsShare": {
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "belowGap": {
                     "type": {
                         "numeric": true
                     }

@@ -12,7 +12,7 @@ Réplica do gráfico nativo **"Gráfico de colunas empilhadas e de linhas"** do 
 
 ## Como usar
 
-1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.3.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.3.1.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos (os mesmos nomes do visual nativo):
    - **Eixo X**: cada valor vira uma coluna (ex.: Mês, Região). Aceita **vários campos aninhados**, até 6 (ex.: *Ano* e *Mês* da tabela Calendário): cada mês aparece dentro do seu ano.
    - **Eixo Y da coluna**: uma ou várias medidas empilhadas. Sem legenda, cada medida vira um segmento da pilha.
@@ -35,7 +35,7 @@ Réplica do gráfico nativo **"Gráfico de colunas empilhadas e de linhas"** do 
 - **Linha calculada na categoria inteira**: a linha não é dividida pela legenda (como no nativo). Uma Margem % continua certa mesmo com Produto na legenda.
 - **Vários campos no Eixo X** (ex.: Ano › Mês ou Ano › Trimestre › Mês), mostrados de três jeitos: **agrupado** (os meses e, embaixo, o ano de cada grupo, com divisórias, como no nativo), **concatenado** (`Jan 2024`, com ordem e separador configuráveis) ou **só o último nível**. A dica de ferramenta mostra o caminho completo (`2024 › Jan`) e o filtro cruzado filtra o mês daquele ano.
 - **Eixo Y secundário** para as linhas, ou a mesma escala das colunas.
-- **Colunas sempre abaixo das linhas** (**Eixo Y secundário → Escala**): as colunas ocupam a parte de baixo (altura máxima configurável) e as linhas a parte de cima, com um espaço entre elas, sem se cruzarem.
+- **Colunas sempre abaixo das linhas** (**Colunas → Posição em relação às linhas**, o primeiro grupo do cartão): as colunas ocupam a parte de baixo (altura máxima configurável) e as linhas a parte de cima, com um espaço entre elas, sem se cruzarem. Funciona mesmo com "Usar a escala das colunas" ligado (as linhas passam a ter escala própria).
 - **Várias linhas sem se embolar** (**Linhas → Várias linhas**): *em faixas* cada linha ganha uma faixa própria, uma acima da outra, com escala própria e espaço entre as faixas configurável; em **Linhas — por série** dá para deslocar cada linha alguns pixels para cima ou para baixo. Nos rótulos, o modo **Sempre visível** afasta o rótulo até achar espaço em vez de escondê-lo.
 - **Colunas**: negativos empilham para baixo, arredondamento do topo, espaço entre colunas, opacidade, borda e cor de cada série.
 - **Linhas**: reta, suave ou em degraus; contínua, tracejada ou pontilhada; marcadores (círculo, quadrado ou losango, cheio ou vazado); área sombreada; vazios interrompem, ligam os pontos ou viram zero.
@@ -58,12 +58,12 @@ Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com
   - *Botões Colunas / Linhas:* mostrar, textos, ícones e as cores de fundo, texto e borda **ligado** e **desligado**.
   - *Botões das séries:* mostrar, estilo quando visível (**fundo neutro**, **fundo na cor da série** ou **borda na cor da série**), cores de fundo, texto e borda **visível** e **escondida**, amostra de cor (mostrar, forma e tamanho) e largura máxima do texto.
   - *Botão "Mostrar tudo":* mostrar, texto (vazio = só o ícone), cor e fundo.
-- **Colunas:** espaço entre colunas, largura máxima, arredondamento do topo e da base, arredondar cada segmento, espaço entre segmentos, opacidade, borda e quanto clarear ao passar o mouse.
+- **Colunas:** colunas sempre abaixo das linhas (altura máxima e espaço), espaço entre colunas, largura máxima, arredondamento do topo e da base, arredondar cada segmento, espaço entre segmentos, opacidade, borda e quanto clarear ao passar o mouse.
 - **Cores das colunas:** cor de cada série.
 - **Linhas:** espessura, estilo, traçado, opacidade, valores vazios; marcadores (forma, tamanho, preenchimento, cor do centro, borda, aumento ao passar o mouse); área (mostrar e opacidade); várias linhas (separar em faixas e espaço entre as faixas).
 - **Linhas — por série:** para cada linha, cor, espessura, estilo, marcadores, área, rótulos (ou "igual às outras") e deslocamento vertical.
 - **Eixo X:** mostrar; rótulos (fonte, cor, rotação, largura máxima, distância do eixo, largura mínima da categoria para rolar); vários campos (como mostrar, ordem e separador do concatenado, fonte e cor dos grupos, espaço entre níveis, divisórias com cor, opacidade e opção de entrar no gráfico); linha do eixo (cor, espessura, opacidade); título (texto, fonte, cor).
-- **Eixo Y (colunas)** e **Eixo Y secundário (linhas):** mostrar; escala (mínimo, máximo, quantidade de marcas e, no secundário, usar a escala das colunas e colunas sempre abaixo das linhas, com altura das colunas e espaço); rótulos (fonte, cor, unidades, casas decimais); título (texto, fonte, cor); grade (cor, opacidade, espessura, estilo).
+- **Eixo Y (colunas)** e **Eixo Y secundário (linhas):** mostrar; escala (mínimo, máximo, quantidade de marcas e, no secundário, usar a escala das colunas); rótulos (fonte, cor, unidades, casas decimais); título (texto, fonte, cor); grade (cor, opacidade, espessura, estilo).
 - **Rótulos das colunas:** mostrar, posição, fonte, cor fixa ou automática (com as cores clara e escura), esconder quando não cabe, unidades e casas decimais.
 - **Rótulos do total:** mostrar, fonte, cor, distância da coluna, mostrar mesmo sem caber, contorno (cor e espessura), unidades e casas decimais.
 - **Rótulos das linhas:** mostrar, quais pontos, posição, distância do ponto, evitar sobreposição (mudar de lado/esconder ou sempre visível), fonte, cor (da linha ou fixa), contorno (cor e espessura), unidades e casas decimais.
