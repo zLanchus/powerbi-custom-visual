@@ -1,5 +1,5 @@
 {
-		"version": "1.3.1.0",
+		"version": "1.4.0.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/colunasLinha621BDED5AAC041AC84F6559C9571914C.pbiviz.json"
 			}
 		],
-		"visual": {"name":"colunasLinha","displayName":"Colunas Empilhadas e Linha","guid":"colunasLinha621BDED5AAC041AC84F6559C9571914C","visualClassName":"Visual","version":"1.3.1.0","description":"Gráfico de colunas empilhadas e linha com legenda interativa para mostrar e esconder colunas e linhas, eixo secundário, rótulos de total e formatação completa.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"colunasLinha","displayName":"Colunas Empilhadas e Linha","guid":"colunasLinha621BDED5AAC041AC84F6559C9571914C","visualClassName":"Visual","version":"1.4.0.0","description":"Gráfico de colunas empilhadas e linha com legenda interativa para mostrar e esconder colunas e linhas, eixo secundário, rótulos de total e formatação completa.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"

@@ -492,8 +492,8 @@ export class Visual implements IVisual {
         y2.min.visible = y2.max.visible = y2.tickCount.visible = own;
         // "Colunas sempre abaixo das linhas" só aparece quando há linhas no visual.
         c.groupBelow.visible = !model || model.lines.length > 0;
-        c.belowShare.visible = c.belowGap.visible = c.alwaysBelow.value;
-        s.linesCard.laneGap.visible = enumValue(s.linesCard.separate) === "lanes";
+        c.belowShare.visible = c.belowGapPx.visible = c.linesHeight.visible = c.alwaysBelow.value;
+        s.linesCard.laneGap.visible = enumValue(s.linesCard.separate) !== "none";
 
         const cl = s.columnLabelsCard;
         cl.fontColor.visible = !cl.autoColor.value;
@@ -1171,16 +1171,22 @@ export class Visual implements IVisual {
         // Limites fixos: medida do campo "Mínimo/Máximo do eixo" ou o valor digitado no painel.
         const fixed1 = { min: model.bounds.y1Min ?? parseNumber(ys.min.value), max: model.bounds.y1Max ?? parseNumber(ys.max.value) };
         const fixed2 = { min: model.bounds.y2Min ?? parseNumber(y2s.min.value), max: model.bounds.y2Max ?? parseNumber(y2s.max.value) };
-        const lanes = enumValue(s.linesCard.separate) === "lanes" && lns.length > 1;
-        const colShare = clamp(s.columnsCard.belowShare.value, 10, 95) / 100;
-        const belowGap = clamp(s.columnsCard.belowGap.value, 0, 50) / 100;
+        // Várias linhas: afastar (mesma escala) ou em faixas (escala própria por linha).
+        const separate = lns.length > 1 ? enumValue(s.linesCard.separate) : "none";
+        const lanes = separate === "lanes";
+        const spread = separate === "spread";
+        const colShare = clamp(s.columnsCard.belowShare.value, 5, 100) / 100;
+        const belowGapPx = Math.max(0, s.columnsCard.belowGapPx.value);
+        const linesHeight = clamp(s.columnsCard.linesHeight.value, 0, 100) / 100;
+        // Linhas "justas": a escala vai do menor ao maior valor, sem arredondar, para a variação aparecer.
+        const tightLines = below || spread;
         const domain = (values: number[], fixed: { min?: number; max?: number }, includeZero = true): [number, number] | undefined => {
             if (values.length === 0) {
                 return undefined;
             }
             let lo = includeZero ? Math.min(0, ...values) : Math.min(...values);
             let hi = includeZero ? Math.max(0, ...values) : Math.max(...values);
-            if (!includeZero && hi > lo) {
+            if (!includeZero && hi > lo && !tightLines) {
                 const pad = (hi - lo) * 0.08;
                 lo -= pad;
                 hi += pad;
@@ -1201,10 +1207,12 @@ export class Visual implements IVisual {
         const colValues = cols.length ? [...stackPos, ...stackNeg] : [];
         let d1 = domain(sameScale ? [...colValues, ...lineVals] : colValues, fixed1);
         if (d1 && below && fixed1.max === undefined) {
-            // As colunas só sobem até a altura escolhida.
-            d1 = [d1[0], d1[0] + (d1[1] - d1[0]) / colShare];
+            // A coluna mais alta sobe exatamente até a altura escolhida (sem arredondar o máximo da escala).
+            fixed1.max = d1[0] + (d1[1] - d1[0]) / colShare;
+            d1 = [d1[0], fixed1.max];
         }
-        const d2 = sameScale ? undefined : domain(lineVals, fixed2, !below);
+        const d2 = sameScale ? undefined : domain(lineVals, fixed2, !tightLines);
+        const fixed2Scale = d2 && tightLines ? { min: fixed2.min ?? d2[0], max: fixed2.max ?? d2[1] } : fixed2;
 
         // ---- fontes
         const xFont = this.textStyle(xs.font);
@@ -1233,13 +1241,19 @@ export class Visual implements IVisual {
             let ticks = niceTicks(d[0], d[1], count);
             const min = userMin ? d[0] : ticks[0];
             let max = userMax ? d[1] : ticks[ticks.length - 1];
+            let step = ticks.length > 1 ? ticks[1] - ticks[0] : (max - min);
             if (userMin || userMax) {
-                ticks = ticks.filter(v => v >= min - 1e-9 && v <= max + 1e-9);
+                const inside = (list: number[]): number[] => list.filter(v => v >= min - 1e-9 && v <= max + 1e-9);
+                // Limites fixos num intervalo curto: pede marcas mais finas até ter pelo menos duas dentro.
+                for (let c = count; inside(ticks).length < 2 && c <= count + 8; c += 2) {
+                    ticks = niceTicks(d[0], d[1], c + 2);
+                    step = ticks.length > 1 ? ticks[1] - ticks[0] : step;
+                }
+                ticks = inside(ticks);
             }
             if (max === min) {
                 max = min + 1;
             }
-            const step = ticks.length > 1 ? ticks[1] - ticks[0] : (max - min);
             const unitBasis = Math.max(Math.abs(min), Math.abs(max));
             const format = this.numberFormat(source, enumValue(card.units), card.decimals.value, unitBasis, step);
             return { min, max, ticks, format, unitBasis, y: v => top + (max - v) / (max - min) * (bottom - top) };
@@ -1272,8 +1286,20 @@ export class Visual implements IVisual {
 
         const showY1 = ys.show.value && !!d1;
         // Em faixas, cada linha tem a sua escala: o eixo secundário não se aplica.
-        const showY2 = !sameScale && !lanes && y2s.show.value && !!d2;
-        const linesBottomOf = (top: number, bottom: number): number => (below ? top + (bottom - top) * Math.max(0.05, 1 - colShare - belowGap) : bottom);
+        // Afastadas ou em faixas, as linhas saem da escala comum: o eixo secundário não se aplica.
+        const showY2 = !sameScale && !lanes && !spread && y2s.show.value && !!d2;
+        // Área das linhas: o gráfico inteiro, ou (colunas abaixo) uma faixa logo acima da coluna mais alta.
+        const markerRoom = Math.max(2, s.linesCard.markerSize.value) + Math.max(1, s.linesCard.width.value);
+        const lineAreaOf = (sc1: Scale | undefined, top: number, bottom: number): { top: number; bottom: number } => {
+            if (!below || !sc1) {
+                return { top, bottom };
+            }
+            const colTop = clamp(sc1.y(Math.max(0, ...stackPos)), top, bottom);
+            const areaBottom = Math.max(top + 12, colTop - belowGapPx - markerRoom);
+            const areaTop = linesHeight > 0 ? Math.max(top, areaBottom - linesHeight * (bottom - top)) : top;
+            return { top: areaTop, bottom: Math.max(areaTop + 4, areaBottom) };
+        };
+        let lineArea = { top: topPad, bottom: plotH0 };
 
         let xLabelH = 0;
         let rotation = 0;
@@ -1290,7 +1316,8 @@ export class Visual implements IVisual {
         // Duas passadas: a primeira estima as margens, a segunda usa os rótulos dos eixos já medidos.
         for (let pass = 0; pass < 2; pass++) {
             scale1 = makeScale(d1, ys, sameScale ? (colSource || lineSource) : colSource, topPad, plotBottom, fixed1);
-            scale2 = makeScale(d2, y2s, lineSource, topPad, below ? linesBottomOf(topPad, plotBottom) : plotBottom, fixed2);
+            lineArea = lineAreaOf(scale1, topPad, plotBottom);
+            scale2 = makeScale(d2, y2s, lineSource, lineArea.top, lineArea.bottom, fixed2Scale);
             const tickW = (sc: Scale | undefined, st: TextStyle): number =>
                 sc ? Math.max(0, ...sc.ticks.map(v => textWidth(sc.format(v), st))) : 0;
             ml = showY1 ? Math.ceil(tickW(scale1, y1Font)) + 10 + (y1Title ? y1TitleFont.size + 8 : 0) : 8;
@@ -1511,31 +1538,12 @@ export class Visual implements IVisual {
             const sc = lineScale;
             const g = svg("g", { class: "cl-lines" }, plot);
             const clampY = (y: number): number => clamp(y, plotTop, plotBottom);
-            // Área das linhas: tudo, ou só a parte de cima com "colunas sempre abaixo".
-            const areaTop = plotTop;
-            const areaBottom = linesBottomOf(plotTop, plotBottom);
-            const laneGap = Math.max(0, s.linesCard.laneGap.value);
-            const laneH = lanes ? Math.max(8, (areaBottom - areaTop - laneGap * (lns.length - 1)) / lns.length) : 0;
+            const layout = this.lineLayout(lns, sc, lineArea, separate, ll.show.value ? lineLabelFont.size + Math.max(0, ll.offset.value) + 4 : 0);
             lns.forEach((l, k) => {
                 const o = l.options;
-                // Posição vertical desta linha: escala comum, ou a faixa dela (com escala própria), mais o deslocamento manual.
-                let yOf = (v: number): number => sc.y(v);
-                let baseY = clampY(sc.y(clamp(0, sc.min, sc.max)));
-                if (lanes) {
-                    const vals = l.values.filter((v): v is number => v !== null);
-                    let lo = vals.length ? Math.min(...vals) : 0;
-                    let hi = vals.length ? Math.max(...vals) : 1;
-                    if (hi === lo) {
-                        lo -= Math.abs(lo) * 0.1 || 1;
-                        hi += Math.abs(hi) * 0.1 || 1;
-                    }
-                    const laneTop = areaTop + k * (laneH + laneGap);
-                    // Folga em cima e embaixo da faixa para marcadores e rótulos.
-                    const padTop = Math.min(laneH * 0.3, lineLabelFont.size + 6);
-                    const padBottom = Math.min(laneH * 0.15, 6);
-                    yOf = v => laneTop + padTop + (hi - v) / (hi - lo) * Math.max(1, laneH - padTop - padBottom);
-                    baseY = laneTop + laneH;
-                }
+                // Posição vertical desta linha (escala comum, afastada ou na faixa dela), mais o deslocamento manual.
+                let yOf = layout[k].yOf;
+                let baseY = clampY(layout[k].baseY);
                 const shift = o.offset || 0;
                 if (shift) {
                     const inner = yOf;
@@ -1759,6 +1767,81 @@ export class Visual implements IVisual {
         if (scrolling) {
             scroller.scrollLeft = this.scrollLeft;
         }
+    }
+
+    /**
+     * Posição vertical de cada linha.
+     * - "none": escala comum.
+     * - "spread": escala comum, e cada linha sobe só o necessário para ficar a pelo menos `gap` px da de baixo
+     *   (a escala encolhe se o conjunto não couber na área).
+     * - "lanes": uma faixa por linha, com escala própria.
+     */
+    private lineLayout(lns: Series[], sc: Scale, area: { top: number; bottom: number }, separate: string, labelRoom: number)
+        : Array<{ yOf: (v: number) => number; baseY: number }> {
+        const ls = this.formattingSettings.linesCard;
+        const markerRoom = Math.max(2, ls.markerSize.value) + Math.max(1, ls.width.value) / 2 + 2;
+        const gap = ls.laneGap.value > 0 ? ls.laneGap.value : Math.max(markerRoom * 2, labelRoom);
+        const zeroY = sc.y(clamp(0, sc.min, sc.max));
+        if (separate === "lanes") {
+            const m = lns.length;
+            const laneH = Math.max(8, (area.bottom - area.top - gap * (m - 1)) / m);
+            return lns.map((l, k) => {
+                const vals = l.values.filter((v): v is number => v !== null);
+                let lo = vals.length ? Math.min(...vals) : 0;
+                let hi = vals.length ? Math.max(...vals) : 1;
+                if (hi === lo) {
+                    lo -= Math.abs(lo) * 0.1 || 1;
+                    hi += Math.abs(hi) * 0.1 || 1;
+                }
+                const top = area.top + k * (laneH + gap);
+                const h = Math.max(1, laneH - markerRoom);
+                return { yOf: (v: number) => top + (hi - v) / (hi - lo) * h, baseY: top + laneH };
+            });
+        }
+        if (separate !== "spread") {
+            return lns.map(() => ({ yOf: (v: number) => sc.y(v), baseY: zeroY }));
+        }
+        const bottom = sc.y(sc.min);
+        const avg = (ys: Array<number | null>): number => {
+            const ok = ys.filter((y): y is number => y !== null);
+            return ok.length ? ok.reduce((a, b) => a + b, 0) / ok.length : bottom;
+        };
+        let factor = 1;
+        let shifts = lns.map(() => 0);
+        for (let iter = 0; iter < 10; iter++) {
+            const ys = lns.map(l => l.values.map(v => (v === null ? null : bottom - (bottom - sc.y(v)) * factor)));
+            // De baixo para cima: cada linha sobe o mínimo para ficar `gap` px acima da de baixo em todos os pontos.
+            const order = lns.map((_, k) => k).sort((a, b) => avg(ys[b]) - avg(ys[a]));
+            shifts = lns.map(() => 0);
+            for (let j = 1; j < order.length; j++) {
+                const up = order[j];
+                const low = order[j - 1];
+                let room = Infinity;
+                ys[up].forEach((y, i) => {
+                    const yl = ys[low][i];
+                    if (y !== null && yl !== null) {
+                        room = Math.min(room, yl + shifts[low] - y);
+                    }
+                });
+                shifts[up] = room === Infinity ? shifts[low] : Math.min(0, room - gap);
+            }
+            let topMost = Infinity;
+            ys.forEach((list, k) => list.forEach(y => {
+                if (y !== null) {
+                    topMost = Math.min(topMost, y + shifts[k]);
+                }
+            }));
+            const overflow = area.top - topMost;
+            if (!(overflow > 0.5) || bottom - area.top <= 1) {
+                break;
+            }
+            // Não coube: encolhe a escala (as diferenças entre as linhas continuam visíveis).
+            factor *= Math.max(0.2, 1 - overflow / Math.max(1, bottom - area.top));
+        }
+        return lns.map((_, k) => ({
+            yOf: (v: number) => bottom - (bottom - sc.y(v)) * factor + shifts[k],
+            baseY: bottom - (bottom - zeroY) * factor + shifts[k]
+        }));
     }
 
     /** Grupos dos níveis de cima do Eixo X (ex.: 2024 embaixo de Jan…Dez), com divisórias entre eles. */

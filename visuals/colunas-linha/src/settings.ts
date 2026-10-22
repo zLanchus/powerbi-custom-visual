@@ -87,7 +87,11 @@ export const LINE_LABEL_POSITION_ITEMS = enumItems(["above", "Acima do ponto"], 
 export const LINE_LABEL_POINTS_ITEMS = enumItems(
     ["all", "Todos os pontos"], ["last", "Só o último"], ["minmax", "Maior e menor"], ["ends", "Primeiro e último"]
 );
-export const LINE_SEPARATE_ITEMS = enumItems(["none", "Não (todas na mesma escala)"], ["lanes", "Em faixas (uma faixa por linha)"]);
+export const LINE_SEPARATE_ITEMS = enumItems(
+    ["none", "Não (todas na mesma escala)"],
+    ["spread", "Afastar automaticamente (mantém a variação)"],
+    ["lanes", "Em faixas (uma faixa por linha, escala própria)"]
+);
 export const LINE_OVERLAP_ITEMS = enumItems(
     ["nudge", "Sempre visível (afasta o rótulo até achar espaço)"], ["hide", "Mudar de lado ou esconder"]
 );
@@ -238,12 +242,14 @@ class ColumnsCard extends FormattingSettingsCompositeCard {
     hoverBrightness = num("hoverBrightness", "Clarear ao passar o mouse (%)", 8);
     alwaysBelow = toggle("alwaysBelow", "Colunas sempre abaixo das linhas", false,
         "As colunas ficam na parte de baixo do gráfico e as linhas na de cima, sem se cruzarem. Vale mesmo com \"Usar a escala das colunas\" ligado.");
-    belowShare = num("belowShare", "Altura máxima das colunas (%)", 60);
-    belowGap = num("belowGap", "Espaço entre colunas e linhas (%)", 6);
+    belowShare = num("belowShare", "Altura da coluna mais alta (%)", 60, "Porcentagem da altura do gráfico que a coluna mais alta ocupa.");
+    belowGapPx = num("belowGapPx", "Espaço entre colunas e linhas (px)", 8, "Distância entre o topo da coluna mais alta e o ponto mais baixo das linhas.");
+    linesHeight = num("linesHeight", "Altura da área das linhas (%)", 30,
+        "Quanto da altura do gráfico as linhas ocupam, logo acima das colunas. Mais alto = mais variação visível. 0 = todo o espaço acima das colunas.");
 
     name = "columns";
     displayName = "Colunas";
-    groupBelow = group("columnsBelowLines", "Posição em relação às linhas", [this.alwaysBelow, this.belowShare, this.belowGap]);
+    groupBelow = group("columnsBelowLines", "Posição em relação às linhas", [this.alwaysBelow, this.belowShare, this.belowGapPx, this.linesHeight]);
     groups: FormattingSettingsGroup[] = [
         this.groupBelow,
         group("columnsShape", "Forma", [
@@ -269,7 +275,8 @@ class LinesCard extends FormattingSettingsCompositeCard {
     showArea = toggle("showArea", "Sombrear a área abaixo", false);
     areaOpacity = num("areaOpacity", "Opacidade da área (%)", 15);
     separate = dropdown("separate", "Separar as linhas", LINE_SEPARATE_ITEMS, 0);
-    laneGap = num("laneGap", "Espaço entre as faixas (px)", 16);
+    laneGap = num("laneGap", "Espaço entre as linhas (px, 0 = automático)", 0,
+        "Distância mínima entre uma linha e a de baixo. Automático = o necessário para o rótulo caber.");
 
     name = "lines";
     displayName = "Linhas";
@@ -282,7 +289,7 @@ class LinesCard extends FormattingSettingsCompositeCard {
         ]),
         group("linesArea", "Área", [this.showArea, this.areaOpacity]),
         group("linesSpacing", "Várias linhas", [this.separate, this.laneGap],
-            "Em faixas, cada linha ganha sua própria faixa e escala, uma acima da outra, para não se cruzarem. Em \"Linhas — por série\" também dá para deslocar cada linha.")
+            "Afastar: as linhas mantêm a mesma escala e só se afastam o necessário para não se cruzarem. Em faixas: cada linha ganha uma faixa com escala própria. Em \"Linhas — por série\" também dá para deslocar cada linha.")
     ];
 }
 

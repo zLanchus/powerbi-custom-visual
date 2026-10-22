@@ -610,7 +610,12 @@
                         "numeric": true
                     }
                 },
-                "belowGap": {
+                "belowGapPx": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "linesHeight": {
                     "type": {
                         "numeric": true
                     }
@@ -816,8 +821,12 @@
                                 "displayName": "Não (todas na mesma escala)"
                             },
                             {
+                                "value": "spread",
+                                "displayName": "Afastar automaticamente (mantém a variação)"
+                            },
+                            {
                                 "value": "lanes",
-                                "displayName": "Em faixas (uma faixa por linha)"
+                                "displayName": "Em faixas (uma faixa por linha, escala própria)"
                             }
                         ]
                     }
