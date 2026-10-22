@@ -2,13 +2,15 @@
 
 Réplica do gráfico nativo **"Gráfico de colunas empilhadas e de linhas"** do Power BI, com uma **legenda interativa** em botões arredondados: clique para **mostrar ou esconder** cada série (um produto da legenda, uma medida de coluna ou uma linha) ou use os botões **Colunas** e **Linhas** para ligar e desligar todas de uma vez. A escala se reajusta ao que fica visível, com uma animação suave. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
 
-| Padrão | Legenda interativa (itens escondidos) | Várias medidas e rótulos |
-|---|---|---|
-| ![Padrão](docs/1-padrao.png) | ![Legenda interativa](docs/2-legenda-interativa.png) | ![Medidas e rótulos](docs/3-medidas-rotulos.png) |
+| Padrão | Legenda interativa (itens escondidos) |
+|---|---|
+| ![Padrão](docs/1-padrao.png) | ![Legenda interativa](docs/2-legenda-interativa.png) |
+| **Várias medidas e rótulos** | **Personalizado** (botões na cor da série, segmentos arredondados, linha tracejada) |
+| ![Medidas e rótulos](docs/3-medidas-rotulos.png) | ![Personalizado](docs/4-personalizado.png) |
 
 ## Como usar
 
-1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos (os mesmos nomes do visual nativo):
    - **Eixo X**: cada valor vira uma coluna (ex.: Mês, Região).
    - **Eixo Y da coluna**: medidas empilhadas. Sem legenda, cada medida vira um segmento da pilha.
@@ -40,15 +42,26 @@ Réplica do gráfico nativo **"Gráfico de colunas empilhadas e de linhas"** do 
 
 ## Formatação
 
-- **Geral:** fonte e animação.
-- **Cabeçalho:** título e subtítulo (texto, tamanho e cor).
-- **Legenda interativa:** mostrar, posição (em cima ou embaixo), alinhamento, botões Colunas / Linhas e por série, textos, o que começa visível, tamanho da fonte, altura, arredondamento, cores (fundo, texto, botões ligados), opacidade do que está escondido, espessura e cor da borda.
-- **Colunas** e **Cores das colunas:** espaço, arredondamento, opacidade, borda e cor de cada série.
-- **Linhas** e **Cores das linhas:** espessura, estilo, traçado, marcadores, área, vazios e cor de cada linha.
-- **Eixo X:** mostrar, fonte, cor, negrito, rotação, largura mínima da categoria, linha do eixo e título.
-- **Eixo Y (colunas)** e **Eixo Y secundário (linhas):** mostrar, fonte, cor, mínimo, máximo, unidades, casas decimais, título e grade.
-- **Rótulos das colunas**, **do total** e **das linhas:** mostrar, posição, fonte, cor, negrito, unidades e casas decimais.
-- **Interação:** tipo da dica de ferramenta, destaque da categoria sob o mouse e opacidade do que não está selecionado.
+Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com texto tem o controle de fonte completo (**fonte, tamanho, negrito, itálico e sublinhado**); deixando a fonte padrão, ela segue a fonte de **Geral**. Opções que não fazem efeito (ex.: cor da borda com borda 0) somem do painel.
+
+- **Geral:** fonte de todo o visual, animação (ligar e duração), margens laterais e de cima/baixo, fundo do visual (cor e arredondamento).
+- **Cabeçalho:** título e subtítulo (texto, fonte e cor), alinhamento e espaço abaixo.
+- **Legenda interativa**
+  - *Posição e comportamento:* em cima ou embaixo, alinhamento, espaço entre os botões, distância até o gráfico, divisória entre os grupos (e a cor), o que começa visível, duplo clique para mostrar só a série e o texto do aviso quando tudo está escondido.
+  - *Texto e forma dos botões:* fonte, altura, espaço interno lateral, arredondamento, espessura da borda, sombra, tamanho dos ícones e como mostrar o que está escondido (esmaecer, riscar ou os dois) com a opacidade.
+  - *Botões Colunas / Linhas:* mostrar, textos, ícones e as cores de fundo, texto e borda **ligado** e **desligado**.
+  - *Botões das séries:* mostrar, estilo quando visível (**fundo neutro**, **fundo na cor da série** ou **borda na cor da série**), cores de fundo, texto e borda **visível** e **escondida**, amostra de cor (mostrar, forma e tamanho) e largura máxima do texto.
+  - *Botão "Mostrar tudo":* mostrar, texto (vazio = só o ícone), cor e fundo.
+- **Colunas:** espaço entre colunas, largura máxima, arredondamento do topo e da base, arredondar cada segmento, espaço entre segmentos, opacidade, borda e quanto clarear ao passar o mouse.
+- **Cores das colunas:** cor de cada série.
+- **Linhas:** espessura, estilo, traçado, opacidade, valores vazios; marcadores (forma, tamanho, preenchimento, cor do centro, borda, aumento ao passar o mouse); área (mostrar e opacidade).
+- **Linhas — por série:** para cada linha, cor, espessura, estilo, marcadores, área e rótulos (ou "igual às outras").
+- **Eixo X:** mostrar; rótulos (fonte, cor, rotação, largura máxima, distância do eixo, largura mínima da categoria para rolar); linha do eixo (cor, espessura, opacidade); título (texto, fonte, cor).
+- **Eixo Y (colunas)** e **Eixo Y secundário (linhas):** mostrar; escala (mínimo, máximo, quantidade de marcas e, no secundário, usar a escala das colunas); rótulos (fonte, cor, unidades, casas decimais); título (texto, fonte, cor); grade (cor, opacidade, espessura, estilo).
+- **Rótulos das colunas:** mostrar, posição, fonte, cor fixa ou automática (com as cores clara e escura), esconder quando não cabe, unidades e casas decimais.
+- **Rótulos do total:** mostrar, fonte, cor, distância da coluna, mostrar mesmo sem caber, contorno (cor e espessura), unidades e casas decimais.
+- **Rótulos das linhas:** mostrar, quais pontos, posição, distância do ponto, evitar sobreposição, fonte, cor (da linha ou fixa), contorno (cor e espessura), unidades e casas decimais.
+- **Interação:** conteúdo da dica de ferramenta, total na dica (e o nome dele), destaque da categoria sob o mouse (cor e opacidade) e opacidade do que não está selecionado.
 
 ## Observações
 

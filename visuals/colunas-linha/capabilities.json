@@ -45,6 +45,40 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "animationDuration": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "paddingX": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "paddingY": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showBackground": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "backgroundRadius": {
+                    "type": {
+                        "numeric": true
+                    }
                 }
             }
         },
@@ -55,9 +89,33 @@
                         "text": true
                     }
                 },
-                "titleSize": {
+                "titleFontFamily": {
                     "type": {
-                        "numeric": true
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "titleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "titleBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleUnderline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "titleColor": {
@@ -74,9 +132,33 @@
                         "text": true
                     }
                 },
-                "subtitleSize": {
+                "subtitleFontFamily": {
                     "type": {
-                        "numeric": true
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "subtitleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "subtitleBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "subtitleItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "subtitleUnderline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "subtitleColor": {
@@ -86,6 +168,29 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "align": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "left",
+                                "displayName": "À esquerda"
+                            },
+                            {
+                                "value": "center",
+                                "displayName": "No centro"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "À direita"
+                            }
+                        ]
+                    }
+                },
+                "spacing": {
+                    "type": {
+                        "numeric": true
                     }
                 }
             }
@@ -129,12 +234,133 @@
                         ]
                     }
                 },
-                "groupButtons": {
+                "gap": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "spacing": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showDivider": {
                     "type": {
                         "bool": true
                     }
                 },
-                "seriesChips": {
+                "dividerColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "startColumns": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "startLines": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "doubleClickSolo": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "allHiddenText": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "paddingX": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "shadow": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "iconSize": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "hiddenStyle": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "fade",
+                                "displayName": "Esmaecer"
+                            },
+                            {
+                                "value": "fadeStrike",
+                                "displayName": "Esmaecer e riscar"
+                            },
+                            {
+                                "value": "strike",
+                                "displayName": "Só riscar"
+                            }
+                        ]
+                    }
+                },
+                "hiddenOpacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "groupButtons": {
                     "type": {
                         "bool": true
                     }
@@ -149,49 +375,9 @@
                         "text": true
                     }
                 },
-                "startColumns": {
+                "showIcons": {
                     "type": {
                         "bool": true
-                    }
-                },
-                "startLines": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "fontSize": {
-                    "type": {
-                        "formatting": {
-                            "fontSize": true
-                        }
-                    }
-                },
-                "height": {
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "radius": {
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "background": {
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "fontColor": {
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
                     }
                 },
                 "activeBackground": {
@@ -212,14 +398,81 @@
                         }
                     }
                 },
-                "hiddenOpacity": {
+                "activeBorderColor": {
                     "type": {
-                        "numeric": true
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
                     }
                 },
-                "borderWidth": {
+                "inactiveBackground": {
                     "type": {
-                        "numeric": true
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "inactiveFontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "inactiveBorderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "seriesChips": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "chipStyle": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "neutral",
+                                "displayName": "Fundo neutro e amostra de cor"
+                            },
+                            {
+                                "value": "filled",
+                                "displayName": "Fundo na cor da série"
+                            },
+                            {
+                                "value": "outline",
+                                "displayName": "Borda na cor da série"
+                            }
+                        ]
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
                     }
                 },
                 "borderColor": {
@@ -229,6 +482,94 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "chipHiddenBackground": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "chipHiddenFontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "chipHiddenBorderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showSwatch": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "swatchShape": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automática (quadrado / traço)"
+                            },
+                            {
+                                "value": "square",
+                                "displayName": "Quadrado"
+                            },
+                            {
+                                "value": "circle",
+                                "displayName": "Círculo"
+                            },
+                            {
+                                "value": "line",
+                                "displayName": "Traço"
+                            }
+                        ]
+                    }
+                },
+                "swatchSize": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "chipMaxWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showReset": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "resetLabel": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "resetColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "resetBackground": {
+                    "type": {
+                        "bool": true
                     }
                 }
             }
@@ -240,7 +581,27 @@
                         "numeric": true
                     }
                 },
+                "maxWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "radiusBase": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "roundEachSegment": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "segmentGap": {
                     "type": {
                         "numeric": true
                     }
@@ -262,6 +623,11 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "hoverBrightness": {
+                    "type": {
+                        "numeric": true
                     }
                 }
             }
@@ -309,6 +675,29 @@
                         ]
                     }
                 },
+                "opacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "nulls": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "gap",
+                                "displayName": "Interromper a linha"
+                            },
+                            {
+                                "value": "connect",
+                                "displayName": "Ligar os pontos"
+                            },
+                            {
+                                "value": "zero",
+                                "displayName": "Tratar como zero"
+                            }
+                        ]
+                    }
+                },
                 "showMarkers": {
                     "type": {
                         "bool": true
@@ -342,13 +731,32 @@
                         "enumeration": [
                             {
                                 "value": "hollow",
-                                "displayName": "Vazado (centro branco)"
+                                "displayName": "Vazado (centro de outra cor)"
                             },
                             {
                                 "value": "filled",
                                 "displayName": "Cheio"
                             }
                         ]
+                    }
+                },
+                "markerCenterColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "markerBorderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "markerGrow": {
+                    "type": {
+                        "numeric": true
                     }
                 },
                 "showArea": {
@@ -360,24 +768,6 @@
                     "type": {
                         "numeric": true
                     }
-                },
-                "nulls": {
-                    "type": {
-                        "enumeration": [
-                            {
-                                "value": "gap",
-                                "displayName": "Interromper a linha"
-                            },
-                            {
-                                "value": "connect",
-                                "displayName": "Ligar os pontos"
-                            },
-                            {
-                                "value": "zero",
-                                "displayName": "Tratar como zero"
-                            }
-                        ]
-                    }
                 }
             }
         },
@@ -388,11 +778,33 @@
                         "bool": true
                     }
                 },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "fontColor": {
@@ -402,11 +814,6 @@
                                 "color": true
                             }
                         }
-                    }
-                },
-                "bold": {
-                    "type": {
-                        "bool": true
                     }
                 },
                 "rotation": {
@@ -431,6 +838,16 @@
                         ]
                     }
                 },
+                "maxLabelWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "labelSpacing": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "minWidth": {
                     "type": {
                         "numeric": true
@@ -450,6 +867,16 @@
                         }
                     }
                 },
+                "lineWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "lineOpacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "showTitle": {
                     "type": {
                         "bool": true
@@ -458,6 +885,44 @@
                 "titleText": {
                     "type": {
                         "text": true
+                    }
+                },
+                "titleFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "titleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "titleBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
                     }
                 }
             }
@@ -469,11 +934,48 @@
                         "bool": true
                     }
                 },
+                "min": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "max": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "tickCount": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "fontColor": {
@@ -483,16 +985,6 @@
                                 "color": true
                             }
                         }
-                    }
-                },
-                "min": {
-                    "type": {
-                        "text": true
-                    }
-                },
-                "max": {
-                    "type": {
-                        "text": true
                     }
                 },
                 "units": {
@@ -524,6 +1016,54 @@
                 "decimals": {
                     "type": {
                         "numeric": true
+                    }
+                },
+                "showTitle": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleText": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "titleFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "titleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "titleBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
                     }
                 },
                 "showGrid": {
@@ -545,6 +1085,11 @@
                         "numeric": true
                     }
                 },
+                "gridWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "gridStyle": {
                     "type": {
                         "enumeration": [
@@ -562,16 +1107,6 @@
                             }
                         ]
                     }
-                },
-                "showTitle": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "titleText": {
-                    "type": {
-                        "text": true
-                    }
                 }
             }
         },
@@ -587,11 +1122,48 @@
                         "bool": true
                     }
                 },
+                "min": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "max": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "tickCount": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "fontColor": {
@@ -601,16 +1173,6 @@
                                 "color": true
                             }
                         }
-                    }
-                },
-                "min": {
-                    "type": {
-                        "text": true
-                    }
-                },
-                "max": {
-                    "type": {
-                        "text": true
                     }
                 },
                 "units": {
@@ -652,6 +1214,86 @@
                 "titleText": {
                     "type": {
                         "text": true
+                    }
+                },
+                "titleFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "titleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "titleBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showGrid": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "gridColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "gridOpacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "gridWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "gridStyle": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "solid",
+                                "displayName": "Contínua"
+                            },
+                            {
+                                "value": "dashed",
+                                "displayName": "Tracejada"
+                            },
+                            {
+                                "value": "dotted",
+                                "displayName": "Pontilhada"
+                            }
+                        ]
                     }
                 }
             }
@@ -681,11 +1323,33 @@
                         ]
                     }
                 },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "autoColor": {
@@ -702,7 +1366,25 @@
                         }
                     }
                 },
-                "bold": {
+                "lightColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "darkColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "hideSmall": {
                     "type": {
                         "bool": true
                     }
@@ -747,11 +1429,33 @@
                         "bool": true
                     }
                 },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "fontColor": {
@@ -763,9 +1467,33 @@
                         }
                     }
                 },
-                "bold": {
+                "offset": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showWhenNotFit": {
                     "type": {
                         "bool": true
+                    }
+                },
+                "halo": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "haloColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "haloWidth": {
+                    "type": {
+                        "numeric": true
                     }
                 },
                 "units": {
@@ -844,11 +1572,43 @@
                         ]
                     }
                 },
+                "offset": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "avoidOverlap": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "type": {
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "useLineColor": {
@@ -865,11 +1625,6 @@
                         }
                     }
                 },
-                "bold": {
-                    "type": {
-                        "bool": true
-                    }
-                },
                 "halo": {
                     "type": {
                         "bool": true
@@ -882,6 +1637,11 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "haloWidth": {
+                    "type": {
+                        "numeric": true
                     }
                 },
                 "units": {
@@ -933,6 +1693,16 @@
                         ]
                     }
                 },
+                "tooltipTotal": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "totalText": {
+                    "type": {
+                        "text": true
+                    }
+                },
                 "hoverBand": {
                     "type": {
                         "bool": true
@@ -981,6 +1751,87 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "width": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "style": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Igual às outras"
+                            },
+                            {
+                                "value": "solid",
+                                "displayName": "Contínua"
+                            },
+                            {
+                                "value": "dashed",
+                                "displayName": "Tracejada"
+                            },
+                            {
+                                "value": "dotted",
+                                "displayName": "Pontilhada"
+                            }
+                        ]
+                    }
+                },
+                "markers": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Igual às outras"
+                            },
+                            {
+                                "value": "on",
+                                "displayName": "Mostrar"
+                            },
+                            {
+                                "value": "off",
+                                "displayName": "Esconder"
+                            }
+                        ]
+                    }
+                },
+                "area": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Igual às outras"
+                            },
+                            {
+                                "value": "on",
+                                "displayName": "Mostrar"
+                            },
+                            {
+                                "value": "off",
+                                "displayName": "Esconder"
+                            }
+                        ]
+                    }
+                },
+                "labels": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Igual às outras"
+                            },
+                            {
+                                "value": "on",
+                                "displayName": "Mostrar"
+                            },
+                            {
+                                "value": "off",
+                                "displayName": "Esconder"
+                            }
+                        ]
                     }
                 }
             }

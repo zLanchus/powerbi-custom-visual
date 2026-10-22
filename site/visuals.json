@@ -108,12 +108,13 @@
       "Linha calculada na categoria inteira, com eixo Y secundário",
       "Rótulos de segmento, total da pilha e das linhas, sem sobreposição",
       "Linhas retas, suaves ou em degraus, com marcadores e área",
-      "Eixos, grade, unidades, cores e rolagem horizontal configuráveis"
+      "Praticamente tudo personalizável: fontes, tamanho e cores dos botões, eixos, grade, rótulos e cada linha"
     ],
     "cover": "1-padrao.png",
     "images": [
       "2-legenda-interativa.png",
-      "3-medidas-rotulos.png"
+      "3-medidas-rotulos.png",
+      "4-personalizado.png"
     ]
   }
 ]

@@ -27,7 +27,6 @@
 
 .cl-header {
     flex: 0 0 auto;
-    padding-bottom: 8px;
 }
 
 .cl-title {
@@ -40,55 +39,49 @@
     line-height: 1.3;
 }
 
-// ---- legenda interativa
+// ---- legenda interativa (tamanhos, cores e fontes vêm do painel)
 
 .cl-toolbar {
     flex: 0 0 auto;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 10px;
-    padding-bottom: 10px;
-
-    &.cl-toolbar-bottom {
-        padding-bottom: 0;
-        padding-top: 10px;
-    }
+    gap: 6px 10px;
 }
 
-.cl-group {
-    display: inline-flex;
-    gap: 6px;
-    padding-right: 10px;
-    border-right: 1px solid rgba(15, 43, 69, 0.15);
-
-    &:last-child {
-        border-right: none;
-        padding-right: 0;
-    }
-}
-
+.cl-group,
 .cl-chips {
     display: inline-flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 6px;
+}
+
+.cl-divider {
+    flex: 0 0 auto;
+    width: 1px;
+    opacity: 0.2;
 }
 
 .cl-btn {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    font-family: inherit;
-    font-weight: 600;
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
     outline: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
     transition: opacity 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease, background-color 0.18s ease;
 
+    &.cl-shadow {
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+
+        &:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+        }
+    }
+
     &:hover {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+        filter: brightness(0.97);
     }
 
     &:active {
@@ -99,24 +92,19 @@
         box-shadow: 0 0 0 2px @primary;
     }
 
-    &:not(.cl-on) .cl-btn-text {
-        text-decoration: line-through;
+    &.cl-strike .cl-btn-text {
+        text-decoration: line-through !important;
         text-decoration-thickness: 1px;
     }
 }
 
 .cl-reset {
-    box-shadow: none;
     justify-content: center;
+}
 
-    &:hover {
-        box-shadow: none;
-        background: rgba(0, 0, 0, 0.06) !important;
-    }
-
-    .cl-btn-text {
-        text-decoration: none;
-    }
+.cl-reset-plain:hover {
+    filter: none;
+    background: rgba(0, 0, 0, 0.06) !important;
 }
 
 .cl-icon,
@@ -126,7 +114,6 @@
 }
 
 .cl-btn-text {
-    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -179,10 +166,6 @@
     white-space: nowrap;
 }
 
-.cl-axis-title {
-    font-weight: 600;
-}
-
 .cl-bands rect {
     transition: fill-opacity 0.12s ease;
 }
@@ -191,7 +174,7 @@
     transition: opacity 0.15s ease, filter 0.15s ease;
 
     &:hover {
-        filter: brightness(1.08);
+        filter: brightness(var(--cl-hover, 1.08));
     }
 }
 
@@ -201,7 +184,7 @@
     transition: transform 0.12s ease, opacity 0.15s ease;
 
     &.cl-marker-hover {
-        transform: scale(1.45);
+        transform: scale(var(--cl-grow, 1.45));
     }
 }
 
@@ -228,7 +211,7 @@
 .cl-animate {
     .cl-seg {
         transform-box: fill-box;
-        animation: cl-grow 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+        animation: cl-grow var(--cl-anim, 450ms) cubic-bezier(0.2, 0.7, 0.3, 1) both;
     }
 
     .cl-up {
@@ -241,17 +224,17 @@
 
     .cl-drawable {
         stroke-dasharray: 1;
-        animation: cl-draw 0.7s ease-out both;
+        animation: cl-draw calc(var(--cl-anim, 450ms) * 1.5) ease-out both;
     }
 
     .cl-path:not(.cl-drawable),
     .cl-area {
-        animation: cl-fade 0.6s ease-out both;
+        animation: cl-fade calc(var(--cl-anim, 450ms) * 1.3) ease-out both;
     }
 
     .cl-marker,
     .cl-label {
-        animation: cl-fade 0.35s ease-out 0.35s both;
+        animation: cl-fade calc(var(--cl-anim, 450ms) * 0.8) ease-out calc(var(--cl-anim, 450ms) * 0.8) both;
     }
 }
 
