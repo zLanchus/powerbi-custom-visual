@@ -100,7 +100,6 @@ export class Visual implements IVisual {
     private button: HTMLElement;
     private popup: PopupState | undefined;
     private inline: HTMLElement | undefined;
-    private viewMode: powerbi.ViewMode = powerbi.ViewMode.View;
     private rippleOn = true;
 
     constructor(options: VisualConstructorOptions) {
@@ -125,12 +124,12 @@ export class Visual implements IVisual {
         // Cliques não prendem o teclado no visual (Ctrl+C / Ctrl+V do Power BI continuam funcionando).
         this.root.addEventListener("mousedown", (e: MouseEvent) => e.preventDefault());
         this.button.addEventListener("pointerdown", (e: PointerEvent) => this.ripple(e));
-        this.button.addEventListener("click", (e: MouseEvent) => this.activate(e.ctrlKey || e.metaKey));
+        this.button.addEventListener("click", () => this.activate());
         this.button.addEventListener("keydown", (e: KeyboardEvent) => {
             if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 this.button.classList.add("bn-pressed");
-                this.activate(true);
+                this.activate();
             }
         });
         this.button.addEventListener("keyup", () => this.button.classList.remove("bn-pressed"));
@@ -148,7 +147,6 @@ export class Visual implements IVisual {
             const dataView: DataView | undefined = options.dataViews?.[0];
             this.formattingSettings = this.formattingSettingsService
                 .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
-            this.viewMode = options.viewMode ?? powerbi.ViewMode.View;
             this.render(dataView, options.viewport);
             this.events?.renderingFinished(options);
         } catch (e) {
@@ -173,30 +171,37 @@ export class Visual implements IVisual {
 
     // ------------------------------------------------------------- clique
 
-    /** No modo de edição (Power BI Desktop ou edição no Service), como nos botões nativos, só abre com Ctrl + clique. */
-    private activate(force: boolean): void {
+    /**
+     * Abre o pop-up com um clique normal, também no Desktop (lá o relatório está sempre em modo de edição
+     * e o Ctrl + clique seleciona visuais). Se o Power BI recusar o tamanho pedido, tenta de novo com o
+     * tamanho padrão dele; sem diálogo disponível, mostra o texto dentro do próprio visual.
+     */
+    private activate(): void {
         const state = this.popup;
         if (!state || this.inline) {
             return;
         }
-        if (this.viewMode !== powerbi.ViewMode.View && !force) {
+        if (this.host.hostCapabilities?.allowModalDialog === false || typeof this.host.openModalDialog !== "function") {
+            this.fallback(state, "O Power BI não oferece pop-ups (diálogos) neste ambiente.");
             return;
         }
-        if (this.host.hostCapabilities?.allowModalDialog === false || !this.host.openModalDialog) {
-            this.openInline(state);
-            return;
-        }
-        const options: powerbi.extensibility.visual.DialogOpenOptions = {
-            title: state.title || " ",
-            size: this.dialogSize(),
-            position: { type: powerbi.VisualDialogPositionType.Center },
-            actionButtons: [powerbi.DialogAction.Close]
+        const title = state.title || " ";
+        const actionButtons = [powerbi.DialogAction.Close];
+        const open = (options: powerbi.extensibility.visual.DialogOpenOptions): Promise<unknown> => {
+            try {
+                return Promise.resolve(this.host.openModalDialog(PopupDialog.id, options, state));
+            } catch (e) {
+                return Promise.reject(e);
+            }
         };
-        try {
-            this.host.openModalDialog(PopupDialog.id, options, state).then(undefined, () => this.openInline(state));
-        } catch {
-            this.openInline(state);
-        }
+        open({ title, actionButtons, size: this.dialogSize(), position: { type: powerbi.VisualDialogPositionType.Center } })
+            .catch(() => open({ title, actionButtons }))
+            .catch((e: unknown) => this.fallback(state, `O Power BI recusou abrir o pop-up: ${String(e)}`));
+    }
+
+    private fallback(state: PopupState, reason: string): void {
+        this.host.displayWarningIcon?.("Pop-up indisponível", `${reason} O texto foi aberto dentro do próprio visual.`);
+        this.openInline(state);
     }
 
     /** Tamanho pedido ao Power BI; ele mesmo limita ao espaço da janela. */
@@ -206,11 +211,11 @@ export class Visual implements IVisual {
         const screenH = window.screen?.availHeight || 768;
         switch (enumValue(p.size)) {
             case "large":
-                return { width: Math.min(1000, screenW * 0.8), height: Math.min(720, screenH * 0.75) };
+                return { width: Math.round(Math.min(1000, screenW * 0.8)), height: Math.round(Math.min(720, screenH * 0.75)) };
             case "medium":
-                return { width: Math.min(680, screenW * 0.7), height: Math.min(480, screenH * 0.6) };
+                return { width: Math.round(Math.min(680, screenW * 0.7)), height: Math.round(Math.min(480, screenH * 0.6)) };
             case "custom":
-                return { width: Math.max(240, p.width.value), height: Math.max(160, p.height.value) };
+                return { width: Math.round(Math.max(240, p.width.value)), height: Math.round(Math.max(160, p.height.value)) };
             default:
                 return { width: Math.round(screenW * 0.92), height: Math.round(screenH * 0.82) };
         }
@@ -380,7 +385,6 @@ export class Visual implements IVisual {
         button.appendChild(el("span", "bn-shine"));
 
         // Acessibilidade e dica.
-        button.title = this.viewMode !== powerbi.ViewMode.View ? "Ctrl + clique para abrir" : "";
         button.setAttribute("aria-label", [title, subtitle].filter(t => t).join(". "));
         button.setAttribute("aria-haspopup", "dialog");
     }

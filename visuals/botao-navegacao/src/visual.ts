@@ -100,7 +100,6 @@ export class Visual implements IVisual {
     private root: HTMLElement;
     private button: HTMLElement;
     private url: string | undefined;
-    private viewMode: powerbi.ViewMode = powerbi.ViewMode.View;
     private rippleOn = true;
 
     constructor(options: VisualConstructorOptions) {
@@ -125,12 +124,12 @@ export class Visual implements IVisual {
         // Cliques não prendem o teclado no visual (Ctrl+C / Ctrl+V do Power BI continuam funcionando).
         this.root.addEventListener("mousedown", (e: MouseEvent) => e.preventDefault());
         this.button.addEventListener("pointerdown", (e: PointerEvent) => this.ripple(e));
-        this.button.addEventListener("click", (e: MouseEvent) => this.activate(e.ctrlKey || e.metaKey));
+        this.button.addEventListener("click", () => this.activate());
         this.button.addEventListener("keydown", (e: KeyboardEvent) => {
             if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 this.button.classList.add("bn-pressed");
-                this.activate(true);
+                this.activate();
             }
         });
         this.button.addEventListener("keyup", () => this.button.classList.remove("bn-pressed"));
@@ -143,7 +142,6 @@ export class Visual implements IVisual {
             const dataView: DataView | undefined = options.dataViews?.[0];
             this.formattingSettings = this.formattingSettingsService
                 .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
-            this.viewMode = options.viewMode ?? powerbi.ViewMode.View;
             this.render(dataView, options.viewport);
             this.events?.renderingFinished(options);
         } catch (e) {
@@ -166,12 +164,9 @@ export class Visual implements IVisual {
 
     // ------------------------------------------------------------- clique
 
-    /** No modo de edição (Power BI Desktop ou edição no Service), como nos botões nativos, só segue o link com Ctrl + clique. */
-    private activate(force: boolean): void {
+    /** Segue o link com um clique normal, também no Desktop (lá o relatório está sempre em modo de edição e o Ctrl + clique seleciona visuais). */
+    private activate(): void {
         if (!this.url) {
-            return;
-        }
-        if (this.viewMode !== powerbi.ViewMode.View && !force) {
             return;
         }
         this.host.launchUrl(this.url);
@@ -304,8 +299,7 @@ export class Visual implements IVisual {
 
         // Acessibilidade e dica.
         const tip = s.actionCard.tooltip.value?.trim() ?? "";
-        const editHint = this.url && this.viewMode !== powerbi.ViewMode.View ? "Ctrl + clique para seguir o link" : "";
-        button.title = [tip, editHint].filter(t => t).join("\n");
+        button.title = tip;
         button.setAttribute("aria-label", [title, subtitle].filter(t => t).join(". "));
         if (this.url) {
             button.setAttribute("role", "link");

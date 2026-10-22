@@ -4,7 +4,7 @@
         "displayName": "Botão de Navegação",
         "guid": "botaoNavegacaoF7704C68E0A445E7BC3C609A8EFD1E3C",
         "visualClassName": "Visual",
-        "version": "1.0.0.0",
+        "version": "1.0.1.0",
         "description": "Botão bonito para navegar: texto, subtítulo, ícone, seta animada, efeitos de hover e clique, abre um link ou a página do relatório.",
         "supportUrl": "https://github.com/zLanchus/powerbi-custom-visual/issues",
         "gitHubUrl": "https://github.com/zLanchus/powerbi-custom-visual"
@@ -22,5 +22,5 @@
     "capabilities": "capabilities.json",
     "dependencies": null,
     "stringResources": [],
-    "version": "1.0.0.0"
+    "version": "1.0.1.0"
 }

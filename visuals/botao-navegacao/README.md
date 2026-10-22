@@ -8,7 +8,7 @@ Botão para levar o usuário a outra página do relatório (ou a qualquer link),
 
 ## Como usar
 
-1. Baixe [`dist/botaoNavegacaoF7704C68E0A445E7BC3C609A8EFD1E3C.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/botaoNavegacaoF7704C68E0A445E7BC3C609A8EFD1E3C.1.0.1.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Coloque o visual na página e escreva o texto em **Formatar visual → Texto**.
 3. Escolha como o clique vai navegar (abaixo).
 
@@ -17,7 +17,6 @@ Campos opcionais (todos medidas):
 - **Texto** e **Subtítulo**: substituem os textos do painel, para rótulos dinâmicos (ex.: `"Base nominal (" & [Qtd colaboradores] & ")"`).
 - **Link**: medida que devolve o endereço a abrir. Tem prioridade sobre o link do painel.
 
-> Se o painel de formatação não aplicar as mudanças com o visual vazio, arraste qualquer medida para **Texto** (ou **Subtítulo**).
 
 ## Navegar para outra página
 
@@ -38,7 +37,7 @@ Assim a troca de página é instantânea, na mesma aba, e funciona no Desktop, n
 Em **Formatar visual → Ação → Link (URL)**, cole o endereço da página no Power BI Service (copie da barra do navegador com a página aberta, ex.: `https://app.powerbi.com/groups/…/reports/…/ReportSection…`). Funciona com qualquer link `https`, inclusive outro relatório ou um filtro na URL (`?filter=Tabela/Campo eq 'Valor'`).
 
 - Abre em **nova aba** (é como o Power BI trata links de visuais) e todos os efeitos do botão aparecem.
-- No Power BI Desktop e na edição do relatório, como nos botões nativos, use **Ctrl + clique** para seguir o link. Na leitura basta clicar.
+- Basta um clique normal, também no Power BI Desktop.
 - Só endereços `http://` e `https://` são abertos.
 
 ## Formatação

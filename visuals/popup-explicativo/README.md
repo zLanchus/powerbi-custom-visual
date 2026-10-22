@@ -8,10 +8,10 @@ Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)
 
 ## Como usar
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.0.1.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
-4. Clique no botão. No Power BI Desktop e na edição do relatório, como nos botões nativos, use **Ctrl + clique**. Na leitura basta clicar.
+4. Clique no botão (clique normal, também no Power BI Desktop).
 
 O pop-up abre por cima do relatório inteiro (diálogo do próprio Power BI, com título e botão **Fechar**). Ele não depende do tamanho do visual: o visual pode ser só o botão.
 
@@ -61,5 +61,6 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 ## Observações
 
 - O tamanho pedido é limitado pelo Power BI ao espaço da janela. "Tela inteira" pede ~92% da tela.
-- Onde o Power BI não oferece diálogos (ex.: **Publicar na Web** e alguns ambientes inseridos), o texto abre por cima do próprio visual, com um **X** para fechar (e `Esc`). Nesse caso, deixe o visual do tamanho que o texto deve ocupar.
+- Se o Power BI recusar o tamanho pedido, o pop-up abre no tamanho padrão dele.
+- Onde o Power BI não oferece diálogos (ex.: **Publicar na Web** e alguns ambientes inseridos), o texto abre por cima do próprio visual, com um **X** para fechar (e `Esc`). Nesse caso aparece um ícone de aviso (⚠) no cabeçalho do visual com o motivo; deixe o visual do tamanho que o texto deve ocupar.
 - O texto nunca é interpretado como HTML: só a marcação da tabela acima.

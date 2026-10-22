@@ -545,5 +545,6 @@
     "supportsKeyboardFocus": true,
     "supportsLandingPage": false,
     "suppressDefaultTitle": true,
-    "privileges": []
+    "privileges": [],
+    "supportsEmptyDataView": true
 }
