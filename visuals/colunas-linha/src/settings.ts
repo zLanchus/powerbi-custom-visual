@@ -74,6 +74,10 @@ export const MARKER_SHAPE_ITEMS = enumItems(["circle", "Círculo"], ["square", "
 export const MARKER_FILL_ITEMS = enumItems(["hollow", "Vazado (centro de outra cor)"], ["filled", "Cheio"]);
 export const NULLS_ITEMS = enumItems(["gap", "Interromper a linha"], ["connect", "Ligar os pontos"], ["zero", "Tratar como zero"]);
 export const ROTATION_ITEMS = enumItems(["auto", "Automática"], ["0", "Horizontal"], ["45", "Inclinada (45°)"], ["90", "Vertical"]);
+export const HIERARCHY_ITEMS = enumItems(
+    ["grouped", "Agrupado (grupos embaixo, como no nativo)"], ["concat", "Concatenado (ex.: Jan 2024)"], ["inner", "Só o último nível"]
+);
+export const CONCAT_ORDER_ITEMS = enumItems(["innerFirst", "Do último para o primeiro (Jan 2024)"], ["outerFirst", "Do primeiro para o último (2024 Jan)"]);
 export const UNITS_ITEMS = enumItems(
     ["auto", "Automático"], ["none", "Nenhuma"], ["1000", "Mil"], ["1000000", "Milhões"], ["1000000000", "Bilhões"]
 );
@@ -286,12 +290,26 @@ class XAxisCard extends FormattingSettingsCompositeCard {
     titleText = text("titleText", "Texto do título", "", "Nome do campo");
     titleFont = new Font("title", "Fonte do título", 12, true);
     titleColor = color("titleColor", "Cor do título", MUTED);
+    hierarchy = dropdown("hierarchy", "Como mostrar", HIERARCHY_ITEMS, 0);
+    concatOrder = dropdown("concatOrder", "Ordem dos níveis", CONCAT_ORDER_ITEMS, 0);
+    concatSeparator = text("concatSeparator", "Separador", " ", "Espaço", "Texto entre os níveis, como \" \", \" / \" ou \" - \".");
+    groupFont = new Font("group", "Fonte dos grupos", 12, true);
+    groupColor = color("groupColor", "Cor dos grupos", DARK);
+    groupSpacing = num("groupSpacing", "Espaço entre os níveis (px)", 4);
+    showSeparators = toggle("showSeparators", "Divisórias entre os grupos", true);
+    separatorColor = color("separatorColor", "Cor das divisórias", DARK);
+    separatorOpacity = num("separatorOpacity", "Opacidade das divisórias (%)", 20);
+    separatorInPlot = toggle("separatorInPlot", "Divisórias também dentro do gráfico", false);
 
     name = "xAxis";
     displayName = "Eixo X";
     topLevelSlice = this.show;
     groups: FormattingSettingsGroup[] = [
         group("xLabels", "Rótulos", [this.font.control, this.fontColor, this.rotation, this.maxLabelWidth, this.labelSpacing, this.minWidth]),
+        group("xHierarchy", "Vários campos (ex.: Ano e Mês)", [
+            this.hierarchy, this.concatOrder, this.concatSeparator, this.groupFont.control, this.groupColor, this.groupSpacing,
+            this.showSeparators, this.separatorColor, this.separatorOpacity, this.separatorInPlot
+        ], "Com mais de um campo no Eixo X, os valores ficam aninhados (ex.: os meses dentro de cada ano)."),
         group("xLine", "Linha do eixo", [this.showLine, this.lineColor, this.lineWidth, this.lineOpacity]),
         group("xTitle", "Título", [this.showTitle, this.titleText, this.titleFont.control, this.titleColor])
     ];

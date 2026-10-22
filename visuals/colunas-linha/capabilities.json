@@ -2,7 +2,7 @@
     "dataRoles": [
         {
             "displayName": "Eixo X",
-            "description": "Cada valor vira uma coluna (ex.: Mês, Região).",
+            "description": "Cada valor vira uma coluna (ex.: Mês, Região). Coloque vários campos para aninhar (ex.: Ano e Mês).",
             "name": "category",
             "kind": "Grouping"
         },
@@ -851,6 +851,110 @@
                 "minWidth": {
                     "type": {
                         "numeric": true
+                    }
+                },
+                "hierarchy": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "grouped",
+                                "displayName": "Agrupado (grupos embaixo, como no nativo)"
+                            },
+                            {
+                                "value": "concat",
+                                "displayName": "Concatenado (ex.: Jan 2024)"
+                            },
+                            {
+                                "value": "inner",
+                                "displayName": "Só o último nível"
+                            }
+                        ]
+                    }
+                },
+                "concatOrder": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "innerFirst",
+                                "displayName": "Do último para o primeiro (Jan 2024)"
+                            },
+                            {
+                                "value": "outerFirst",
+                                "displayName": "Do primeiro para o último (2024 Jan)"
+                            }
+                        ]
+                    }
+                },
+                "concatSeparator": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "groupFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "groupFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "groupBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "groupItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "groupUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "groupColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "groupSpacing": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showSeparators": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "separatorColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "separatorOpacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "separatorInPlot": {
+                    "type": {
+                        "bool": true
                     }
                 },
                 "showLine": {
@@ -1885,7 +1989,7 @@
             "conditions": [
                 {
                     "category": {
-                        "max": 1
+                        "max": 6
                     },
                     "series": {
                         "max": 0
@@ -1893,7 +1997,7 @@
                 },
                 {
                     "category": {
-                        "max": 1
+                        "max": 6
                     },
                     "series": {
                         "max": 1

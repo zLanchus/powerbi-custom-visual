@@ -38,7 +38,13 @@ interface TextStyle {
 /** Um valor do eixo X. */
 interface Category {
     index: number;
+    /** Texto no eixo X (último nível, ou os níveis concatenados). */
     label: string;
+    /** Caminho completo, para a dica de ferramenta (ex.: 2024 › Jan). */
+    fullLabel: string;
+    /** Rótulo de cada nível (do primeiro ao último) e chave de cada nível, para agrupar. */
+    path: string[];
+    keys: string[];
     selectionId: ISelectionId;
 }
 
@@ -79,6 +85,10 @@ interface Model {
     lines: Series[];
     extras: ExtraColumn[];
     hasLegend: boolean;
+    /** Quantidade de campos no Eixo X. */
+    levels: number;
+    /** Eixo X agrupado: os níveis de cima aparecem como grupos embaixo dos rótulos. */
+    groupedAxis: boolean;
 }
 
 interface Scale {
@@ -456,6 +466,16 @@ export class Visual implements IVisual {
 
         const x = s.xAxisCard;
         x.lineColor.visible = x.lineWidth.visible = x.lineOpacity.visible = x.showLine.value;
+        // Opções de vários campos só aparecem com mais de um campo no Eixo X.
+        const hierarchyGroup = x.groups.find(grp => grp.name === "xHierarchy");
+        if (hierarchyGroup) {
+            hierarchyGroup.visible = !!model && model.levels > 1;
+        }
+        const xMode = enumValue(x.hierarchy);
+        x.concatOrder.visible = x.concatSeparator.visible = xMode === "concat";
+        [x.groupFont.control, x.groupColor, x.groupSpacing, x.showSeparators, x.separatorColor, x.separatorOpacity, x.separatorInPlot]
+            .forEach(slice => { slice.visible = xMode === "grouped"; });
+        x.separatorColor.visible = x.separatorOpacity.visible = x.separatorInPlot.visible = xMode === "grouped" && x.showSeparators.value;
         x.titleText.visible = x.titleFont.control.visible = x.titleColor.visible = x.showTitle.value;
         for (const axis of [s.yAxisCard, s.y2AxisCard]) {
             axis.titleText.visible = axis.titleFont.control.visible = axis.titleColor.visible = axis.showTitle.value;
@@ -609,13 +629,45 @@ export class Visual implements IVisual {
         const hasLegend = memberLevels > 0 && members.length > 0;
 
         // ---- categorias (linhas da matriz)
-        const rowNodes = (rowRoot.children || []).filter(n => !n.isSubtotal);
-        const catSource = rowLevels[0]?.sources?.[0];
-        const categories: Category[] = rowNodes.map((node, index) => ({
-            index,
-            label: memberLabel(node.levelValues?.[0]?.value ?? node.value, catSource, locale),
-            selectionId: builder().withMatrixNode(node, rowLevels).createSelectionId()
-        }));
+        // Vários campos no Eixo X (ex.: Ano e Mês): cada folha da hierarquia vira uma categoria.
+        const rowNodes: DataViewMatrixNode[] = [];
+        const paths: string[][] = [];
+        const keyPaths: string[][] = [];
+        const collect = (node: DataViewMatrixNode, path: string[], keys: string[]): void => {
+            for (const child of node.children || []) {
+                if (child.isSubtotal) {
+                    continue;
+                }
+                const level = child.level ?? path.length;
+                const value = child.levelValues?.[0]?.value ?? child.value;
+                const source = rowLevels[level]?.sources?.[child.levelValues?.[0]?.levelSourceIndex ?? 0];
+                const nextPath = path.concat(memberLabel(value, source, locale));
+                const nextKeys = keys.concat(value instanceof Date ? String(value.getTime()) : String(value));
+                if ((child.children || []).some(c => !c.isSubtotal)) {
+                    collect(child, nextPath, nextKeys);
+                } else {
+                    rowNodes.push(child);
+                    paths.push(nextPath);
+                    keyPaths.push(nextKeys);
+                }
+            }
+        };
+        collect(rowRoot, [], []);
+        const xs = this.formattingSettings.xAxisCard;
+        const mode = rowLevels.length > 1 ? enumValue(xs.hierarchy) : "inner";
+        const separator = xs.concatSeparator.value ?? " ";
+        const innerFirst = enumValue(xs.concatOrder) !== "outerFirst";
+        const categories: Category[] = rowNodes.map((node, index) => {
+            const path = paths[index];
+            return {
+                index,
+                label: mode === "concat" ? (innerFirst ? path.slice().reverse() : path).join(separator) : path[path.length - 1],
+                fullLabel: path.join(" › "),
+                path,
+                keys: keyPaths[index],
+                selectionId: builder().withMatrixNode(node, rowLevels).createSelectionId()
+            };
+        });
         const cell = (row: DataViewMatrixNode, group: string, measure: number): PrimitiveValue | undefined => {
             const j = leafIndex.get(group + "\u001f" + measure);
             return j === undefined ? undefined : row.values?.[j]?.value;
@@ -677,7 +729,8 @@ export class Visual implements IVisual {
         if (categories.length === 0 || columns.length + lines.length === 0) {
             return undefined;
         }
-        return { categoryName: catSource?.displayName || "", categories, columns, lines, extras, hasLegend };
+        const categoryName = rowLevels.map(l => l.sources?.[0]?.displayName || "").filter(Boolean).join(" › ");
+        return { categoryName, categories, columns, lines, extras, hasLegend, levels: rowLevels.length, groupedAxis: mode === "grouped" };
     }
 
     private lineOptions(objects: powerbi.DataViewObjects | undefined): LineOptions {
@@ -1164,6 +1217,12 @@ export class Visual implements IVisual {
         const maxLabelW = Math.max(0, ...labelWidths);
         const labelCap = xs.maxLabelWidth.value > 0 ? xs.maxLabelWidth.value : Math.min(maxLabelW, Math.max(40, H * 0.32));
         const labelGap = Math.max(0, xs.labelSpacing.value);
+        // Eixo agrupado (vários campos): uma faixa de grupos por nível de cima (ex.: o ano embaixo dos meses).
+        const groupFont = this.textStyle(xs.groupFont);
+        const groupGap = Math.max(0, xs.groupSpacing.value);
+        const outerRows = model.groupedAxis && xs.show.value ? model.levels - 1 : 0;
+        const groupRowH = groupFont.size * 1.3 + groupGap;
+        const groupsH = outerRows * groupRowH;
 
         const y1Title = ys.showTitle.value ? (ys.titleText.value || (sameScale ? [...cols, ...lns] : cols).map(c => c.source.displayName)
             .filter((v, i, a) => a.indexOf(v) === i).join(", ")) : "";
@@ -1207,7 +1266,7 @@ export class Visual implements IVisual {
                 const cap = Math.min(maxLabelW, labelCap);
                 xLabelH = rotation === 0 ? xFont.size * 1.3 + labelGap + 2 : rotation === 45 ? cap * 0.71 + xFont.size + labelGap : cap + labelGap + 2;
             }
-            plotBottom = Math.max(topPad + 20, plotH0 - xLabelH - (scrolling ? scrollbar : 0));
+            plotBottom = Math.max(topPad + 20, plotH0 - xLabelH - groupsH - (scrolling ? scrollbar : 0));
             if (pass === 0 && rotation > 0 && xs.show.value) {
                 // O primeiro rótulo inclinado avança para a esquerda: deixa um espaço antes da primeira coluna.
                 const first = Math.min(labelWidths[0] || 0, labelCap);
@@ -1223,7 +1282,7 @@ export class Visual implements IVisual {
             chart.appendChild(msg);
             return;
         }
-        const svgH = plotBottom + xLabelH;
+        const svgH = plotBottom + xLabelH + groupsH;
         const plotTop = topPad;
         const lineScale = sameScale ? scale1 : scale2;
 
@@ -1604,14 +1663,73 @@ export class Visual implements IVisual {
                     t.textContent = fit(c.label, labelCap, xFont);
                 }
                 const title = svg("title", {}, t);
-                title.textContent = c.label;
+                title.textContent = c.fullLabel;
                 this.pointNodes.push({ node: t, category: i });
             });
+            if (outerRows > 0) {
+                this.drawGroups(model, plot, band, plotTop, plotBottom, plotBottom + xLabelH, groupRowH, groupGap, groupFont);
+            }
         }
 
         this.bindPlot(model, plotSvg, padLeft, band, cols, lns, stackTotal);
         if (scrolling) {
             scroller.scrollLeft = this.scrollLeft;
+        }
+    }
+
+    /** Grupos dos níveis de cima do Eixo X (ex.: 2024 embaixo de Jan…Dez), com divisórias entre eles. */
+    private drawGroups(model: Model, plot: SVGGElement, band: number, plotTop: number, plotBottom: number,
+        top: number, rowH: number, gap: number, font: TextStyle): void {
+        const xs = this.formattingSettings.xAxisCard;
+        const cats = model.categories;
+        const n = cats.length;
+        const outerRows = model.levels - 1;
+        const g = svg("g", { class: "cl-x-groups" }, plot);
+        const prefix = (c: Category, level: number): string => c.keys.slice(0, level + 1).join("\u001f");
+        for (let r = 0; r < outerRows; r++) {
+            // r = 0 é a faixa logo abaixo dos rótulos (o nível imediatamente acima do último).
+            const level = model.levels - 2 - r;
+            const y = top + r * rowH + gap;
+            let start = 0;
+            for (let i = 1; i <= n; i++) {
+                if (i < n && prefix(cats[i], level) === prefix(cats[start], level)) {
+                    continue;
+                }
+                const x0 = start * band;
+                const x1 = i * band;
+                const label = cats[start].path[level] ?? "";
+                const t = svg("text", {
+                    x: (x0 + x1) / 2, y, fill: xs.groupColor.value.value, ...svgFont(font),
+                    "text-anchor": "middle", "dominant-baseline": "hanging", class: "cl-x-label cl-x-group"
+                }, g);
+                t.textContent = fit(label, Math.max(0, x1 - x0 - 6), font);
+                const title = svg("title", {}, t);
+                title.textContent = cats[start].path.slice(0, level + 1).join(" › ");
+                start = i;
+            }
+        }
+        if (!xs.showSeparators.value) {
+            return;
+        }
+        // Uma divisória por troca de grupo; desce até a faixa do nível mais alto que mudou.
+        const lineTop = xs.separatorInPlot.value ? plotTop : plotBottom;
+        for (let i = 1; i < n; i++) {
+            let changed = -1;
+            for (let level = 0; level < model.levels - 1; level++) {
+                if (cats[i].keys[level] !== cats[i - 1].keys[level]) {
+                    changed = level;
+                    break;
+                }
+            }
+            if (changed < 0) {
+                continue;
+            }
+            const row = model.levels - 2 - changed;
+            const x = Math.round(i * band) + 0.5;
+            svg("line", {
+                x1: x, x2: x, y1: lineTop, y2: top + (row + 1) * rowH, stroke: xs.separatorColor.value.value,
+                "stroke-opacity": pct(xs.separatorOpacity.value), class: "cl-x-separator"
+            }, g);
         }
     }
 
@@ -1672,7 +1790,7 @@ export class Visual implements IVisual {
     private tooltip(model: Model, index: number, hoveredSeries: Series | undefined, cols: Series[], lns: Series[], totals: Array<number | null>): VisualTooltipDataItem[] {
         const category = model.categories[index];
         const it = this.formattingSettings.interactionCard;
-        const items: VisualTooltipDataItem[] = [{ displayName: model.categoryName, value: category.label }];
+        const items: VisualTooltipDataItem[] = [{ displayName: model.categoryName, value: category.fullLabel }];
         const add = (series: Series): void => {
             items.push({ displayName: series.name, value: series.format(series.values[index]), color: series.color });
         };
