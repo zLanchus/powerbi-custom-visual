@@ -107,6 +107,7 @@
       "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
       "Linha calculada na categoria inteira, com eixo Y secundário",
       "Vários campos aninhados no Eixo X (ex.: Ano e Mês), agrupados ou concatenados",
+      "Mínimo e máximo dos eixos por medida, colunas sempre abaixo das linhas e linhas em faixas",
       "Rótulos de segmento, total da pilha e das linhas, sem sobreposição",
       "Linhas retas, suaves ou em degraus, com marcadores e área",
       "Praticamente tudo personalizável: fontes, tamanho e cores dos botões, eixos, grade, rótulos e cada linha"
@@ -116,7 +117,8 @@
       "2-legenda-interativa.png",
       "5-ano-mes.png",
       "3-medidas-rotulos.png",
-      "4-personalizado.png"
+      "4-personalizado.png",
+      "6-faixas-colunas-abaixo.png"
     ]
   }
 ]

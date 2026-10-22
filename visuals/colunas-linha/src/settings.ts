@@ -87,6 +87,10 @@ export const LINE_LABEL_POSITION_ITEMS = enumItems(["above", "Acima do ponto"], 
 export const LINE_LABEL_POINTS_ITEMS = enumItems(
     ["all", "Todos os pontos"], ["last", "Só o último"], ["minmax", "Maior e menor"], ["ends", "Primeiro e último"]
 );
+export const LINE_SEPARATE_ITEMS = enumItems(["none", "Não (todas na mesma escala)"], ["lanes", "Em faixas (uma faixa por linha)"]);
+export const LINE_OVERLAP_ITEMS = enumItems(
+    ["nudge", "Sempre visível (afasta o rótulo até achar espaço)"], ["hide", "Mudar de lado ou esconder"]
+);
 export const TOOLTIP_MODE_ITEMS = enumItems(["category", "Todos os valores da categoria"], ["item", "Só o item sob o mouse"]);
 export const CHIP_ON_STYLE_ITEMS = enumItems(
     ["neutral", "Fundo neutro e amostra de cor"], ["filled", "Fundo na cor da série"], ["outline", "Borda na cor da série"]
@@ -258,6 +262,8 @@ class LinesCard extends FormattingSettingsCompositeCard {
     markerGrow = num("markerGrow", "Aumentar ao passar o mouse (%)", 45);
     showArea = toggle("showArea", "Sombrear a área abaixo", false);
     areaOpacity = num("areaOpacity", "Opacidade da área (%)", 15);
+    separate = dropdown("separate", "Separar as linhas", LINE_SEPARATE_ITEMS, 0);
+    laneGap = num("laneGap", "Espaço entre as faixas (px)", 16);
 
     name = "lines";
     displayName = "Linhas";
@@ -268,7 +274,9 @@ class LinesCard extends FormattingSettingsCompositeCard {
             this.showMarkers, this.markerShape, this.markerSize, this.markerFill, this.markerCenterColor,
             this.markerBorderWidth, this.markerGrow
         ]),
-        group("linesArea", "Área", [this.showArea, this.areaOpacity])
+        group("linesArea", "Área", [this.showArea, this.areaOpacity]),
+        group("linesSpacing", "Várias linhas", [this.separate, this.laneGap],
+            "Em faixas, cada linha ganha sua própria faixa e escala, uma acima da outra, para não se cruzarem. Em \"Linhas — por série\" também dá para deslocar cada linha.")
     ];
 }
 
@@ -319,8 +327,8 @@ class ValueAxisCard extends FormattingSettingsCompositeCard {
     show = toggle("show", "Mostrar", true);
     font = new Font("", "Fonte", 11);
     fontColor = color("fontColor", "Cor do texto", MUTED);
-    min = text("min", "Mínimo", "", "Automático");
-    max = text("max", "Máximo", "", "Automático");
+    min = text("min", "Mínimo", "", "Automático", "Também dá para usar uma medida: arraste-a para o campo \"Mínimo do eixo\" do visual.");
+    max = text("max", "Máximo", "", "Automático", "Também dá para usar uma medida: arraste-a para o campo \"Máximo do eixo\" do visual.");
     tickCount = num("tickCount", "Quantidade de marcas (0 = automática)", 0);
     units = dropdown("units", "Unidades de exibição", UNITS_ITEMS, 0);
     decimals = num("decimals", "Casas decimais (-1 = automático)", -1);
@@ -335,6 +343,10 @@ class ValueAxisCard extends FormattingSettingsCompositeCard {
     gridStyle = dropdown("gridStyle", "Estilo", GRID_STYLE_ITEMS, 1);
 
     sameScale = toggle("sameScale", "Usar a escala das colunas", false, "Linhas e colunas na mesma escala (sem eixo secundário).");
+    columnsBelow = toggle("columnsBelow", "Colunas sempre abaixo das linhas", false,
+        "As colunas ficam na parte de baixo do gráfico e as linhas na de cima, sem se cruzarem.");
+    columnsShare = num("columnsShare", "Altura máxima das colunas (%)", 60);
+    belowGap = num("belowGap", "Espaço entre colunas e linhas (%)", 6);
     topLevelSlice = this.show;
     name = "";
     displayName = "";
@@ -347,7 +359,7 @@ class ValueAxisCard extends FormattingSettingsCompositeCard {
         const sameScale = this.sameScale;
         this.groups = [
             group(name + "Scale", "Escala", secondary
-                ? [sameScale, this.min, this.max, this.tickCount]
+                ? [sameScale, this.min, this.max, this.tickCount, this.columnsBelow, this.columnsShare, this.belowGap]
                 : [this.min, this.max, this.tickCount]),
             group(name + "Labels", "Rótulos", [this.font.control, this.fontColor, this.units, this.decimals]),
             group(name + "Title", "Título", [this.showTitle, this.titleText, this.titleFont.control, this.titleColor]),
@@ -409,7 +421,8 @@ class LineLabelsCard extends FormattingSettingsCompositeCard {
     points = dropdown("points", "Quais pontos", LINE_LABEL_POINTS_ITEMS, 0);
     position = dropdown("position", "Posição", LINE_LABEL_POSITION_ITEMS, 0);
     offset = num("offset", "Distância do ponto (px)", 4);
-    avoidOverlap = toggle("avoidOverlap", "Evitar sobreposição", true, "Rótulos que batem em outros mudam de lado ou somem.");
+    avoidOverlap = toggle("avoidOverlap", "Evitar sobreposição", true);
+    overlapMode = dropdown("overlapMode", "Quando bater em outro rótulo", LINE_OVERLAP_ITEMS, 0);
     font = new Font("", "Fonte", 11, true);
     useLineColor = toggle("useLineColor", "Usar a cor da linha", true);
     fontColor = color("fontColor", "Cor do texto", DARK);
@@ -423,7 +436,7 @@ class LineLabelsCard extends FormattingSettingsCompositeCard {
     displayName = "Rótulos das linhas";
     topLevelSlice = this.show;
     groups: FormattingSettingsGroup[] = [
-        group("lineLabelsPlace", "Posição", [this.points, this.position, this.offset, this.avoidOverlap]),
+        group("lineLabelsPlace", "Posição", [this.points, this.position, this.offset, this.avoidOverlap, this.overlapMode]),
         group("lineLabelsText", "Texto", [this.font.control, this.useLineColor, this.fontColor]),
         group("lineLabelsHalo", "Contorno", [this.halo, this.haloColor, this.haloWidth]),
         group("lineLabelsNumbers", "Números", [this.units, this.decimals])

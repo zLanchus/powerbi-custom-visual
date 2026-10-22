@@ -55,6 +55,8 @@ interface LineOptions {
     markers: string;
     area: string;
     labels: string;
+    /** Deslocamento vertical da linha, em px (positivo sobe). */
+    offset: number;
 }
 
 /** Uma série: um segmento das colunas (item da legenda ou medida) ou uma linha (medida). */
@@ -89,6 +91,8 @@ interface Model {
     levels: number;
     /** Eixo X agrupado: os níveis de cima aparecem como grupos embaixo dos rótulos. */
     groupedAxis: boolean;
+    /** Mínimo e máximo dos eixos vindos de medidas (têm prioridade sobre o valor digitado). */
+    bounds: { y1Min?: number; y1Max?: number; y2Min?: number; y2Max?: number };
 }
 
 interface Scale {
@@ -484,7 +488,9 @@ export class Visual implements IVisual {
         const y2 = s.y2AxisCard;
         const own = !y2.sameScale.value;
         y2.groups.slice(1).forEach(grp => { grp.visible = own; });
-        y2.min.visible = y2.max.visible = y2.tickCount.visible = own;
+        y2.min.visible = y2.max.visible = y2.tickCount.visible = y2.columnsBelow.visible = own;
+        y2.columnsShare.visible = y2.belowGap.visible = own && y2.columnsBelow.value;
+        s.linesCard.laneGap.visible = enumValue(s.linesCard.separate) === "lanes";
 
         const cl = s.columnLabelsCard;
         cl.fontColor.visible = !cl.autoColor.value;
@@ -493,6 +499,7 @@ export class Visual implements IVisual {
         tl.haloColor.visible = tl.haloWidth.visible = tl.halo.value;
         const ll = s.lineLabelsCard;
         ll.fontColor.visible = !ll.useLineColor.value;
+        ll.overlapMode.visible = ll.avoidOverlap.value;
         ll.haloColor.visible = ll.haloWidth.visible = ll.halo.value;
         const it = s.interactionCard;
         it.hoverColor.visible = it.hoverOpacity.visible = it.hoverBand.value;
@@ -562,6 +569,10 @@ export class Visual implements IVisual {
                     }),
                     new formattingSettings.ItemDropdown({
                         name: "labels", displayName: "Rótulos", items: SERIES_TRISTATE_ITEMS, value: pick(SERIES_TRISTATE_ITEMS, o.labels), selector
+                    }),
+                    new formattingSettings.NumUpDown({
+                        name: "offset", displayName: "Deslocamento vertical (px, positivo sobe)", value: o.offset, selector,
+                        description: "Afasta esta linha das outras só no desenho; os valores e rótulos continuam os mesmos."
                     })
                 ]
             });
@@ -694,6 +705,16 @@ export class Visual implements IVisual {
         const columnMeasures = sources.map((_, i) => i).filter(i => role(i, "columnValues"));
         const lineMeasures = sources.map((_, i) => i).filter(i => role(i, "lineValues"));
         const extraMeasures = sources.map((_, i) => i).filter(i => role(i, "tooltips"));
+        // Mínimo e máximo dos eixos vindos de medidas: o menor (ou maior) valor entre as categorias.
+        const bound = (roleName: string, pickMax: boolean): number | undefined => {
+            const measure = sources.findIndex((_, i) => role(i, roleName));
+            if (measure < 0) {
+                return undefined;
+            }
+            const values = rowNodes.map(row => toNumber(total(row, measure))).filter((v): v is number => v !== null);
+            return values.length ? (pickMax ? Math.max(...values) : Math.min(...values)) : undefined;
+        };
+        const bounds = { y1Min: bound("y1Min", false), y1Max: bound("y1Max", true), y2Min: bound("y2Min", false), y2Max: bound("y2Max", true) };
 
         let columns: Series[];
         if (hasLegend && columnMeasures.length > 0) {
@@ -730,7 +751,7 @@ export class Visual implements IVisual {
             return undefined;
         }
         const categoryName = rowLevels.map(l => l.sources?.[0]?.displayName || "").filter(Boolean).join(" › ");
-        return { categoryName, categories, columns, lines, extras, hasLegend, levels: rowLevels.length, groupedAxis: mode === "grouped" };
+        return { categoryName, categories, columns, lines, extras, hasLegend, levels: rowLevels.length, groupedAxis: mode === "grouped", bounds };
     }
 
     private lineOptions(objects: powerbi.DataViewObjects | undefined): LineOptions {
@@ -741,7 +762,8 @@ export class Visual implements IVisual {
             style: str(o["style"]),
             markers: str(o["markers"]),
             area: str(o["area"]),
-            labels: str(o["labels"])
+            labels: str(o["labels"]),
+            offset: typeof o["offset"] === "number" ? o["offset"] as number : 0
         };
     }
 
@@ -1141,14 +1163,27 @@ export class Visual implements IVisual {
         const lineVals = lns.flatMap(l => l.values.filter((v): v is number => v !== null));
 
         // ---- domínios
-        const domain = (values: number[], minText: string, maxText: string): [number, number] | undefined => {
+        // Limites fixos: medida do campo "Mínimo/Máximo do eixo" ou o valor digitado no painel.
+        const fixed1 = { min: model.bounds.y1Min ?? parseNumber(ys.min.value), max: model.bounds.y1Max ?? parseNumber(ys.max.value) };
+        const fixed2 = { min: model.bounds.y2Min ?? parseNumber(y2s.min.value), max: model.bounds.y2Max ?? parseNumber(y2s.max.value) };
+        const lanes = enumValue(s.linesCard.separate) === "lanes" && lns.length > 1;
+        // Colunas embaixo e linhas em cima: as linhas ganham a parte de cima do gráfico.
+        const below = y2s.columnsBelow.value && !sameScale && cols.length > 0 && lns.length > 0;
+        const colShare = clamp(y2s.columnsShare.value, 10, 95) / 100;
+        const belowGap = clamp(y2s.belowGap.value, 0, 50) / 100;
+        const domain = (values: number[], fixed: { min?: number; max?: number }, includeZero = true): [number, number] | undefined => {
             if (values.length === 0) {
                 return undefined;
             }
-            let lo = Math.min(0, ...values);
-            let hi = Math.max(0, ...values);
-            const userMin = parseNumber(minText);
-            const userMax = parseNumber(maxText);
+            let lo = includeZero ? Math.min(0, ...values) : Math.min(...values);
+            let hi = includeZero ? Math.max(0, ...values) : Math.max(...values);
+            if (!includeZero && hi > lo) {
+                const pad = (hi - lo) * 0.08;
+                lo -= pad;
+                hi += pad;
+            }
+            const userMin = fixed.min;
+            const userMax = fixed.max;
             if (userMin !== undefined) {
                 lo = userMin;
             }
@@ -1161,8 +1196,12 @@ export class Visual implements IVisual {
             return hi > lo ? [lo, hi] : [hi, lo];
         };
         const colValues = cols.length ? [...stackPos, ...stackNeg] : [];
-        const d1 = domain(sameScale ? [...colValues, ...lineVals] : colValues, ys.min.value, ys.max.value);
-        const d2 = sameScale ? undefined : domain(lineVals, y2s.min.value, y2s.max.value);
+        let d1 = domain(sameScale ? [...colValues, ...lineVals] : colValues, fixed1);
+        if (d1 && below && fixed1.max === undefined) {
+            // As colunas só sobem até a altura escolhida.
+            d1 = [d1[0], d1[0] + (d1[1] - d1[0]) / colShare];
+        }
+        const d2 = sameScale ? undefined : domain(lineVals, fixed2, !below);
 
         // ---- fontes
         const xFont = this.textStyle(xs.font);
@@ -1181,12 +1220,12 @@ export class Visual implements IVisual {
         const plotH0 = Math.max(20, H - xTitleH);
 
         const makeScale = (d: [number, number] | undefined, card: typeof ys, source: DataViewMetadataColumn | undefined,
-            top: number, bottom: number): Scale | undefined => {
+            top: number, bottom: number, fixed: { min?: number; max?: number }): Scale | undefined => {
             if (!d) {
                 return undefined;
             }
-            const userMin = parseNumber(card.min.value) !== undefined;
-            const userMax = parseNumber(card.max.value) !== undefined;
+            const userMin = fixed.min !== undefined;
+            const userMax = fixed.max !== undefined;
             const count = card.tickCount.value > 0 ? Math.round(card.tickCount.value) : Math.max(2, Math.round((bottom - top) / 48));
             let ticks = niceTicks(d[0], d[1], count);
             const min = userMin ? d[0] : ticks[0];
@@ -1229,7 +1268,9 @@ export class Visual implements IVisual {
         const y2Title = !sameScale && y2s.showTitle.value ? (y2s.titleText.value || lns.map(l => l.name).join(", ")) : "";
 
         const showY1 = ys.show.value && !!d1;
-        const showY2 = !sameScale && y2s.show.value && !!d2;
+        // Em faixas, cada linha tem a sua escala: o eixo secundário não se aplica.
+        const showY2 = !sameScale && !lanes && y2s.show.value && !!d2;
+        const linesBottomOf = (top: number, bottom: number): number => (below ? top + (bottom - top) * Math.max(0.05, 1 - colShare - belowGap) : bottom);
 
         let xLabelH = 0;
         let rotation = 0;
@@ -1245,8 +1286,8 @@ export class Visual implements IVisual {
         let padLeft = 0;
         // Duas passadas: a primeira estima as margens, a segunda usa os rótulos dos eixos já medidos.
         for (let pass = 0; pass < 2; pass++) {
-            scale1 = makeScale(d1, ys, sameScale ? (colSource || lineSource) : colSource, topPad, plotBottom);
-            scale2 = makeScale(d2, y2s, lineSource, topPad, plotBottom);
+            scale1 = makeScale(d1, ys, sameScale ? (colSource || lineSource) : colSource, topPad, plotBottom, fixed1);
+            scale2 = makeScale(d2, y2s, lineSource, topPad, below ? linesBottomOf(topPad, plotBottom) : plotBottom, fixed2);
             const tickW = (sc: Scale | undefined, st: TextStyle): number =>
                 sc ? Math.max(0, ...sc.ticks.map(v => textWidth(sc.format(v), st))) : 0;
             ml = showY1 ? Math.ceil(tickW(scale1, y1Font)) + 10 + (y1Title ? y1TitleFont.size + 8 : 0) : 8;
@@ -1467,9 +1508,37 @@ export class Visual implements IVisual {
             const sc = lineScale;
             const g = svg("g", { class: "cl-lines" }, plot);
             const clampY = (y: number): number => clamp(y, plotTop, plotBottom);
-            const baseY = clampY(sc.y(clamp(0, sc.min, sc.max)));
-            lns.forEach(l => {
+            // Área das linhas: tudo, ou só a parte de cima com "colunas sempre abaixo".
+            const areaTop = plotTop;
+            const areaBottom = linesBottomOf(plotTop, plotBottom);
+            const laneGap = Math.max(0, s.linesCard.laneGap.value);
+            const laneH = lanes ? Math.max(8, (areaBottom - areaTop - laneGap * (lns.length - 1)) / lns.length) : 0;
+            lns.forEach((l, k) => {
                 const o = l.options;
+                // Posição vertical desta linha: escala comum, ou a faixa dela (com escala própria), mais o deslocamento manual.
+                let yOf = (v: number): number => sc.y(v);
+                let baseY = clampY(sc.y(clamp(0, sc.min, sc.max)));
+                if (lanes) {
+                    const vals = l.values.filter((v): v is number => v !== null);
+                    let lo = vals.length ? Math.min(...vals) : 0;
+                    let hi = vals.length ? Math.max(...vals) : 1;
+                    if (hi === lo) {
+                        lo -= Math.abs(lo) * 0.1 || 1;
+                        hi += Math.abs(hi) * 0.1 || 1;
+                    }
+                    const laneTop = areaTop + k * (laneH + laneGap);
+                    // Folga em cima e embaixo da faixa para marcadores e rótulos.
+                    const padTop = Math.min(laneH * 0.3, lineLabelFont.size + 6);
+                    const padBottom = Math.min(laneH * 0.15, 6);
+                    yOf = v => laneTop + padTop + (hi - v) / (hi - lo) * Math.max(1, laneH - padTop - padBottom);
+                    baseY = laneTop + laneH;
+                }
+                const shift = o.offset || 0;
+                if (shift) {
+                    const inner = yOf;
+                    yOf = v => inner(v) - shift;
+                    baseY -= shift;
+                }
                 const lineW = Math.max(0.5, o.width > 0 ? o.width : ls.width.value);
                 const dash = o.style !== "default" ? o.style : enumValue(ls.style);
                 const showMarkers = tri(o.markers, ls.showMarkers.value);
@@ -1477,7 +1546,7 @@ export class Visual implements IVisual {
                 const showLabels = tri(o.labels, ll.show.value);
                 const points: Array<Point | null> = l.values.map((v, i) => {
                     const value = v === null && nulls === "zero" ? 0 : v;
-                    return value === null ? null : [i * band + band / 2, clampY(sc.y(value))];
+                    return value === null ? null : [i * band + band / 2, clampY(yOf(value))];
                 });
                 // Trechos contínuos (vazios interrompem a linha, a não ser que a opção ligue os pontos).
                 const runs: Point[][] = [];
@@ -1613,12 +1682,24 @@ export class Visual implements IVisual {
             for (const lab of lineLabels) {
                 const w = textWidth(lab.text, lineLabelFont);
                 // Tenta o lado escolhido; se bater em outro rótulo, o outro lado do ponto.
-                const sides = ll.avoidOverlap.value ? [lab.above, !lab.above] : [lab.above];
-                const candidates = sides.map(above => {
-                    const y = above ? Math.max(size, lab.y - lab.offset) : Math.min(plotBottom - 2, lab.y + lab.offset + size * 0.8);
-                    return { y, box: [lab.x - w / 2 - 2, y - size, lab.x + w / 2 + 2, y + 2] as Box };
-                });
-                const spot = ll.avoidOverlap.value ? candidates.find(c => !collides(c.box)) : candidates[0];
+                // No modo "sempre visível", vai afastando o rótulo até achar espaço (e, sem espaço, mostra assim mesmo).
+                const avoid = ll.avoidOverlap.value;
+                const nudge = avoid && enumValue(ll.overlapMode) === "nudge";
+                const at = (above: boolean, step: number): { y: number; box: Box } => {
+                    const extra = step * (size + 2);
+                    const y = above ? Math.max(size, lab.y - lab.offset - extra) : Math.min(plotBottom - 2, lab.y + lab.offset + size * 0.8 + extra);
+                    return { y, box: [lab.x - w / 2 - 2, y - size, lab.x + w / 2 + 2, y + 2] };
+                };
+                const candidates = [at(lab.above, 0)];
+                if (avoid) {
+                    candidates.push(at(!lab.above, 0));
+                }
+                if (nudge) {
+                    for (let step = 1; step <= 5; step++) {
+                        candidates.push(at(lab.above, step), at(!lab.above, step));
+                    }
+                }
+                const spot = !avoid ? candidates[0] : candidates.find(c => !collides(c.box)) || (nudge ? candidates[0] : undefined);
                 if (!spot) {
                     continue;
                 }
