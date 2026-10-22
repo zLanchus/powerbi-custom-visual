@@ -1286,8 +1286,8 @@ export class Visual implements IVisual {
 
         const showY1 = ys.show.value && !!d1;
         // Em faixas, cada linha tem a sua escala: o eixo secundário não se aplica.
-        // Afastadas ou em faixas, as linhas saem da escala comum: o eixo secundário não se aplica.
-        const showY2 = !sameScale && !lanes && !spread && y2s.show.value && !!d2;
+        // Em faixas, cada linha tem a sua escala: o eixo secundário não se aplica. Afastando só os rótulos, ele continua valendo.
+        const showY2 = !sameScale && !lanes && y2s.show.value && !!d2;
         // Área das linhas: o gráfico inteiro, ou (colunas abaixo) uma faixa logo acima da coluna mais alta.
         const markerRoom = Math.max(2, s.linesCard.markerSize.value) + Math.max(1, s.linesCard.width.value);
         const lineAreaOf = (sc1: Scale | undefined, top: number, bottom: number): { top: number; bottom: number } => {
@@ -1688,7 +1688,9 @@ export class Visual implements IVisual {
                 this.pointNodes.push({ node: t, category: i });
             });
         }
-        if (lineLabels.length) {
+        if (lineLabels.length && spread) {
+            this.spreadLineLabels(lineLabels, labels, placed, lineLabelFont, plotBottom, halo);
+        } else if (lineLabels.length) {
             const size = lineLabelFont.size;
             for (const lab of lineLabels) {
                 const w = textWidth(lab.text, lineLabelFont);
@@ -1771,9 +1773,7 @@ export class Visual implements IVisual {
 
     /**
      * Posição vertical de cada linha.
-     * - "none": escala comum.
-     * - "spread": escala comum, e cada linha sobe só o necessário para ficar a pelo menos `gap` px da de baixo
-     *   (a escala encolhe se o conjunto não couber na área).
+     * - "none" e "spread": escala comum, no valor real.
      * - "lanes": uma faixa por linha, com escala própria.
      */
     private lineLayout(lns: Series[], sc: Scale, area: { top: number; bottom: number }, separate: string, labelRoom: number)
@@ -1798,50 +1798,73 @@ export class Visual implements IVisual {
                 return { yOf: (v: number) => top + (hi - v) / (hi - lo) * h, baseY: top + laneH };
             });
         }
-        if (separate !== "spread") {
-            return lns.map(() => ({ yOf: (v: number) => sc.y(v), baseY: zeroY }));
-        }
-        const bottom = sc.y(sc.min);
-        const avg = (ys: Array<number | null>): number => {
-            const ok = ys.filter((y): y is number => y !== null);
-            return ok.length ? ok.reduce((a, b) => a + b, 0) / ok.length : bottom;
-        };
-        let factor = 1;
-        let shifts = lns.map(() => 0);
-        for (let iter = 0; iter < 10; iter++) {
-            const ys = lns.map(l => l.values.map(v => (v === null ? null : bottom - (bottom - sc.y(v)) * factor)));
-            // De baixo para cima: cada linha sobe o mínimo para ficar `gap` px acima da de baixo em todos os pontos.
-            const order = lns.map((_, k) => k).sort((a, b) => avg(ys[b]) - avg(ys[a]));
-            shifts = lns.map(() => 0);
-            for (let j = 1; j < order.length; j++) {
-                const up = order[j];
-                const low = order[j - 1];
-                let room = Infinity;
-                ys[up].forEach((y, i) => {
-                    const yl = ys[low][i];
-                    if (y !== null && yl !== null) {
-                        room = Math.min(room, yl + shifts[low] - y);
-                    }
-                });
-                shifts[up] = room === Infinity ? shifts[low] : Math.min(0, room - gap);
+        // "spread" e "none": todas as linhas no mesmo eixo, no valor real (no "spread" só os rótulos se afastam).
+        return lns.map(() => ({ yOf: (v: number) => sc.y(v), baseY: zeroY }));
+    }
+
+    /**
+     * Rótulos das linhas com "Afastar automaticamente": em cada categoria, o rótulo da linha de cima vai acima do
+     * ponto, o da linha de baixo vai abaixo e os do meio são empurrados para manter um espaço mínimo entre eles.
+     * As linhas não saem do lugar; quando o rótulo fica longe do ponto, um traço liga os dois.
+     */
+    private spreadLineLabels(
+        list: Array<{ x: number; y: number; text: string; color: string; category: number; above: boolean; offset: number }>,
+        parent: SVGGElement, placed: Box[], font: TextStyle, plotBottom: number,
+        halo: (t: SVGTextElement, on: boolean, color: string, width: number) => void
+    ): void {
+        const ll = this.formattingSettings.lineLabelsCard;
+        const size = font.size;
+        const sep = this.formattingSettings.linesCard.laneGap.value > 0 ? this.formattingSettings.linesCard.laneGap.value : 2;
+        const byCategory = new Map<number, typeof list>();
+        list.forEach(lab => byCategory.set(lab.category, (byCategory.get(lab.category) || []).concat(lab)));
+        for (const items of byCategory.values()) {
+            // De cima para baixo, pela posição do ponto.
+            items.sort((a, b) => a.y - b.y);
+            const m = items.length;
+            const wanted = items.map((lab, k) => {
+                const above = m === 1 ? lab.above : k < m - 1;
+                return above ? lab.y - lab.offset : lab.y + lab.offset + size * 0.8;
+            });
+            // Espaço mínimo entre rótulos vizinhos (linha de base a linha de base).
+            const final = wanted.slice();
+            for (let k = 1; k < m; k++) {
+                final[k] = Math.max(final[k], final[k - 1] + size + sep);
             }
-            let topMost = Infinity;
-            ys.forEach((list, k) => list.forEach(y => {
-                if (y !== null) {
-                    topMost = Math.min(topMost, y + shifts[k]);
+            const excess = final[m - 1] - (plotBottom - 2);
+            if (excess > 0) {
+                for (let k = 0; k < m; k++) {
+                    final[k] -= excess;
                 }
-            }));
-            const overflow = area.top - topMost;
-            if (!(overflow > 0.5) || bottom - area.top <= 1) {
-                break;
             }
-            // Não coube: encolhe a escala (as diferenças entre as linhas continuam visíveis).
-            factor *= Math.max(0.2, 1 - overflow / Math.max(1, bottom - area.top));
+            const shiftDown = size - final[0];
+            if (shiftDown > 0) {
+                for (let k = 0; k < m; k++) {
+                    final[k] += shiftDown;
+                }
+            }
+            items.forEach((lab, k) => {
+                const y = final[k];
+                const w = textWidth(lab.text, font);
+                placed.push([lab.x - w / 2 - 2, y - size, lab.x + w / 2 + 2, y + 2]);
+                // Traço ligando o rótulo ao ponto quando ele foi empurrado para longe.
+                const labelMid = y - size * 0.35;
+                if (Math.abs(labelMid - lab.y) > lab.offset + size) {
+                    const fromY = lab.y + (labelMid > lab.y ? lab.offset * 0.6 : -lab.offset * 0.6);
+                    const toY = labelMid > lab.y ? y - size : y + 2;
+                    const leader = svg("line", {
+                        x1: lab.x, x2: lab.x, y1: fromY, y2: toY, stroke: lab.color, "stroke-width": 1,
+                        "stroke-opacity": 0.45, class: "cl-label cl-leader"
+                    }, parent);
+                    this.pointNodes.push({ node: leader, category: lab.category });
+                }
+                const t = svg("text", {
+                    x: lab.x, y, fill: lab.color, ...svgFont(font), "text-anchor": "middle", class: "cl-label cl-line-label"
+                }, parent);
+                halo(t, ll.halo.value, ll.haloColor.value.value, Math.max(0, ll.haloWidth.value));
+                t.textContent = lab.text;
+                this.pointNodes.push({ node: t, category: lab.category });
+            });
         }
-        return lns.map((_, k) => ({
-            yOf: (v: number) => bottom - (bottom - sc.y(v)) * factor + shifts[k],
-            baseY: bottom - (bottom - zeroY) * factor + shifts[k]
-        }));
     }
 
     /** Grupos dos níveis de cima do Eixo X (ex.: 2024 embaixo de Jan…Dez), com divisórias entre eles. */

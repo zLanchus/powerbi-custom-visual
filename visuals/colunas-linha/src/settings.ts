@@ -89,8 +89,8 @@ export const LINE_LABEL_POINTS_ITEMS = enumItems(
 );
 export const LINE_SEPARATE_ITEMS = enumItems(
     ["none", "Não (todas na mesma escala)"],
-    ["spread", "Afastar automaticamente (mantém a variação)"],
-    ["lanes", "Em faixas (uma faixa por linha, escala própria)"]
+    ["spread", "Mesmo eixo, rótulos afastados (recomendado)"],
+    ["lanes", "Em faixas (cada linha com escala própria, sai do eixo comum)"]
 );
 export const LINE_OVERLAP_ITEMS = enumItems(
     ["nudge", "Sempre visível (afasta o rótulo até achar espaço)"], ["hide", "Mudar de lado ou esconder"]
@@ -274,9 +274,9 @@ class LinesCard extends FormattingSettingsCompositeCard {
     markerGrow = num("markerGrow", "Aumentar ao passar o mouse (%)", 45);
     showArea = toggle("showArea", "Sombrear a área abaixo", false);
     areaOpacity = num("areaOpacity", "Opacidade da área (%)", 15);
-    separate = dropdown("separate", "Separar as linhas", LINE_SEPARATE_ITEMS, 0);
-    laneGap = num("laneGap", "Espaço entre as linhas (px, 0 = automático)", 0,
-        "Distância mínima entre uma linha e a de baixo. Automático = o necessário para o rótulo caber.");
+    separate = dropdown("separate", "Separar as linhas", LINE_SEPARATE_ITEMS, 1);
+    laneGap = num("laneGap", "Espaço entre os rótulos / faixas (px, 0 = automático)", 0,
+        "Rótulos afastados: espaço mínimo entre os rótulos de linhas diferentes no mesmo ponto. Em faixas: espaço entre as faixas.");
 
     name = "lines";
     displayName = "Linhas";
@@ -289,7 +289,7 @@ class LinesCard extends FormattingSettingsCompositeCard {
         ]),
         group("linesArea", "Área", [this.showArea, this.areaOpacity]),
         group("linesSpacing", "Várias linhas", [this.separate, this.laneGap],
-            "Afastar: as linhas mantêm a mesma escala e só se afastam o necessário para não se cruzarem. Em faixas: cada linha ganha uma faixa com escala própria. Em \"Linhas — por série\" também dá para deslocar cada linha.")
+            "Rótulos afastados: as linhas ficam no valor real, no mesmo eixo; em cada ponto o rótulo da linha de cima vai acima e o da de baixo vai abaixo, sem se sobreporem. Em faixas: cada linha ganha uma faixa com escala própria (o eixo secundário some).")
     ];
 }
 

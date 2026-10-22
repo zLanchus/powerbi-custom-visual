@@ -822,11 +822,11 @@
                             },
                             {
                                 "value": "spread",
-                                "displayName": "Afastar automaticamente (mantém a variação)"
+                                "displayName": "Mesmo eixo, rótulos afastados (recomendado)"
                             },
                             {
                                 "value": "lanes",
-                                "displayName": "Em faixas (uma faixa por linha, escala própria)"
+                                "displayName": "Em faixas (cada linha com escala própria, sai do eixo comum)"
                             }
                         ]
                     }
