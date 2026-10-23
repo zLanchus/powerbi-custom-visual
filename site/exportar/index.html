@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exportar página do Power BI</title>
+  <meta name="description" content="Captura a página do relatório do Power BI e gera PDF ou imagem no próprio navegador.">
+  <meta name="referrer" content="no-referrer">
+  <!--
+    Página usada pelo visual "Exportar Página" (visuals/exportar-pagina).
+    O visual abre esta página com host.launchUrl e passa as opções depois do "#":
+      nome, formato (pdf|png|jpg), papel (fit|a4|letter), orientacao (auto|landscape|portrait),
+      datahora (1|0), rodape (1|0), texto (texto do rodapé), auto (1|0).
+    A captura usa getDisplayMedia (o usuário escolhe a aba/janela do relatório). Nada é enviado
+    para servidor nenhum: recorte, PDF, PNG/JPG e ZIP são gerados aqui mesmo, no navegador.
+    Arquivo único e sem dependências: pode ser copiado para qualquer endereço https da empresa.
+  -->
+  <style>
+    :root {
+      --primary: #6CBEEB; --dark: #0F2B45; --panel: #F1F8FD; --white: #FFFFFF;
+      --bg: #EEF4F9; --card: #FFFFFF; --text: #0F2B45; --muted: #4E6175; --line: rgba(15, 43, 69, .12);
+      --font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0F1720; --card: #17212B; --panel: #203040; --text: #E6F1FA; --muted: #A5B6C6;
+              --line: rgba(255, 255, 255, .1); color-scheme: dark; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); }
+    button, input, select { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+
+    header { background: var(--primary); color: var(--dark); }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+    header .wrap { padding-top: 22px; padding-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+    header svg { width: 34px; height: 34px; flex: none; }
+    header h1 { margin: 0; font-size: clamp(20px, 3.4vw, 26px); line-height: 1.2; }
+    header p { margin: 2px 0 0; font-size: 14px; opacity: .85; overflow-wrap: anywhere; }
+
+    main .wrap { padding-top: 20px; padding-bottom: 32px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+    @media (max-width: 900px) { main .wrap { grid-template-columns: minmax(0, 1fr); } }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+    .card + .card { margin-top: 16px; }
+    h2 { margin: 0 0 10px; font-size: 17px; }
+    h2 .step { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-right: 8px;
+               border-radius: 999px; background: var(--primary); color: var(--dark); font-size: 13px; vertical-align: 1px; }
+    p { margin: 0 0 10px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    kbd { padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font: 12px/1.6 var(--font); }
+
+    .icon { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Botões no padrão do repositório (DESIGN.md). */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 16px;
+           border: 0; border-radius: 14px; background: var(--panel); color: var(--text); font-weight: 600; cursor: pointer;
+           box-shadow: 0 1px 2px rgba(0,0,0,.12); transition: filter .15s, box-shadow .15s, transform .1s; text-decoration: none; }
+    .btn:hover { filter: brightness(1.04); box-shadow: 0 3px 10px rgba(0,0,0,.16); }
+    .btn:active { transform: translateY(1px); }
+    .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .btn:disabled { opacity: .5; cursor: default; box-shadow: none; filter: none; transform: none; }
+    .btn.primary { background: var(--primary); color: var(--dark); }
+    .btn.dark { background: var(--dark); color: var(--white); }
+    @media (prefers-color-scheme: dark) { .btn.dark { background: var(--white); color: #0F2B45; } }
+    .btn.big { min-height: 54px; padding: 0 20px; font-size: 16px; }
+    .btn.big i { width: 2px; align-self: stretch; margin: 12px 0; background: currentColor; opacity: .55; border-radius: 2px; }
+    .btn.small { min-height: 34px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    /* Passo 1 */
+    .start { text-align: center; padding: 34px 18px; }
+    .start .btn { margin: 6px 0 14px; }
+    .start ol { text-align: left; max-width: 620px; margin: 0 auto 14px; padding-left: 20px; color: var(--muted); font-size: 14px; }
+    .start ol li { margin: 4px 0; }
+    .drop { margin-top: 10px; padding: 12px; border: 2px dashed var(--line); border-radius: 14px; color: var(--muted); font-size: 14px; }
+    .drop.over { border-color: var(--primary); background: var(--panel); }
+    .link { background: none; border: 0; padding: 0; color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+    /* Editor de recorte */
+    .editor-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .editor-head h2 { margin: 0; }
+    .stage-box { display: flex; justify-content: center; background: var(--panel); border-radius: 14px; padding: 12px; }
+    .stage { position: relative; display: inline-block; max-width: 100%; line-height: 0; touch-action: none; cursor: crosshair; user-select: none; }
+    .stage canvas { display: block; max-width: 100%; max-height: 64vh; width: auto; height: auto; border-radius: 4px; }
+    .crop { position: absolute; border: 2px solid var(--primary); box-shadow: 0 0 0 9999px rgba(15, 43, 69, .45); cursor: move; }
+    .stage-clip { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .stage-clip .crop { pointer-events: auto; }
+    .handle { position: absolute; width: 14px; height: 14px; border-radius: 4px; background: var(--white); border: 2px solid var(--primary); }
+    .handle[data-h="nw"] { left: -8px; top: -8px; cursor: nwse-resize; }
+    .handle[data-h="ne"] { right: -8px; top: -8px; cursor: nesw-resize; }
+    .handle[data-h="sw"] { left: -8px; bottom: -8px; cursor: nesw-resize; }
+    .handle[data-h="se"] { right: -8px; bottom: -8px; cursor: nwse-resize; }
+    .crop-size { position: absolute; left: 0; top: -26px; padding: 2px 8px; border-radius: 6px; background: var(--dark); color: var(--white);
+                 font-size: 12px; line-height: 1.6; white-space: nowrap; }
+
+    .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
+    .thumb { position: relative; border: 2px solid transparent; border-radius: 12px; background: var(--panel); padding: 6px; cursor: pointer; text-align: left; }
+    .thumb.sel { border-color: var(--primary); }
+    .thumb img { display: block; width: 100%; height: 76px; object-fit: cover; object-position: top; border-radius: 8px; }
+    .thumb span { display: block; margin-top: 4px; font-size: 12px; font-weight: 600; }
+    .thumb .del { position: absolute; top: 2px; right: 2px; width: 26px; height: 26px; border-radius: 999px; border: 0;
+                  background: var(--dark); color: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .thumb .del .icon { width: 14px; height: 14px; }
+
+    /* Ao vivo */
+    .live video { width: 100%; border-radius: 12px; background: var(--panel); display: block; aspect-ratio: 16 / 9; object-fit: contain; }
+    .live .row { margin-top: 10px; }
+    .live .row .btn { flex: 1 1 auto; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #C23B3B; }
+    .badge::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: currentColor; animation: pulse 1.4s infinite; }
+    @keyframes pulse { 50% { opacity: .3; } }
+
+    /* Opções */
+    label.field { display: block; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+    label.field > span { display: block; margin-bottom: 4px; }
+    input[type=text], select { width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); color: #0F2B45; }
+    .seg { display: flex; gap: 6px; background: var(--panel); padding: 4px; border-radius: 12px; }
+    .seg button { flex: 1; min-height: 34px; border: 0; border-radius: 9px; background: transparent; font-weight: 600; cursor: pointer; }
+    .seg button[aria-pressed=true] { background: var(--primary); color: var(--dark); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+    .check { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 14px; cursor: pointer; }
+    .check input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .actions { display: grid; gap: 10px; margin-top: 6px; }
+    .actions .btn { width: 100%; }
+
+    .msg { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--panel); font-size: 14px; }
+    .msg.err { background: rgba(214, 69, 69, .12); color: inherit; }
+    .msg:empty { display: none; }
+
+    details { border-top: 1px solid var(--line); padding: 10px 0; }
+    details:first-of-type { border-top: 0; }
+    summary { cursor: pointer; font-weight: 600; }
+    details p, details ul { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    details ul { padding-left: 20px; }
+    footer { color: var(--muted); font-size: 13px; }
+    footer .wrap { padding-bottom: 28px; }
+    footer a { color: inherit; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+      <div>
+        <h1>Exportar página do Power BI</h1>
+        <p id="subtitle">A captura e o arquivo são gerados no seu navegador. Nada é enviado para a internet.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section>
+        <!-- Passo 1: escolher a aba/janela do relatório -->
+        <div class="card start" id="start">
+          <h2><span class="step">1</span>Escolha a aba do relatório</h2>
+          <button class="btn primary big" id="share" type="button">
+            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7"/><path d="M12 16.5V20"/></svg>
+            <span>Escolher aba do relatório</span>
+          </button>
+          <ol>
+            <li>Na janela do navegador que abrir, clique em <strong>Guia do Chrome</strong> (ou <strong>Guia do Edge</strong>) e escolha a aba do <strong>relatório do Power BI</strong>.</li>
+            <li>No <strong>Power BI Desktop</strong>, escolha <strong>Janela</strong> e depois a janela do Power BI Desktop.</li>
+            <li>Clique em <strong>Compartilhar</strong>. A página é capturada e aparece aqui para você recortar e baixar.</li>
+          </ol>
+          <p class="muted" id="unsupported" hidden>Este navegador não permite capturar a tela. Use o Chrome ou o Edge no computador, ou cole uma captura abaixo.</p>
+          <div class="drop" id="drop">
+            Ou cole uma captura de tela aqui (<kbd>Ctrl</kbd>+<kbd>V</kbd>, depois de <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>),
+            arraste uma imagem ou <button class="link" id="pick" type="button">escolha um arquivo</button>.
+            <input type="file" id="file" accept="image/*" multiple hidden>
+          </div>
+          <div class="msg" id="startMsg" role="status"></div>
+        </div>
+
+        <!-- Passo 2: recortar -->
+        <div class="card" id="editorCard" hidden>
+          <div class="editor-head">
+            <h2><span class="step">2</span>Ajuste o recorte</h2>
+            <div class="row">
+              <button class="btn small" id="cropAll" type="button">Página inteira</button>
+              <button class="btn small" id="addMore" type="button" hidden>Capturar outra aba</button>
+            </div>
+          </div>
+          <p class="muted">Arraste sobre a imagem para marcar só a área do relatório (sem menus e painéis). O recorte vale para todas as capturas e fica salvo para a próxima vez.</p>
+          <div class="stage-box">
+            <div class="stage" id="stage">
+              <canvas id="view"></canvas>
+              <div class="stage-clip">
+                <div class="crop" id="crop">
+                  <span class="crop-size" id="cropSize"></span>
+                  <span class="handle" data-h="nw"></span><span class="handle" data-h="ne"></span>
+                  <span class="handle" data-h="sw"></span><span class="handle" data-h="se"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="thumbs" id="thumbs"></div>
+        </div>
+      </section>
+
+      <aside>
+        <!-- Ao vivo -->
+        <div class="card live" id="liveCard" hidden>
+          <div class="editor-head">
+            <h2>Aba compartilhada</h2>
+            <span class="badge">ao vivo</span>
+          </div>
+          <video id="video" muted playsinline autoplay></video>
+          <p class="muted" style="margin-top:10px">Para exportar outra página do relatório, mude de página na aba do Power BI e clique em <strong>Capturar</strong>. Cada captura vira uma página do PDF.</p>
+          <div class="row">
+            <button class="btn primary" id="capture" type="button">
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M4 8.5V7a2 2 0 0 1 2-2h1.5"/><path d="M16.5 5H18a2 2 0 0 1 2 2v1.5"/><path d="M20 15.5V17a2 2 0 0 1-2 2h-1.5"/><path d="M7.5 19H6a2 2 0 0 1-2-2v-1.5"/><circle cx="12" cy="12" r="3"/></svg>
+              Capturar
+            </button>
+            <button class="btn" id="stop" type="button">Parar</button>
+          </div>
+        </div>
+
+        <!-- Passo 3: baixar -->
+        <div class="card" id="optionsCard">
+          <h2><span class="step">3</span>Baixe o arquivo</h2>
+          <label class="field"><span>Nome do arquivo</span><input type="text" id="name" maxlength="120"></label>
+          <div class="field" style="margin-bottom:12px">
+            <span style="display:block;margin-bottom:4px;font-size:13px;font-weight:600">Formato</span>
+            <div class="seg" id="format" role="group" aria-label="Formato">
+              <button type="button" data-v="pdf">PDF</button>
+              <button type="button" data-v="png">PNG</button>
+              <button type="button" data-v="jpg">JPG</button>
+            </div>
+          </div>
+          <div id="pdfOptions">
+            <label class="field"><span>Papel</span>
+              <select id="paper">
+                <option value="fit">Do tamanho da página</option>
+                <option value="a4">A4</option>
+                <option value="letter">Carta</option>
+              </select>
+            </label>
+            <label class="field" id="orientationField"><span>Orientação</span>
+              <select id="orientation">
+                <option value="auto">Automática</option>
+                <option value="landscape">Paisagem</option>
+                <option value="portrait">Retrato</option>
+              </select>
+            </label>
+          </div>
+          <label class="check"><input type="checkbox" id="stamp"> Data e hora no nome do arquivo</label>
+          <label class="check"><input type="checkbox" id="footer"> Rodapé com data e hora</label>
+          <label class="field" id="footerTextField"><span>Texto do rodapé</span><input type="text" id="footerText" maxlength="1500" placeholder="Opcional"></label>
+          <div class="actions">
+            <button class="btn dark big" id="download" type="button" disabled>
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+              <span id="downloadLabel">Baixar PDF</span>
+            </button>
+            <button class="btn" id="copy" type="button" disabled>
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+              Copiar imagem
+            </button>
+          </div>
+          <div class="msg" id="msg" role="status"></div>
+        </div>
+
+        <div class="card">
+          <h2>Dúvidas</h2>
+          <details>
+            <summary>Meus dados saem do computador?</summary>
+            <p>Não. A imagem é capturada pelo próprio navegador e o PDF/PNG é montado nesta página, sem enviar nada para servidor nenhum. Você pode desligar a internet depois de abrir esta página e tudo continua funcionando.</p>
+          </details>
+          <details>
+            <summary>Como deixar só o relatório, sem menus?</summary>
+            <ul>
+              <li>No Power BI, use <strong>Exibir → Ajustar à página</strong> para a página caber inteira na tela.</li>
+              <li>Feche os painéis de filtros e de páginas, ou use <strong>Exibir → Tela inteira</strong>.</li>
+              <li>Depois marque o recorte uma vez: ele fica salvo para os próximos usos.</li>
+            </ul>
+          </details>
+          <details>
+            <summary>Não aparece a opção de aba</summary>
+            <p>A captura de abas existe no Chrome e no Edge. No Firefox e no Safari escolha a <strong>janela</strong> do navegador com o relatório. Em celular e tablet a captura não está disponível: tire um print e cole aqui.</p>
+          </details>
+          <details>
+            <summary>A página tem rolagem</summary>
+            <p>A captura pega só o que está na tela. Use <strong>Ajustar à página</strong> ou capture as partes em sequência (cada captura vira uma página do PDF).</p>
+          </details>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">Visual "Exportar Página" · <a href="https://github.com/zLanchus/powerbi-custom-visual/tree/main/visuals/exportar-pagina#readme">documentação</a></div>
+  </footer>
+
+<script>
+"use strict";
+
+// ------------------------------------------------------------------ opções vindas do visual (#...)
+
+const params = new URLSearchParams(location.hash.slice(1));
+const opt = {
+  name: params.get("nome") || "Relatório",
+  format: ["pdf", "png", "jpg"].includes(params.get("formato")) ? params.get("formato") : "pdf",
+  paper: ["fit", "a4", "letter"].includes(params.get("papel")) ? params.get("papel") : "fit",
+  orientation: ["auto", "landscape", "portrait"].includes(params.get("orientacao")) ? params.get("orientacao") : "auto",
+  stamp: params.get("datahora") !== "0",
+  footer: params.get("rodape") !== "0",
+  footerText: params.get("texto") || "",
+  auto: params.get("auto") !== "0"
+};
+
+const $ = (id) => document.getElementById(id);
+const ui = {
+  start: $("start"), share: $("share"), unsupported: $("unsupported"), drop: $("drop"), pick: $("pick"), file: $("file"),
+  startMsg: $("startMsg"), editorCard: $("editorCard"), stage: $("stage"), view: $("view"), crop: $("crop"),
+  cropSize: $("cropSize"), cropAll: $("cropAll"), addMore: $("addMore"), thumbs: $("thumbs"), liveCard: $("liveCard"),
+  video: $("video"), capture: $("capture"), stop: $("stop"), name: $("name"), format: $("format"),
+  pdfOptions: $("pdfOptions"), paper: $("paper"), orientation: $("orientation"), orientationField: $("orientationField"),
+  stamp: $("stamp"), footer: $("footer"), footerText: $("footerText"), footerTextField: $("footerTextField"),
+  download: $("download"), downloadLabel: $("downloadLabel"), copy: $("copy"), msg: $("msg"), subtitle: $("subtitle")
+};
+
+ui.name.value = opt.name;
+ui.paper.value = opt.paper;
+ui.orientation.value = opt.orientation;
+ui.stamp.checked = opt.stamp;
+ui.footer.checked = opt.footer;
+ui.footerText.value = opt.footerText;
+if (params.has("nome")) {
+  ui.subtitle.textContent = opt.name + " · a captura e o arquivo são gerados no seu navegador. Nada é enviado para a internet.";
+}
+
+// ------------------------------------------------------------------ estado
+
+/** Capturas: { canvas, thumb (URL) }. */
+const captures = [];
+let selected = -1;
+let stream = null;
+// Recorte salvo por nome de relatório e o último usado (para nomes que mudam, ex.: com o mês).
+const storageKey = "exportar-pagina:recorte:" + opt.name;
+const lastKey = "exportar-pagina:recorte";
+/** Recorte em frações da imagem (vale para todas as capturas). */
+let crop = loadCrop();
+
+function loadCrop() {
+  for (const key of [storageKey, lastKey]) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || "null");
+      if (saved && [saved.x, saved.y, saved.w, saved.h].every((v) => typeof v === "number") && saved.w > 0.02 && saved.h > 0.02) {
+        return saved;
+      }
+    } catch (e) { /* sem armazenamento: usa a página inteira */ }
+  }
+  return { x: 0, y: 0, w: 1, h: 1 };
+}
+function saveCrop() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(crop));
+    localStorage.setItem(lastKey, JSON.stringify(crop));
+  } catch (e) { /* ignora */ }
+}
+
+function message(text, error = false, target = ui.msg) {
+  target.textContent = text;
+  target.classList.toggle("err", error);
+}
+
+// ------------------------------------------------------------------ captura da tela
+
+const canCapture = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+if (!canCapture) {
+  ui.share.disabled = true;
+  ui.unsupported.hidden = false;
+}
+
+async function startSharing() {
+  message("", false, ui.startMsg);
+  let controller = null;
+  try {
+    // Mantém esta página na frente depois de escolher a aba (Chrome/Edge).
+    controller = "CaptureController" in window ? new CaptureController() : null;
+  } catch (e) { controller = null; }
+  const options = {
+    video: { displaySurface: "browser", frameRate: { ideal: 10, max: 15 } },
+    audio: false,
+    selfBrowserSurface: "exclude",
+    surfaceSwitching: "include",
+    preferCurrentTab: false,
+    monitorTypeSurfaces: "include"
+  };
+  if (controller) {
+    options.controller = controller;
+  }
+  let newStream;
+  try {
+    newStream = await navigator.mediaDevices.getDisplayMedia(options);
+  } catch (e) {
+    if (e && e.name === "NotAllowedError") {
+      message("A captura foi cancelada. Clique em \"Escolher aba do relatório\" para tentar de novo.", false, ui.startMsg);
+    } else {
+      message("Não foi possível capturar a tela: " + (e && e.message ? e.message : e), true, ui.startMsg);
+    }
+    return;
+  }
+  if (controller && controller.setFocusBehavior) {
+    try { controller.setFocusBehavior("focus-capturing-application"); } catch (e) { /* navegador sem suporte */ }
+  }
+  stopSharing();
+  stream = newStream;
+  const track = stream.getVideoTracks()[0];
+  track.addEventListener("ended", () => { if (stream === newStream) { stopSharing(); } });
+  ui.video.srcObject = stream;
+  ui.liveCard.hidden = false;
+  try { await ui.video.play(); } catch (e) { /* autoplay mudo é permitido */ }
+  await waitForVideo();
+  refresh();
+  if (opt.auto) {
+    // Espera o relatório se reajustar à barra "compartilhando esta aba" do navegador.
+    message("Capturando…");
+    await sleep(1200);
+    if (stream === newStream) {
+      captureFrame();
+    }
+  }
+}
+
+function stopSharing() {
+  if (stream) {
+    stream.getTracks().forEach((t) => t.stop());
+  }
+  stream = null;
+  ui.video.srcObject = null;
+  ui.liveCard.hidden = true;
+  refresh();
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForVideo() {
+  for (let i = 0; i < 50 && !(ui.video.videoWidth > 0 && ui.video.readyState >= 2); i++) {
+    await sleep(100);
+  }
+}
+
+function captureFrame() {
+  const v = ui.video;
+  if (!stream || !v.videoWidth) {
+    message("A imagem da aba ainda não chegou. Tente de novo em instantes.", true);
+    return;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  canvas.getContext("2d").drawImage(v, 0, 0);
+  addCapture(canvas);
+  message("Página capturada. Ajuste o recorte, se quiser, e clique em Baixar.");
+}
+
+// ------------------------------------------------------------------ colar / arquivo (sem captura)
+
+async function addImageBlob(blob) {
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext("2d").drawImage(bitmap, 0, 0);
+    bitmap.close && bitmap.close();
+    addCapture(canvas);
+  } catch (e) {
+    message("Não foi possível abrir essa imagem.", true, captures.length ? ui.msg : ui.startMsg);
+  }
+}
+
+document.addEventListener("paste", (e) => {
+  if (e.target instanceof HTMLInputElement) {
+    return;
+  }
+  const items = Array.from(e.clipboardData ? e.clipboardData.items : []);
+  const images = items.filter((i) => i.type.startsWith("image/"));
+  if (images.length) {
+    e.preventDefault();
+    images.forEach((i) => addImageBlob(i.getAsFile()));
+  }
+});
+ui.pick.addEventListener("click", () => ui.file.click());
+ui.file.addEventListener("change", () => {
+  Array.from(ui.file.files).forEach(addImageBlob);
+  ui.file.value = "";
+});
+ui.drop.addEventListener("dragover", (e) => { e.preventDefault(); ui.drop.classList.add("over"); });
+ui.drop.addEventListener("dragleave", () => ui.drop.classList.remove("over"));
+ui.drop.addEventListener("drop", (e) => {
+  e.preventDefault();
+  ui.drop.classList.remove("over");
+  Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/")).forEach(addImageBlob);
+});
+
+// ------------------------------------------------------------------ capturas e miniaturas
+
+function addCapture(canvas) {
+  const thumb = document.createElement("canvas");
+  const scale = Math.min(1, 320 / canvas.width);
+  thumb.width = Math.max(1, Math.round(canvas.width * scale));
+  thumb.height = Math.max(1, Math.round(canvas.height * scale));
+  thumb.getContext("2d").drawImage(canvas, 0, 0, thumb.width, thumb.height);
+  captures.push({ canvas, thumb: thumb.toDataURL("image/jpeg", 0.8) });
+  select(captures.length - 1);
+}
+
+function removeCapture(index) {
+  captures.splice(index, 1);
+  select(Math.min(selected, captures.length - 1));
+}
+
+function select(index) {
+  selected = index;
+  const current = captures[index];
+  if (current) {
+    ui.view.width = current.canvas.width;
+    ui.view.height = current.canvas.height;
+    ui.view.getContext("2d").drawImage(current.canvas, 0, 0);
+  }
+  refresh();
+}
+
+function refresh() {
+  const has = captures.length > 0;
+  ui.start.hidden = has || !!stream;
+  ui.editorCard.hidden = !has;
+  ui.addMore.hidden = !!stream || !canCapture;
+  ui.download.disabled = !has;
+  ui.copy.disabled = !has || !(navigator.clipboard && window.ClipboardItem);
+
+  ui.thumbs.replaceChildren(...captures.map((c, i) => {
+    const item = document.createElement("div");
+    item.className = "thumb" + (i === selected ? " sel" : "");
+    item.tabIndex = 0;
+    item.setAttribute("role", "button");
+    item.title = "Mostrar a captura " + (i + 1);
+    const img = document.createElement("img");
+    img.src = c.thumb;
+    img.alt = "";
+    const label = document.createElement("span");
+    label.textContent = (captures.length > 1 ? "Página " : "Captura ") + (i + 1);
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "del";
+    del.title = "Remover";
+    del.innerHTML = '<svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
+    del.addEventListener("click", (e) => { e.stopPropagation(); removeCapture(i); });
+    item.addEventListener("click", () => select(i));
+    item.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(i); } });
+    item.append(img, label, del);
+    return item;
+  }));
+  ui.thumbs.hidden = captures.length < 2 && !stream;
+
+  const format = currentFormat();
+  ui.format.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === format)));
+  ui.pdfOptions.hidden = format !== "pdf";
+  ui.orientationField.hidden = ui.paper.value === "fit";
+  ui.footerTextField.hidden = !ui.footer.checked;
+  const many = captures.length > 1;
+  ui.downloadLabel.textContent = format === "pdf"
+    ? (many ? `Baixar PDF (${captures.length} páginas)` : "Baixar PDF")
+    : (many ? `Baixar ${format.toUpperCase()} (${captures.length} em .zip)` : "Baixar " + format.toUpperCase());
+  drawCrop();
+}
+
+let format = opt.format;
+function currentFormat() {
+  return format;
+}
+ui.format.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (b) {
+    format = b.dataset.v;
+    refresh();
+  }
+});
+[ui.paper, ui.orientation, ui.footer, ui.stamp].forEach((input) => input.addEventListener("change", refresh));
+
+ui.share.addEventListener("click", startSharing);
+ui.addMore.addEventListener("click", startSharing);
+ui.capture.addEventListener("click", captureFrame);
+ui.stop.addEventListener("click", stopSharing);
+
+// ------------------------------------------------------------------ recorte
+
+function drawCrop() {
+  const s = ui.crop.style;
+  s.left = crop.x * 100 + "%";
+  s.top = crop.y * 100 + "%";
+  s.width = crop.w * 100 + "%";
+  s.height = crop.h * 100 + "%";
+  const c = captures[selected];
+  const full = crop.x === 0 && crop.y === 0 && crop.w === 1 && crop.h === 1;
+  ui.crop.style.boxShadow = full ? "none" : "";
+  ui.cropSize.textContent = c && !full ? `${Math.round(crop.w * c.canvas.width)} × ${Math.round(crop.h * c.canvas.height)} px` : "";
+  ui.cropSize.hidden = full;
+  ui.cropAll.disabled = full;
+}
+
+let drag = null;
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+function pointer(e) {
+  const r = ui.stage.getBoundingClientRect();
+  return { x: clamp((e.clientX - r.left) / r.width, 0, 1), y: clamp((e.clientY - r.top) / r.height, 0, 1) };
+}
+
+ui.stage.addEventListener("pointerdown", (e) => {
+  if (!captures.length || e.button !== 0) {
+    return;
+  }
+  e.preventDefault();
+  ui.stage.setPointerCapture(e.pointerId);
+  const p = pointer(e);
+  const handle = e.target.dataset && e.target.dataset.h;
+  const inside = p.x > crop.x && p.x < crop.x + crop.w && p.y > crop.y && p.y < crop.y + crop.h;
+  const full = crop.x === 0 && crop.y === 0 && crop.w === 1 && crop.h === 1;
+  if (handle) {
+    // Canto oposto fica parado.
+    const ax = handle.includes("w") ? crop.x + crop.w : crop.x;
+    const ay = handle.includes("n") ? crop.y + crop.h : crop.y;
+    drag = { mode: "draw", ax, ay };
+  } else if (inside && !full && e.target === ui.crop) {
+    drag = { mode: "move", dx: p.x - crop.x, dy: p.y - crop.y };
+  } else {
+    drag = { mode: "draw", ax: p.x, ay: p.y };
+  }
+});
+ui.stage.addEventListener("pointermove", (e) => {
+  if (!drag) {
+    return;
+  }
+  const p = pointer(e);
+  if (drag.mode === "move") {
+    crop.x = clamp(p.x - drag.dx, 0, 1 - crop.w);
+    crop.y = clamp(p.y - drag.dy, 0, 1 - crop.h);
+  } else {
+    crop = {
+      x: Math.min(drag.ax, p.x), y: Math.min(drag.ay, p.y),
+      w: Math.abs(p.x - drag.ax), h: Math.abs(p.y - drag.ay)
+    };
+  }
+  drawCrop();
+});
+function endDrag() {
+  if (!drag) {
+    return;
+  }
+  drag = null;
+  // Clique sem arrastar (ou área minúscula) volta para a página inteira.
+  if (crop.w < 0.02 || crop.h < 0.02) {
+    crop = { x: 0, y: 0, w: 1, h: 1 };
+  }
+  saveCrop();
+  drawCrop();
+}
+ui.stage.addEventListener("pointerup", endDrag);
+ui.stage.addEventListener("pointercancel", endDrag);
+ui.cropAll.addEventListener("click", () => {
+  crop = { x: 0, y: 0, w: 1, h: 1 };
+  saveCrop();
+  drawCrop();
+});
+
+// ------------------------------------------------------------------ montagem da imagem final
+
+const pad2 = (n) => String(n).padStart(2, "0");
+const exportedAt = () => new Date();
+
+/** Recorte + rodapé opcional. */
+function compose(capture, when) {
+  const src = capture.canvas;
+  const sx = Math.round(crop.x * src.width);
+  const sy = Math.round(crop.y * src.height);
+  const sw = Math.max(1, Math.round(crop.w * src.width));
+  const sh = Math.max(1, Math.round(crop.h * src.height));
+  const withFooter = ui.footer.checked;
+  const band = withFooter ? Math.round(clamp(sw * 0.024, 26, 64)) : 0;
+
+  const out = document.createElement("canvas");
+  out.width = sw;
+  out.height = sh + band;
+  const ctx = out.getContext("2d");
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(src, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  if (withFooter) {
+    const font = Math.round(band * 0.42);
+    const margin = Math.round(band * 0.6);
+    ctx.fillStyle = "#E4EDF5";
+    ctx.fillRect(0, sh, sw, Math.max(1, Math.round(band * 0.04)));
+    ctx.textBaseline = "middle";
+    const y = sh + band / 2;
+    const right = `Exportado em ${pad2(when.getDate())}/${pad2(when.getMonth() + 1)}/${when.getFullYear()} às ${pad2(when.getHours())}:${pad2(when.getMinutes())}`;
+    ctx.font = `400 ${font}px "Segoe UI", helvetica, arial, sans-serif`;
+    ctx.fillStyle = "#4E6175";
+    ctx.textAlign = "right";
+    ctx.fillText(right, sw - margin, y);
+    const rightWidth = ctx.measureText(right).width;
+
+    let left = ui.footerText.value.trim().replace(/\s+/g, " ");
+    if (left) {
+      ctx.font = `600 ${font}px "Segoe UI", helvetica, arial, sans-serif`;
+      ctx.fillStyle = "#0F2B45";
+      ctx.textAlign = "left";
+      const max = sw - margin * 3 - rightWidth;
+      if (ctx.measureText(left).width > max) {
+        while (left.length > 1 && ctx.measureText(left + "…").width > max) {
+          left = left.slice(0, -1);
+        }
+        left += "…";
+      }
+      if (max > font) {
+        ctx.fillText(left, margin, y);
+      }
+    }
+  }
+  return out;
+}
+
+function toBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Falha ao gerar a imagem."))), type, quality));
+}
+
+function fileBase(when) {
+  let name = (ui.name.value || "Relatório").replace(/[\\/:*?"<>|\u0000-\u001F]+/g, " ").replace(/\s+/g, " ").trim() || "Relatório";
+  if (ui.stamp.checked) {
+    name += ` ${when.getFullYear()}-${pad2(when.getMonth() + 1)}-${pad2(when.getDate())} ${pad2(when.getHours())}h${pad2(when.getMinutes())}`;
+  }
+  return name.slice(0, 150);
+}
+
+function save(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// ------------------------------------------------------------------ PDF (imagens JPEG, sem bibliotecas)
+
+const PAPERS = { a4: [595.28, 841.89], letter: [612, 792] };
+
+function pageLayout(imgW, imgH) {
+  const landscapeImage = imgW >= imgH;
+  if (ui.paper.value === "fit") {
+    // Página do tamanho da imagem, com o lado maior igual ao de uma A4.
+    const scale = 841.89 / Math.max(imgW, imgH);
+    const w = imgW * scale;
+    const h = imgH * scale;
+    return { pageW: w, pageH: h, x: 0, y: 0, w, h };
+  }
+  let [pw, ph] = PAPERS[ui.paper.value] || PAPERS.a4;
+  const orientation = ui.orientation.value;
+  const landscape = orientation === "landscape" || (orientation === "auto" && landscapeImage);
+  if (landscape) {
+    [pw, ph] = [ph, pw];
+  }
+  const margin = 28;
+  const scale = Math.min((pw - margin * 2) / imgW, (ph - margin * 2) / imgH);
+  const w = imgW * scale;
+  const h = imgH * scale;
+  return { pageW: pw, pageH: ph, x: (pw - w) / 2, y: (ph - h) / 2, w, h };
+}
+
+function ascii(text) {
+  const bytes = new Uint8Array(text.length);
+  for (let i = 0; i < text.length; i++) {
+    bytes[i] = text.charCodeAt(i) & 0xff;
+  }
+  return bytes;
+}
+
+/** Texto do PDF em UTF-16BE (aceita acentos). */
+function pdfText(text) {
+  let hex = "FEFF";
+  for (const ch of text) {
+    const code = ch.codePointAt(0);
+    const units = code > 0xffff
+      ? [0xd800 + ((code - 0x10000) >> 10), 0xdc00 + ((code - 0x10000) & 0x3ff)]
+      : [code];
+    units.forEach((u) => { hex += u.toString(16).toUpperCase().padStart(4, "0"); });
+  }
+  return "<" + hex + ">";
+}
+
+function buildPdf(pages, title) {
+  const parts = [];
+  let length = 0;
+  const offsets = [];
+  const push = (data) => {
+    const bytes = typeof data === "string" ? ascii(data) : data;
+    parts.push(bytes);
+    length += bytes.length;
+  };
+  const object = (n, body, stream) => {
+    offsets[n] = length;
+    push(`${n} 0 obj\n${body}\n`);
+    if (stream) {
+      push("stream\n");
+      push(stream);
+      push("\nendstream\n");
+    }
+    push("endobj\n");
+  };
+  const f = (v) => v.toFixed(2);
+
+  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  const kids = pages.map((_, i) => `${4 + i * 3} 0 R`).join(" ");
+  object(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  object(2, `<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
+  const now = new Date();
+  const date = `D:${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+  object(3, `<< /Title ${pdfText(title)} /Producer ${pdfText("Exportar Página (Power BI)")} /CreationDate (${date}) >>`);
+
+  pages.forEach((p, i) => {
+    const n = 4 + i * 3;
+    const l = p.layout;
+    const content = ascii(`q ${f(l.w)} 0 0 ${f(l.h)} ${f(l.x)} ${f(l.pageH - l.y - l.h)} cm /Im0 Do Q`);
+    object(n, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(l.pageW)} ${f(l.pageH)}] ` +
+      `/Resources << /XObject << /Im0 ${n + 2} 0 R >> >> /Contents ${n + 1} 0 R >>`);
+    object(n + 1, `<< /Length ${content.length} >>`, content);
+    object(n + 2, `<< /Type /XObject /Subtype /Image /Width ${p.width} /Height ${p.height} /ColorSpace /DeviceRGB ` +
+      `/BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>`, p.jpeg);
+  });
+
+  const count = 4 + pages.length * 3;
+  const xref = length;
+  let table = `xref\n0 ${count}\n0000000000 65535 f \n`;
+  for (let i = 1; i < count; i++) {
+    table += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
+  }
+  push(table);
+  push(`trailer\n<< /Size ${count} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts, { type: "application/pdf" });
+}
+
+// ------------------------------------------------------------------ ZIP (sem compressão) para várias imagens
+
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    }
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) {
+    c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function buildZip(files, when) {
+  const enc = new TextEncoder();
+  const time = (when.getHours() << 11) | (when.getMinutes() << 5) | (when.getSeconds() >> 1);
+  const date = ((when.getFullYear() - 1980) << 9) | ((when.getMonth() + 1) << 5) | when.getDate();
+  const parts = [];
+  const central = [];
+  let offset = 0;
+  for (const file of files) {
+    const name = enc.encode(file.name);
+    const crc = crc32(file.data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true); // nomes em UTF-8
+    local.setUint16(8, 0, true);
+    local.setUint16(10, time, true);
+    local.setUint16(12, date, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, file.data.length, true);
+    local.setUint32(22, file.data.length, true);
+    local.setUint16(26, name.length, true);
+    local.setUint16(28, 0, true);
+    parts.push(new Uint8Array(local.buffer), name, file.data);
+
+    const entry = new DataView(new ArrayBuffer(46));
+    entry.setUint32(0, 0x02014b50, true);
+    entry.setUint16(4, 20, true);
+    entry.setUint16(6, 20, true);
+    entry.setUint16(8, 0x0800, true);
+    entry.setUint16(10, 0, true);
+    entry.setUint16(12, time, true);
+    entry.setUint16(14, date, true);
+    entry.setUint32(16, crc, true);
+    entry.setUint32(20, file.data.length, true);
+    entry.setUint32(24, file.data.length, true);
+    entry.setUint16(28, name.length, true);
+    entry.setUint32(42, offset, true);
+    central.push(new Uint8Array(entry.buffer), name);
+    offset += 30 + name.length + file.data.length;
+  }
+  const centralSize = central.reduce((s, b) => s + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, centralSize, true);
+  end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+
+// ------------------------------------------------------------------ baixar / copiar
+
+async function download() {
+  if (!captures.length) {
+    return;
+  }
+  ui.download.disabled = true;
+  message("Gerando o arquivo…");
+  try {
+    const when = exportedAt();
+    const base = fileBase(when);
+    const format = currentFormat();
+    const images = captures.map((c) => compose(c, when));
+    if (format === "pdf") {
+      const pages = [];
+      for (const canvas of images) {
+        const jpeg = new Uint8Array(await (await toBlob(canvas, "image/jpeg", 0.92)).arrayBuffer());
+        pages.push({ jpeg, width: canvas.width, height: canvas.height, layout: pageLayout(canvas.width, canvas.height) });
+      }
+      save(buildPdf(pages, ui.name.value || "Relatório"), base + ".pdf");
+    } else {
+      const type = format === "png" ? "image/png" : "image/jpeg";
+      const blobs = [];
+      for (const canvas of images) {
+        blobs.push(await toBlob(canvas, type, 0.92));
+      }
+      if (blobs.length === 1) {
+        save(blobs[0], `${base}.${format}`);
+      } else {
+        const files = [];
+        for (let i = 0; i < blobs.length; i++) {
+          files.push({ name: `${base} - página ${i + 1}.${format}`, data: new Uint8Array(await blobs[i].arrayBuffer()) });
+        }
+        save(buildZip(files, when), base + ".zip");
+      }
+    }
+    message("Pronto! O arquivo foi baixado.");
+  } catch (e) {
+    message("Não foi possível gerar o arquivo: " + (e && e.message ? e.message : e), true);
+  } finally {
+    ui.download.disabled = !captures.length;
+  }
+}
+
+async function copyImage() {
+  const capture = captures[selected];
+  if (!capture) {
+    return;
+  }
+  try {
+    const blob = toBlob(compose(capture, exportedAt()), "image/png");
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    message("Imagem copiada. Cole no e-mail, Teams ou PowerPoint com Ctrl+V.");
+  } catch (e) {
+    message("O navegador não deixou copiar a imagem. Use Baixar PNG.", true);
+  }
+}
+
+ui.download.addEventListener("click", download);
+ui.copy.addEventListener("click", copyImage);
+window.addEventListener("beforeunload", stopSharing);
+
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/exportarPagina40FB6B3372834974BEC785F386B84CA0.pbiviz.json"
+			}
+		],
+		"visual": {"name":"exportarPagina","displayName":"Exportar Página","guid":"exportarPagina40FB6B3372834974BEC785F386B84CA0","visualClassName":"Visual","version":"1.0.0.0","description":"Botão que exporta a página do relatório para PDF ou imagem (PNG/JPG), sem depender de configuração do administrador.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}

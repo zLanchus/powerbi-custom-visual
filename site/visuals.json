@@ -98,5 +98,23 @@
       "2-top-destaque.png",
       "3-fx.png"
     ]
+  },
+  {
+    "id": "exportar-pagina",
+    "name": "Exportar Página",
+    "summary": "Botão que exporta a página do relatório para PDF, PNG ou JPG, sem configuração do administrador.",
+    "features": [
+      "Captura a aba do relatório (ou a janela do Power BI Desktop) direto no navegador",
+      "Recorte só da área do relatório, lembrado para as próximas vezes",
+      "PDF com várias páginas, PNG/JPG (em .zip) ou copiar a imagem",
+      "Nome do arquivo e rodapé por medida (ex.: filtros aplicados)",
+      "Nada é enviado para servidor: tudo é gerado no navegador"
+    ],
+    "cover": "3-recorte.png",
+    "images": [
+      "1-botao.png",
+      "2-escolher-aba.png",
+      "4-pdf.png"
+    ]
   }
 ]
