@@ -12,7 +12,7 @@ Réplica do gráfico nativo **"Gráfico de colunas clusterizado e de linhas"** d
 
 ## Como usar
 
-1. Baixe [`dist/colunasAgrupadasLinha0EA17ECAA7434FCDBD2D66C874C117EA.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/colunasAgrupadasLinha0EA17ECAA7434FCDBD2D66C874C117EA.1.0.1.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos (os mesmos nomes do visual nativo):
    - **Eixo X**: cada valor vira uma coluna (ex.: Mês, Região). Aceita **vários campos aninhados**, até 6 (ex.: *Ano* e *Mês* da tabela Calendário): cada mês aparece dentro do seu ano.
    - **Eixo Y da coluna**: uma ou várias medidas. Sem legenda, cada medida vira uma coluna do grupo.
@@ -62,7 +62,7 @@ Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com
 - **Cores das colunas:** cor de cada série.
 - **Linhas:** espessura, estilo, traçado, opacidade, valores vazios; marcadores (forma, tamanho, preenchimento, cor do centro, borda, aumento ao passar o mouse); área (mostrar e opacidade); várias linhas (mesmo eixo com rótulos afastados, ou em faixas, e o espaço entre os rótulos/faixas em px).
 - **Linhas — por série:** para cada linha, cor, espessura, estilo, marcadores, área, rótulos (ou "igual às outras") e deslocamento vertical.
-- **Eixo X:** mostrar; rótulos (fonte, cor, rotação, largura máxima, distância do eixo, largura mínima da categoria para rolar); vários campos (como mostrar, ordem e separador do concatenado, fonte e cor dos grupos, espaço entre níveis, divisórias com cor, opacidade e opção de entrar no gráfico); linha do eixo (cor, espessura, opacidade); título (texto, fonte, cor).
+- **Eixo X:** mostrar; rótulos (fonte, cor, formato de data, rotação, largura máxima, distância do eixo, largura mínima da categoria para rolar); vários campos (como mostrar, ordem e separador do concatenado, fonte e cor dos grupos, espaço entre níveis, divisórias com cor, opacidade e opção de entrar no gráfico); linha do eixo (cor, espessura, opacidade); título (texto, fonte, cor).
 - **Eixo Y (colunas)** e **Eixo Y secundário (linhas):** mostrar; escala (mínimo, máximo, quantidade de marcas e, no secundário, usar a escala das colunas); rótulos (fonte, cor, unidades, casas decimais); título (texto, fonte, cor); grade (cor, opacidade, espessura, estilo).
 - **Rótulos das colunas:** mostrar, posição (acima da coluna, dentro no topo, centro ou base), fonte, cor fixa ou automática (com as cores clara e escura), esconder quando não cabe, unidades e casas decimais.
 - **Rótulos do total do grupo:** mostrar (desligado por padrão), fonte, cor, distância da coluna, mostrar mesmo sem caber, contorno (cor e espessura), unidades e casas decimais.
@@ -70,6 +70,8 @@ Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com
 - **Interação:** conteúdo da dica de ferramenta, total na dica (e o nome dele), destaque da categoria sob o mouse (cor e opacidade) e opacidade do que não está selecionado.
 
 ## Observações
+
+- Datas no Eixo X usam o formato da coluna no modelo (ex.: Data abreviada); sem formato, a data aparece sem a hora. Para outro formato só no visual, use **Eixo X → Formato de data** (data curta, dia e mês, mês e ano, mês por extenso, data e hora ou personalizado).
 
 - Até 1000 categorias no eixo X e 60 itens na legenda.
 - O que foi escondido na legenda vale enquanto o relatório está aberto. Para definir o estado inicial, use as opções "visíveis ao abrir".

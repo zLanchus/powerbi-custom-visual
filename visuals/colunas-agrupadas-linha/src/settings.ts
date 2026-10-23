@@ -78,6 +78,11 @@ export const HIERARCHY_ITEMS = enumItems(
     ["grouped", "Agrupado (grupos embaixo, como no nativo)"], ["concat", "Concatenado (ex.: Jan 2024)"], ["inner", "Só o último nível"]
 );
 export const CONCAT_ORDER_ITEMS = enumItems(["innerFirst", "Do último para o primeiro (Jan 2024)"], ["outerFirst", "Do primeiro para o último (2024 Jan)"]);
+export const DATE_FORMAT_ITEMS = enumItems(
+    ["auto", "Automático (formato do modelo)"], ["d", "Data curta (31/01/2024)"], ["dd/MM", "Dia e mês (31/01)"],
+    ["MMM/yy", "Mês e ano (jan/24)"], ["MMM yyyy", "Mês e ano (jan 2024)"], ["MMMM yyyy", "Mês por extenso (janeiro 2024)"],
+    ["dd/MM/yyyy HH:mm", "Data e hora (31/01/2024 14:30)"], ["custom", "Personalizado"]
+);
 export const UNITS_ITEMS = enumItems(
     ["auto", "Automático"], ["none", "Nenhuma"], ["1000", "Mil"], ["1000000", "Milhões"], ["1000000000", "Bilhões"]
 );
@@ -302,6 +307,9 @@ class XAxisCard extends FormattingSettingsCompositeCard {
     fontColor = color("fontColor", "Cor do texto", MUTED);
     rotation = dropdown("rotation", "Rotação dos rótulos", ROTATION_ITEMS, 0);
     maxLabelWidth = num("maxLabelWidth", "Largura máxima do rótulo (px, 0 = automática)", 0);
+    dateFormat = dropdown("dateFormat", "Formato de data", DATE_FORMAT_ITEMS, 0);
+    dateFormatCustom = text("dateFormatCustom", "Formato personalizado", "dd/MM/yyyy", "dd/MM/yyyy",
+        "Códigos como no Power BI: dd = dia, MM = mês, MMM = mês abreviado, yyyy = ano, HH:mm = hora.");
     labelSpacing = num("labelSpacing", "Distância do eixo (px)", 6);
     minWidth = num("minWidth", "Largura mínima da categoria (px)", 0, "0 = tudo cabe na largura do visual. Acima disso, aparece a rolagem horizontal.");
     showLine = toggle("showLine", "Mostrar linha do eixo", true);
@@ -327,7 +335,9 @@ class XAxisCard extends FormattingSettingsCompositeCard {
     displayName = "Eixo X";
     topLevelSlice = this.show;
     groups: FormattingSettingsGroup[] = [
-        group("xLabels", "Rótulos", [this.font.control, this.fontColor, this.rotation, this.maxLabelWidth, this.labelSpacing, this.minWidth]),
+        group("xLabels", "Rótulos", [
+            this.font.control, this.fontColor, this.dateFormat, this.dateFormatCustom, this.rotation, this.maxLabelWidth, this.labelSpacing, this.minWidth
+        ]),
         group("xHierarchy", "Vários campos (ex.: Ano e Mês)", [
             this.hierarchy, this.concatOrder, this.concatSeparator, this.groupFont.control, this.groupColor, this.groupSpacing,
             this.showSeparators, this.separatorColor, this.separatorOpacity, this.separatorInPlot

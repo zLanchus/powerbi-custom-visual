@@ -137,12 +137,34 @@ function toNumber(value: PrimitiveValue | undefined): number | null {
     return typeof value === "number" && isFinite(value) ? value : null;
 }
 
-function memberLabel(value: PrimitiveValue | undefined, source: DataViewMetadataColumn | undefined, locale: string): string {
+/** Data vinda do Power BI (objeto Date ou texto ISO, como "2024-01-31T00:00:00"). */
+function asDate(value: PrimitiveValue | undefined): Date | undefined {
+    if (value instanceof Date) {
+        return isNaN(value.getTime()) ? undefined : value;
+    }
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/.test(value)) {
+        const d = new Date(value.length === 10 ? value + "T00:00:00" : value);
+        return isNaN(d.getTime()) ? undefined : d;
+    }
+    return undefined;
+}
+
+/**
+ * Texto de um valor de campo (eixo X ou legenda).
+ * Datas: usa o formato escolhido no visual, senão o do modelo; sem formato, data à meia-noite aparece sem a hora.
+ */
+function memberLabel(value: PrimitiveValue | undefined, source: DataViewMetadataColumn | undefined, locale: string, dateFormat = ""): string {
     if (value === null || value === undefined || value === "") {
         return "(Em branco)";
     }
-    if (source?.format || value instanceof Date) {
-        return valueFormatter.format(value, source?.format, false, locale);
+    const date = asDate(value);
+    if (date) {
+        const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0;
+        const format = dateFormat || source?.format || (hasTime ? "G" : "d");
+        return valueFormatter.format(date, format, false, locale);
+    }
+    if (source?.format) {
+        return valueFormatter.format(value, source.format, false, locale);
     }
     return String(value);
 }
@@ -470,6 +492,7 @@ export class Visual implements IVisual {
 
         const x = s.xAxisCard;
         x.lineColor.visible = x.lineWidth.visible = x.lineOpacity.visible = x.showLine.value;
+        x.dateFormatCustom.visible = enumValue(x.dateFormat) === "custom";
         // Opções de vários campos só aparecem com mais de um campo no Eixo X.
         const hierarchyGroup = x.groups.find(grp => grp.name === "xHierarchy");
         if (hierarchyGroup) {
@@ -647,6 +670,18 @@ export class Visual implements IVisual {
         const rowNodes: DataViewMatrixNode[] = [];
         const paths: string[][] = [];
         const keyPaths: string[][] = [];
+        // Formato de cada campo: o do nível da matriz ou, se faltar, o da coluna nos metadados (ex.: Data abreviada).
+        const metaColumns = dataView?.metadata?.columns || [];
+        const withFormat = (source: DataViewMetadataColumn | undefined): DataViewMetadataColumn | undefined => {
+            if (!source || source.format) {
+                return source;
+            }
+            const meta = metaColumns.find(c => c.queryName === source.queryName && !!c.format);
+            return meta ? { ...source, format: meta.format } : source;
+        };
+        const xs0 = this.formattingSettings.xAxisCard;
+        const dateChoice = enumValue(xs0.dateFormat);
+        const xDateFormat = dateChoice === "auto" ? "" : dateChoice === "custom" ? (xs0.dateFormatCustom.value || "").trim() : dateChoice;
         const collect = (node: DataViewMatrixNode, path: string[], keys: string[]): void => {
             for (const child of node.children || []) {
                 if (child.isSubtotal) {
@@ -655,8 +690,8 @@ export class Visual implements IVisual {
                 const level = child.level ?? path.length;
                 const value = child.levelValues?.[0]?.value ?? child.value;
                 const source = rowLevels[level]?.sources?.[child.levelValues?.[0]?.levelSourceIndex ?? 0];
-                const nextPath = path.concat(memberLabel(value, source, locale));
-                const nextKeys = keys.concat(value instanceof Date ? String(value.getTime()) : String(value));
+                const nextPath = path.concat(memberLabel(value, withFormat(source), locale, xDateFormat));
+                const nextKeys = keys.concat(asDate(value)?.getTime().toString() ?? String(value));
                 if ((child.children || []).some(c => !c.isSubtotal)) {
                     collect(child, nextPath, nextKeys);
                 } else {
@@ -722,7 +757,7 @@ export class Visual implements IVisual {
         let columns: Series[];
         if (hasLegend && columnMeasures.length > 0) {
             const measure = columnMeasures[0];
-            const memberSource = colLevels[0]?.sources?.[0];
+            const memberSource = withFormat(colLevels[0]?.sources?.[0]);
             columns = members.map((member, k) => {
                 const memberId = builder().withMatrixNode(member, colLevels).createSelectionId();
                 return {

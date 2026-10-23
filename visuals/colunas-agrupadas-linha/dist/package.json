@@ -1,5 +1,5 @@
 {
-		"version": "1.0.0.0",
+		"version": "1.0.1.0",
 		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
 		"resources": [
 			{
@@ -8,7 +8,7 @@
 				"file": "resources/colunasAgrupadasLinha0EA17ECAA7434FCDBD2D66C874C117EA.pbiviz.json"
 			}
 		],
-		"visual": {"name":"colunasAgrupadasLinha","displayName":"Colunas Agrupadas e Linha","guid":"colunasAgrupadasLinha0EA17ECAA7434FCDBD2D66C874C117EA","visualClassName":"Visual","version":"1.0.0.0","description":"Gráfico de colunas agrupadas (clusterizadas) e linha com legenda interativa para mostrar e esconder colunas e linhas, eixo secundário, rótulos e formatação completa.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"visual": {"name":"colunasAgrupadasLinha","displayName":"Colunas Agrupadas e Linha","guid":"colunasAgrupadasLinha0EA17ECAA7434FCDBD2D66C874C117EA","visualClassName":"Visual","version":"1.0.1.0","description":"Gráfico de colunas agrupadas (clusterizadas) e linha com legenda interativa para mostrar e esconder colunas e linhas, eixo secundário, rótulos e formatação completa.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
 		"metadata": {
 			"pbivizjson": {
 				"resourceId": "rId0"
