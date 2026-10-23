@@ -6,6 +6,9 @@
   <title>Exportar página do Power BI</title>
   <meta name="description" content="Captura a página do relatório do Power BI e gera PDF ou imagem no próprio navegador.">
   <meta name="referrer" content="no-referrer">
+  <!-- Segurança: a página não pode abrir conexão nenhuma (connect-src 'none') nem carregar nada de fora.
+       A imagem capturada não tem como sair do navegador. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
   <!--
     Página usada pelo visual "Exportar Página" (visuals/exportar-pagina).
     O visual abre esta página com host.launchUrl e passa as opções depois do "#":
@@ -334,28 +337,22 @@ if (params.has("nome")) {
 const captures = [];
 let selected = -1;
 let stream = null;
-// Recorte salvo por nome de relatório e o último usado (para nomes que mudam, ex.: com o mês).
-const storageKey = "exportar-pagina:recorte:" + opt.name;
-const lastKey = "exportar-pagina:recorte";
+// Só a posição do recorte (4 números) fica salva no navegador; nada do relatório nem o nome dele.
+const storageKey = "exportar-pagina:recorte";
 /** Recorte em frações da imagem (vale para todas as capturas). */
 let crop = loadCrop();
 
 function loadCrop() {
-  for (const key of [storageKey, lastKey]) {
-    try {
-      const saved = JSON.parse(localStorage.getItem(key) || "null");
-      if (saved && [saved.x, saved.y, saved.w, saved.h].every((v) => typeof v === "number") && saved.w > 0.02 && saved.h > 0.02) {
-        return saved;
-      }
-    } catch (e) { /* sem armazenamento: usa a página inteira */ }
-  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+    if (saved && [saved.x, saved.y, saved.w, saved.h].every((v) => typeof v === "number") && saved.w > 0.02 && saved.h > 0.02) {
+      return saved;
+    }
+  } catch (e) { /* sem armazenamento: usa a página inteira */ }
   return { x: 0, y: 0, w: 1, h: 1 };
 }
 function saveCrop() {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(crop));
-    localStorage.setItem(lastKey, JSON.stringify(crop));
-  } catch (e) { /* ignora */ }
+  try { localStorage.setItem(storageKey, JSON.stringify(crop)); } catch (e) { /* ignora */ }
 }
 
 function message(text, error = false, target = ui.msg) {

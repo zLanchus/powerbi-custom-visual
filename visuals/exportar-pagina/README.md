@@ -16,7 +16,16 @@ Botão que **exporta a página do relatório** para **PDF**, **PNG** ou **JPG**.
 
 Para exportar várias páginas do relatório num PDF só, troque de página na aba do Power BI e clique em **Capturar** de novo. Cada captura vira uma página do PDF. Com PNG/JPG, várias capturas saem num `.zip`.
 
-**Nada sai do computador.** A captura é feita pelo próprio navegador (`getDisplayMedia`, a mesma API usada para compartilhar a tela numa reunião). O recorte, o PDF, as imagens e o ZIP são montados em JavaScript na própria página. As opções vão depois do `#` do endereço, que o navegador não envia ao servidor.
+### Segurança: o que fica salvo e o que sai do computador
+
+- **A captura não sai do computador.** Ela é feita pelo próprio navegador (`getDisplayMedia`, a mesma API usada para compartilhar a tela numa reunião) e fica só na memória da aba. O recorte, o PDF, as imagens e o ZIP são montados em JavaScript na própria página. Ao fechar a aba, tudo some.
+- **A página é proibida de usar a rede.** Ela tem uma política de segurança (`Content-Security-Policy` com `connect-src 'none'`) que faz o navegador bloquear qualquer envio e qualquer arquivo de fora. Não há scripts, fontes nem imagens externas.
+- **O que fica salvo:**
+  - o arquivo baixado, na pasta de downloads do usuário, como qualquer download;
+  - no navegador, só a posição do recorte (4 números), sem nome nem dado do relatório.
+- **O endereço:** as opções vão depois do `#`, parte que o navegador não envia ao servidor. Elas ficam, porém, no histórico do navegador, assim como qualquer endereço visitado. Se o texto do rodapé tiver informação sensível, prefira digitá-lo na página em vez de usar a medida.
+- **O visual** não pede nenhum privilégio (`"privileges": []`): não acessa a rede, não baixa arquivos e não lê nada além das medidas de nome e rodapé.
+- **Quem serve a página:** por padrão é o GitHub Pages deste repositório. O GitHub só vê que a página foi aberta (endereço sem o `#`, IP, navegador), nunca a captura. Para não depender de terceiros, hospede a sua cópia (veja abaixo).
 
 ### Por que desse jeito
 
