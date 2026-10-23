@@ -105,7 +105,7 @@
     "summary": "Botão que exporta a página do relatório para PDF, PNG ou JPG, sem configuração do administrador.",
     "features": [
       "Captura a aba do relatório (ou a janela do Power BI Desktop) direto no navegador",
-      "Recorte só da área do relatório, lembrado para as próximas vezes",
+      "Recorte automático: só a página do relatório, sem menus e painéis do Power BI",
       "PDF com várias páginas, PNG/JPG (em .zip) ou copiar a imagem",
       "Nome do arquivo e rodapé por medida (ex.: filtros aplicados)",
       "Nada é enviado para servidor: tudo é gerado no navegador"

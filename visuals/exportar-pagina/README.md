@@ -11,8 +11,14 @@ Botão que **exporta a página do relatório** para **PDF**, **PNG** ou **JPG**.
 1. O usuário clica em **Exportar página** no relatório.
 2. Abre uma aba com a [página de exportação](https://zlanchus.github.io/powerbi-custom-visual/exportar/).
 3. O usuário clica em **Escolher aba do relatório** e escolhe a aba do Power BI. No Power BI Desktop, escolhe a janela do Power BI Desktop.
-4. A página é capturada e aparece para recortar (só o relatório, sem menus). O recorte fica salvo para as próximas vezes.
-5. **Baixar PDF**, **PNG** ou **JPG**, ou **Copiar imagem** para colar no e-mail, no Teams ou no PowerPoint.
+4. A página é capturada e **recortada automaticamente**: fica só a página do relatório, sem a barra do Power BI, os painéis de páginas e de filtros e o fundo cinza.
+5. **Baixar PDF** (o botão já vem selecionado: basta Enter), **PNG** ou **JPG**, ou **Copiar imagem** para colar no e-mail, no Teams ou no PowerPoint. Depois de baixar, o compartilhamento da aba para sozinho.
+
+### Recorte automático
+
+No Power BI (serviço e Desktop), a página do relatório é um retângulo de bordas retas cercado pelo fundo cinza da área de trabalho. A página de exportação procura o maior retângulo assim na captura, com preferência para os formatos de página 16:9 e 4:3, e acerta as bordas pixel a pixel. Funciona com os painéis abertos ou fechados, no modo **Tela inteira**, com fundo de página escuro e em qualquer resolução ou zoom de tela.
+
+Se não achar a página (por exemplo, quando o fundo da página tem a mesma cor do fundo do Power BI), ela usa o último recorte feito à mão, ou a captura inteira. O usuário sempre pode arrastar para ajustar, ou clicar em **Recortar automaticamente** para voltar ao recorte automático.
 
 Para exportar várias páginas do relatório num PDF só, troque de página na aba do Power BI e clique em **Capturar** de novo. Cada captura vira uma página do PDF. Com PNG/JPG, várias capturas saem num `.zip`.
 
@@ -55,7 +61,7 @@ Texto do rodapé =
     & " · Ano: " & IF ( ISFILTERED ( Calendario[Ano] ), CONCATENATEX ( VALUES ( Calendario[Ano] ), Calendario[Ano], ", " ), "Todos" )
 ```
 
-Dicas para um resultado limpo: no Power BI, use **Exibir → Ajustar à página** e feche os painéis de filtros e de páginas, ou marque o recorte uma vez na página de exportação.
+Dica: no Power BI, deixe **Exibir → Ajustar à página** (o padrão) para a página inteira aparecer na tela e entrar na captura.
 
 ## Formatação
 

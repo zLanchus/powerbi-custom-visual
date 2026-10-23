@@ -177,13 +177,14 @@
         <!-- Passo 2: recortar -->
         <div class="card" id="editorCard" hidden>
           <div class="editor-head">
-            <h2><span class="step">2</span>Ajuste o recorte</h2>
+            <h2><span class="step">2</span>Confira o recorte</h2>
             <div class="row">
-              <button class="btn small" id="cropAll" type="button">Página inteira</button>
+              <button class="btn small" id="cropAuto" type="button">Recortar automaticamente</button>
+              <button class="btn small" id="cropAll" type="button">Captura inteira</button>
               <button class="btn small" id="addMore" type="button" hidden>Capturar outra aba</button>
             </div>
           </div>
-          <p class="muted">Arraste sobre a imagem para marcar só a área do relatório (sem menus e painéis). O recorte vale para todas as capturas e fica salvo para a próxima vez.</p>
+          <p class="muted">A página do relatório é recortada automaticamente, sem menus e painéis do Power BI. Se precisar, arraste sobre a imagem para ajustar.</p>
           <div class="stage-box">
             <div class="stage" id="stage">
               <canvas id="view"></canvas>
@@ -201,23 +202,6 @@
       </section>
 
       <aside>
-        <!-- Ao vivo -->
-        <div class="card live" id="liveCard" hidden>
-          <div class="editor-head">
-            <h2>Aba compartilhada</h2>
-            <span class="badge">ao vivo</span>
-          </div>
-          <video id="video" muted playsinline autoplay></video>
-          <p class="muted" style="margin-top:10px">Para exportar outra página do relatório, mude de página na aba do Power BI e clique em <strong>Capturar</strong>. Cada captura vira uma página do PDF.</p>
-          <div class="row">
-            <button class="btn primary" id="capture" type="button">
-              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M4 8.5V7a2 2 0 0 1 2-2h1.5"/><path d="M16.5 5H18a2 2 0 0 1 2 2v1.5"/><path d="M20 15.5V17a2 2 0 0 1-2 2h-1.5"/><path d="M7.5 19H6a2 2 0 0 1-2-2v-1.5"/><circle cx="12" cy="12" r="3"/></svg>
-              Capturar
-            </button>
-            <button class="btn" id="stop" type="button">Parar</button>
-          </div>
-        </div>
-
         <!-- Passo 3: baixar -->
         <div class="card" id="optionsCard">
           <h2><span class="step">3</span>Baixe o arquivo</h2>
@@ -262,6 +246,23 @@
           <div class="msg" id="msg" role="status"></div>
         </div>
 
+        <!-- Ao vivo -->
+        <div class="card live" id="liveCard" hidden>
+          <div class="editor-head">
+            <h2>Aba compartilhada</h2>
+            <span class="badge">ao vivo</span>
+          </div>
+          <video id="video" muted playsinline autoplay></video>
+          <p class="muted" style="margin-top:10px">Para exportar outra página do relatório, mude de página na aba do Power BI e clique em <strong>Capturar</strong>. Cada captura vira uma página do PDF.</p>
+          <div class="row">
+            <button class="btn primary" id="capture" type="button">
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M4 8.5V7a2 2 0 0 1 2-2h1.5"/><path d="M16.5 5H18a2 2 0 0 1 2 2v1.5"/><path d="M20 15.5V17a2 2 0 0 1-2 2h-1.5"/><path d="M7.5 19H6a2 2 0 0 1-2-2v-1.5"/><circle cx="12" cy="12" r="3"/></svg>
+              Capturar
+            </button>
+            <button class="btn" id="stop" type="button">Parar</button>
+          </div>
+        </div>
+
         <div class="card">
           <h2>Dúvidas</h2>
           <details>
@@ -269,11 +270,11 @@
             <p>Não. A imagem é capturada pelo próprio navegador e o PDF/PNG é montado nesta página, sem enviar nada para servidor nenhum. Você pode desligar a internet depois de abrir esta página e tudo continua funcionando.</p>
           </details>
           <details>
-            <summary>Como deixar só o relatório, sem menus?</summary>
+            <summary>O recorte automático pegou a área errada</summary>
             <ul>
-              <li>No Power BI, use <strong>Exibir → Ajustar à página</strong> para a página caber inteira na tela.</li>
-              <li>Feche os painéis de filtros e de páginas, ou use <strong>Exibir → Tela inteira</strong>.</li>
-              <li>Depois marque o recorte uma vez: ele fica salvo para os próximos usos.</li>
+              <li>O recorte procura a página do relatório pela borda entre ela e o fundo cinza do Power BI. Se o fundo da página tiver a mesma cor desse fundo, não há borda para achar.</li>
+              <li>Use <strong>Exibir → Ajustar à página</strong> no Power BI para a página aparecer inteira, com fundo em volta.</li>
+              <li>Ou arraste sobre a imagem para marcar a área. Esse recorte fica salvo e é usado quando a detecção não encontrar a página.</li>
             </ul>
           </details>
           <details>
@@ -314,7 +315,7 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   start: $("start"), share: $("share"), unsupported: $("unsupported"), drop: $("drop"), pick: $("pick"), file: $("file"),
   startMsg: $("startMsg"), editorCard: $("editorCard"), stage: $("stage"), view: $("view"), crop: $("crop"),
-  cropSize: $("cropSize"), cropAll: $("cropAll"), addMore: $("addMore"), thumbs: $("thumbs"), liveCard: $("liveCard"),
+  cropSize: $("cropSize"), cropAll: $("cropAll"), cropAuto: $("cropAuto"), addMore: $("addMore"), thumbs: $("thumbs"), liveCard: $("liveCard"),
   video: $("video"), capture: $("capture"), stop: $("stop"), name: $("name"), format: $("format"),
   pdfOptions: $("pdfOptions"), paper: $("paper"), orientation: $("orientation"), orientationField: $("orientationField"),
   stamp: $("stamp"), footer: $("footer"), footerText: $("footerText"), footerTextField: $("footerTextField"),
@@ -341,6 +342,8 @@ let stream = null;
 const storageKey = "exportar-pagina:recorte";
 /** Recorte em frações da imagem (vale para todas as capturas). */
 let crop = loadCrop();
+/** O usuário mexeu no recorte nesta sessão: a detecção automática não mexe mais nele. */
+let cropManual = false;
 
 function loadCrop() {
   try {
@@ -450,7 +453,6 @@ function captureFrame() {
   canvas.height = v.videoHeight;
   canvas.getContext("2d").drawImage(v, 0, 0);
   addCapture(canvas);
-  message("Página capturada. Ajuste o recorte, se quiser, e clique em Baixar.");
 }
 
 // ------------------------------------------------------------------ colar / arquivo (sem captura)
@@ -502,7 +504,23 @@ function addCapture(canvas) {
   thumb.height = Math.max(1, Math.round(canvas.height * scale));
   thumb.getContext("2d").drawImage(canvas, 0, 0, thumb.width, thumb.height);
   captures.push({ canvas, thumb: thumb.toDataURL("image/jpeg", 0.8) });
+  if (!cropManual) {
+    autoCrop(canvas);
+  }
   select(captures.length - 1);
+  ui.download.focus({ preventScroll: true });
+}
+
+/** Recorte automático: área do relatório detectada; se não achar, o último recorte salvo. */
+function autoCrop(canvas) {
+  const found = detectReport(canvas);
+  if (found) {
+    crop = found;
+    message("Pronto: a área do relatório foi recortada automaticamente. É só clicar em Baixar.");
+  } else {
+    crop = loadCrop();
+    message("Não encontrei a borda da página do relatório. Arraste sobre a imagem para recortar, se precisar, e clique em Baixar.");
+  }
 }
 
 function removeCapture(index) {
@@ -649,6 +667,7 @@ function endDrag() {
     return;
   }
   drag = null;
+  cropManual = true;
   // Clique sem arrastar (ou área minúscula) volta para a página inteira.
   if (crop.w < 0.02 || crop.h < 0.02) {
     crop = { x: 0, y: 0, w: 1, h: 1 };
@@ -660,9 +679,228 @@ ui.stage.addEventListener("pointerup", endDrag);
 ui.stage.addEventListener("pointercancel", endDrag);
 ui.cropAll.addEventListener("click", () => {
   crop = { x: 0, y: 0, w: 1, h: 1 };
+  cropManual = true;
   saveCrop();
   drawCrop();
 });
+ui.cropAuto.addEventListener("click", () => {
+  const current = captures[selected];
+  if (current) {
+    cropManual = false;
+    autoCrop(current.canvas);
+    drawCrop();
+  }
+});
+
+// ------------------------------------------------------------------ detecção automática da página do relatório
+//
+// No Power BI (serviço e Desktop) a página do relatório é um retângulo de bordas retas cercado pelo
+// fundo da área de trabalho, uma faixa de cor uniforme. Procura, numa cópia reduzida da captura, o
+// maior retângulo assim (com preferência para 16:9 e 4:3, os tamanhos de página mais comuns) e depois
+// acerta as bordas na resolução original. Menus, painel de páginas e de filtros ficam de fora.
+
+function detectReport(src) {
+  const scale = Math.min(1, 1000 / src.width);
+  const W = Math.round(src.width * scale);
+  const H = Math.round(src.height * scale);
+  if (W < 80 || H < 80) {
+    return null;
+  }
+  const small = document.createElement("canvas");
+  small.width = W;
+  small.height = H;
+  const sctx = small.getContext("2d", { willReadFrequently: true });
+  sctx.drawImage(src, 0, 0, W, H);
+  const d = sctx.getImageData(0, 0, W, H).data;
+  const at = (x, y) => (y * W + x) * 4;
+  const diff = (a, b) => Math.abs(d[a] - d[b]) + Math.abs(d[a + 1] - d[b + 1]) + Math.abs(d[a + 2] - d[b + 2]);
+  const EDGE = 20;
+
+  // Bordas comparando com 2 pixels antes (a redução deixa as linhas finas meio borradas).
+  const h = new Uint8Array(W * H);
+  const v = new Uint8Array(W * H);
+  for (let y = 2; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      h[y * W + x] = diff(at(x, y), at(x, y - 2)) > EDGE ? 1 : 0;
+    }
+  }
+  for (let y = 0; y < H; y++) {
+    for (let x = 2; x < W; x++) {
+      v[y * W + x] = diff(at(x, y), at(x - 2, y)) > EDGE ? 1 : 0;
+    }
+  }
+
+  // Linhas horizontais longas (aceita falhas de até 2 pixels).
+  const lines = [];
+  const minW = W * 0.15;
+  const minH = H * 0.15;
+  for (let y = 2; y < H; y++) {
+    let start = -1;
+    let last = -1;
+    for (let x = 0; x <= W; x++) {
+      if (x < W && h[y * W + x]) {
+        if (start < 0) {
+          start = x;
+        }
+        last = x;
+      } else if (start >= 0 && (x === W || x - last > 2)) {
+        if (last - start + 1 >= minW) {
+          lines.push({ y, a: start, b: last });
+        }
+        start = -1;
+      }
+    }
+  }
+
+  // Lado encostado na borda da captura (ex.: modo tela inteira do Power BI): não tem linha nem faixa de fora.
+  const atBorder = (pos, size) => pos <= 4 || pos >= size - 5;
+  const vertical = (x, y0, y1) => {
+    if (atBorder(x, W)) {
+      return 1;
+    }
+    let hits = 0;
+    for (let y = y0; y <= y1; y++) {
+      for (let k = -2; k <= 2; k++) {
+        const xx = x + k;
+        if (xx >= 0 && xx < W && v[y * W + xx]) {
+          hits++;
+          break;
+        }
+      }
+    }
+    return hits / (y1 - y0 + 1);
+  };
+
+  // Faixa logo do lado de fora: precisa ter a mesma cor em todos os lados que não encostam na borda.
+  const ring = (x0, y0, x1, y1) => {
+    const step = Math.max(1, Math.round(Math.max(W, H) / 300));
+    const use = [!atBorder(y0, H), !atBorder(y1, H), !atBorder(x0, W), !atBorder(x1, W)];
+    const sides = [[], [], [], []];
+    for (let k = 2; k <= 4; k++) {
+      for (let x = x0; x <= x1; x += step) {
+        if (use[0]) {
+          sides[0].push(at(x, y0 - k));
+        }
+        if (use[1]) {
+          sides[1].push(at(x, y1 + k));
+        }
+      }
+      for (let y = y0; y <= y1; y += step) {
+        if (use[2]) {
+          sides[2].push(at(x0 - k, y));
+        }
+        if (use[3]) {
+          sides[3].push(at(x1 + k, y));
+        }
+      }
+    }
+    const present = sides.filter((side) => side.length);
+    if (present.length < 2) {
+      return null;
+    }
+    const mean = (list) => {
+      const m = [0, 0, 0];
+      list.forEach((i) => { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; });
+      return m.map((c) => c / list.length);
+    };
+    const all = mean(sides.flat());
+    const dist = (m) => Math.abs(m[0] - all[0]) + Math.abs(m[1] - all[1]) + Math.abs(m[2] - all[2]);
+    if (present.some((side) => dist(mean(side)) > 18)) {
+      return null;
+    }
+    let spread = 0;
+    const flat = present.flat();
+    flat.forEach((i) => { spread += Math.abs(d[i] - all[0]) + Math.abs(d[i + 1] - all[1]) + Math.abs(d[i + 2] - all[2]); });
+    return spread / flat.length < 14 ? { color: all, complete: present.length === 4 } : null;
+  };
+
+  const tol = 3 + Math.round(W * 0.006);
+  const ratios = [16 / 9, 4 / 3];
+  let best = null;
+  for (const top of lines) {
+    for (const bottom of lines) {
+      if (bottom.y - top.y < minH || Math.abs(top.a - bottom.a) > tol || Math.abs(top.b - bottom.b) > tol) {
+        continue;
+      }
+      const x0 = Math.round((top.a + bottom.a) / 2);
+      const x1 = Math.round((top.b + bottom.b) / 2);
+      const y0 = top.y - 1;
+      const y1 = bottom.y - 1;
+      const area = (x1 - x0) * (y1 - y0);
+      if (area < W * H * 0.12) {
+        continue;
+      }
+      const ratio = (x1 - x0) / (y1 - y0);
+      const pageRatio = ratios.some((r) => Math.abs(ratio / r - 1) < 0.03);
+      const score = area * (pageRatio ? 2.5 : 1);
+      if (best && score <= best.score) {
+        continue;
+      }
+      if (vertical(x0, y0, y1) < 0.85 || vertical(x1, y0, y1) < 0.85) {
+        continue;
+      }
+      const around = ring(x0, y0, x1, y1);
+      // Encostado na borda só vale com formato de página (evita pegar faixas de menu).
+      if (!around || (!around.complete && !pageRatio)) {
+        continue;
+      }
+      best = { x0, y0, x1, y1, score };
+    }
+  }
+  if (!best) {
+    return null;
+  }
+  const edges = refineEdges(src, best.x0 / scale, best.y0 / scale, best.x1 / scale, best.y1 / scale, 3 / scale + 2);
+  return {
+    x: edges.x0 / src.width,
+    y: edges.y0 / src.height,
+    w: (edges.x1 - edges.x0) / src.width,
+    h: (edges.y1 - edges.y0) / src.height
+  };
+}
+
+/** Acerta cada borda na resolução original: procura, perto da posição aproximada, a linha de maior contraste. */
+function refineEdges(src, x0, y0, x1, y1, radius) {
+  const ctx = src.getContext("2d", { willReadFrequently: true });
+  const r = Math.ceil(radius);
+  const strength = (horizontal, pos, from, to) => {
+    // Contraste entre a linha pos-1 e a linha pos (ou colunas), ao longo do lado.
+    const length = Math.max(1, Math.round(to - from));
+    const img = horizontal
+      ? ctx.getImageData(Math.round(from), pos - 1, length, 2).data
+      : ctx.getImageData(pos - 1, Math.round(from), 2, length).data;
+    let total = 0;
+    for (let i = 0; i < length; i++) {
+      const a = horizontal ? i * 4 : i * 8;
+      const b = horizontal ? (length + i) * 4 : i * 8 + 4;
+      total += Math.abs(img[a] - img[b]) + Math.abs(img[a + 1] - img[b + 1]) + Math.abs(img[a + 2] - img[b + 2]);
+    }
+    return total / length;
+  };
+  const search = (horizontal, around, from, to, max) => {
+    let bestPos = Math.round(around);
+    let bestValue = -1;
+    for (let p = Math.max(1, Math.round(around) - r); p <= Math.min(max - 1, Math.round(around) + r); p++) {
+      const value = strength(horizontal, p, from, to);
+      if (value > bestValue + 1e-6) {
+        bestValue = value;
+        bestPos = p;
+      }
+    }
+    return bestPos;
+  };
+  // Só o miolo de cada lado, longe dos cantos (que podem ser arredondados ou ter sombra).
+  const mx = (x1 - x0) * 0.1;
+  const my = (y1 - y0) * 0.1;
+  const edge = (horizontal, around, from, to, max) =>
+    around <= radius + 1 ? 0 : around >= max - radius - 1 ? max : search(horizontal, around, from, to, max);
+  return {
+    y0: edge(true, y0, x0 + mx, x1 - mx, src.height),
+    y1: edge(true, y1, x0 + mx, x1 - mx, src.height),
+    x0: edge(false, x0, y0 + my, y1 - my, src.width),
+    x1: edge(false, x1, y0 + my, y1 - my, src.width)
+  };
+}
 
 // ------------------------------------------------------------------ montagem da imagem final
 
@@ -951,6 +1189,8 @@ async function download() {
       }
     }
     message("Pronto! O arquivo foi baixado.");
+    // Como no "imprimir": terminou, para de compartilhar a aba. Para outra página, "Capturar outra aba".
+    stopSharing();
   } catch (e) {
     message("Não foi possível gerar o arquivo: " + (e && e.message ? e.message : e), true);
   } finally {
