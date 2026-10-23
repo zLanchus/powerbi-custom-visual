@@ -159,5 +159,8 @@ const html = `<!doctype html>
 `;
 
 writeFileSync(join(out, "index.html"), html);
+// Página de exportação usada pelo visual "Exportar Página" (arquivo único, sem dependências).
+mkdirSync(join(out, "exportar"), { recursive: true });
+copyFileSync(join(root, "site", "exportar", "index.html"), join(out, "exportar", "index.html"));
 writeFileSync(join(out, ".nojekyll"), "");
 console.log(`Site gerado em ${out}`);

@@ -14,6 +14,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Pirâmide Segmentada**](visuals/piramide/) | Funil/pirâmide como o nativo, com as barras divididas em segmentos coloridos por um campo de legenda. Tem modo pirâmide espelhada (etária), conectores com taxa de conversão e rótulos de total e %. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/piramide.pbiviz) |
 | [**Card Comparativo**](visuals/card-comparativo/) | Card de KPI com o valor principal em destaque, o período selecionado (medida do calendário) e até 5 comparações com outras medidas (meta, mês anterior, ano anterior), com diferença ou variação %, cores e setas. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/card-comparativo.pbiviz) |
 | [**Barras com Insight**](visuals/barras-ranking/) | Barras horizontais com trilho no estilo de ranking: valor e detalhe ao lado (ex.: 24,2% (18)), top N, ordenação por outro campo (ex.: ordem do nível), cor com fx e frase de insight automática (maior ou menor valor). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-ranking.pbiviz) |
+| [**Exportar Página**](visuals/exportar-pagina/) | Botão que exporta a página do relatório para PDF, PNG ou JPG sem configuração do administrador nem certificação: abre a [página de exportação](https://zlanchus.github.io/powerbi-custom-visual/exportar/), que captura a aba do relatório e gera o arquivo no próprio navegador. Recorte salvo, PDF com várias páginas, nome e rodapé por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/exportar-pagina.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -40,7 +41,8 @@ powerbi-custom-visual/
 │   ├── matriz/
 │   ├── piramide/
 │   ├── card-comparativo/
-│   └── barras-ranking/
+│   ├── barras-ranking/
+│   └── exportar-pagina/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
@@ -49,7 +51,7 @@ powerbi-custom-visual/
 │       ├── capabilities.json
 │       ├── pbiviz.json
 │       └── README.md
-├── site/                    # página de download (GitHub Pages)
+├── site/                    # página de download (GitHub Pages) e página de exportação (site/exportar)
 ├── DESIGN.md                # padrão visual (cores, formas, opções) para todos os visuais
 └── .github/workflows/       # build de todos os visuais + publicação do site
 ```

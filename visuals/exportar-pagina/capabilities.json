@@ -1,0 +1,218 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Nome do arquivo",
+            "name": "fileName",
+            "kind": "Measure",
+            "description": "Opcional: medida de texto com o nome do arquivo, ex.: \"Vendas - \" & SELECTEDVALUE(Calendario[Mês])."
+        },
+        {
+            "displayName": "Texto do rodapé",
+            "name": "footer",
+            "kind": "Measure",
+            "description": "Opcional: medida de texto mostrada no rodapé do arquivo, ex.: os filtros aplicados."
+        }
+    ],
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "fileName": {
+                        "max": 1
+                    },
+                    "footer": {
+                        "max": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "values": {
+                    "select": [
+                        {
+                            "bind": {
+                                "to": "fileName"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "footer"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "objects": {
+        "button": {
+            "properties": {
+                "text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "showIcon": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showArrow": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "height": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "export": {
+            "properties": {
+                "format": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "pdf",
+                                "displayName": "PDF"
+                            },
+                            {
+                                "value": "png",
+                                "displayName": "Imagem PNG"
+                            },
+                            {
+                                "value": "jpg",
+                                "displayName": "Imagem JPG"
+                            }
+                        ]
+                    }
+                },
+                "paper": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "fit",
+                                "displayName": "Do tamanho da página"
+                            },
+                            {
+                                "value": "a4",
+                                "displayName": "A4"
+                            },
+                            {
+                                "value": "letter",
+                                "displayName": "Carta"
+                            }
+                        ]
+                    }
+                },
+                "orientation": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automática"
+                            },
+                            {
+                                "value": "landscape",
+                                "displayName": "Paisagem"
+                            },
+                            {
+                                "value": "portrait",
+                                "displayName": "Retrato"
+                            }
+                        ]
+                    }
+                },
+                "fileName": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "timestamp": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "footer": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "footerText": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "autoCapture": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "url": {
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
+        }
+    },
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "suppressDefaultTitle": false,
+    "privileges": []
+}

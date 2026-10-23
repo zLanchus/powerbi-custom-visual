@@ -1,0 +1,156 @@
+// Visual "Exportar Página". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação via variáveis CSS (applyStyles em visual.ts).
+
+.ep-root {
+    --ep-bg: #6CBEEB;
+    --ep-fg: #0F2B45;
+    --ep-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --ep-font-size: 15px;
+    --ep-weight: 600;
+    --ep-height: 52px;
+    --ep-radius: 14px;
+    --ep-bw: 0px;
+    --ep-bc: #0F2B45;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    font-family: var(--ep-font);
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.ep-icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ep-button {
+    width: 100%;
+    height: min(var(--ep-height), 100%);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: var(--ep-bw) solid var(--ep-bc);
+    border-radius: var(--ep-radius);
+    background: var(--ep-bg);
+    color: var(--ep-fg);
+    font-family: inherit;
+    font-size: var(--ep-font-size);
+    font-weight: var(--ep-weight);
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+
+    &:hover {
+        filter: brightness(1.05);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+    }
+
+    &:active {
+        transform: translateY(1px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--ep-fg);
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.6;
+        filter: none;
+        box-shadow: none;
+    }
+}
+
+.ep-button-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.9em;
+    position: relative;
+}
+
+.ep-button-icon {
+    position: absolute;
+    left: 0.85em;
+    width: 1.35em;
+    height: 1.35em;
+
+    .ep-busy & {
+        animation: ep-bounce 0.8s ease-in-out infinite;
+    }
+}
+
+.ep-button-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-left: 1.6em;
+
+    .ep-no-icon & {
+        padding-left: 0;
+    }
+}
+
+.ep-no-icon .ep-button-icon,
+.ep-no-arrow .ep-divider,
+.ep-no-arrow .ep-button-arrow {
+    display: none;
+}
+
+.ep-divider {
+    flex: none;
+    width: 2px;
+    align-self: stretch;
+    margin: 10px 0;
+    border-radius: 2px;
+    background: var(--ep-fg);
+    opacity: 0.55;
+}
+
+.ep-button-arrow {
+    flex: none;
+    width: 3.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ep-icon {
+        width: 1.2em;
+        height: 1.2em;
+        transition: transform 0.2s ease;
+    }
+
+    .ep-button:hover & .ep-icon {
+        transform: translate(2px, -2px);
+    }
+}
+
+@keyframes ep-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(3px);
+    }
+}
