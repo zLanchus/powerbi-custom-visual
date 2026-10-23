@@ -15,6 +15,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Card Comparativo**](visuals/card-comparativo/) | Card de KPI com o valor principal em destaque, o período selecionado (medida do calendário) e até 5 comparações com outras medidas (meta, mês anterior, ano anterior), com diferença ou variação %, cores e setas. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/card-comparativo.pbiviz) |
 | [**Barras com Insight**](visuals/barras-ranking/) | Barras horizontais com trilho no estilo de ranking: valor e detalhe ao lado (ex.: 24,2% (18)), top N, ordenação por outro campo (ex.: ordem do nível), cor com fx e frase de insight automática (maior ou menor valor). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-ranking.pbiviz) |
 | [**Colunas Empilhadas e Linha**](visuals/colunas-linha/) | Réplica do gráfico nativo de colunas empilhadas e linhas com legenda interativa: botões para mostrar ou esconder cada série ou todas as colunas / linhas, eixo secundário, rótulos de total e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-linha.pbiviz) |
+| [**Colunas Agrupadas e Linha**](visuals/colunas-agrupadas-linha/) | A versão agrupada (clusterizada) do Colunas Empilhadas e Linha: colunas lado a lado, com a mesma legenda interativa, rótulos acima das colunas, eixos por medida, colunas sempre abaixo das linhas, Ano e Mês aninhados e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-agrupadas-linha.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -42,7 +43,8 @@ powerbi-custom-visual/
 │   ├── piramide/
 │   ├── card-comparativo/
 │   ├── barras-ranking/
-│   └── colunas-linha/
+│   ├── colunas-linha/
+│   └── colunas-agrupadas-linha/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone

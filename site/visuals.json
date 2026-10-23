@@ -120,5 +120,24 @@
       "4-personalizado.png",
       "6-colunas-abaixo-linhas-afastadas.png"
     ]
+  },
+  {
+    "id": "colunas-agrupadas-linha",
+    "name": "Colunas Agrupadas e Linha",
+    "summary": "Colunas agrupadas (lado a lado) e linha como o nativo, com legenda interativa para mostrar e esconder séries.",
+    "features": [
+      "Colunas lado a lado por item da legenda ou por medida, com rótulo acima de cada coluna",
+      "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
+      "Linhas no mesmo eixo secundário, com rótulos afastados para não se sobrepor",
+      "Colunas sempre abaixo das linhas, mínimo e máximo dos eixos por medida e Ano/Mês aninhados",
+      "Praticamente tudo personalizável: fontes, botões, cores, eixos, grade, rótulos e cada linha"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-legenda-interativa.png",
+      "3-colunas-abaixo.png",
+      "4-ano-mes.png",
+      "5-medidas-negativos.png"
+    ]
   }
 ]
