@@ -15,7 +15,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding: 4px 6px;
+    gap: 10px;
+    padding: 6px;
     font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
     color: @dark;
     user-select: none;
@@ -25,9 +26,29 @@
     }
 }
 
-.ps-header {
+// ---- topo (cabeçalho + botão de ajuda) e rodapé
+
+.ps-top,
+.ps-bottom {
     flex: 0 0 auto;
-    padding-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.ps-bottom {
+    align-items: center;
+}
+
+.ps-header,
+.ps-spacer,
+.ps-footer-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ps-header {
+    border-radius: 10px;
 }
 
 .ps-title {
@@ -95,8 +116,6 @@
     flex: 0 0 auto;
     text-align: right;
     padding-left: 16px;
-    border-left: 1px solid rgba(15, 43, 69, .25);
-    border-left-color: color-mix(in srgb, currentColor 30%, transparent);
 }
 
 .ps-hero-value {
@@ -202,13 +221,26 @@
     background: @dark;
 }
 
-// ---- rodapé e estados vazios
+// ---- rodapé, aviso de medidas e estados vazios
 
 .ps-footer {
-    flex: 0 0 auto;
-    padding-top: 8px;
     line-height: 1.4;
     color: @muted;
+}
+
+.ps-warning {
+    display: block;
+    margin-top: 2px;
+    padding: 0;
+    border: none;
+    background: none;
+    text-align: left;
+    line-height: 1.4;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline !important;
+    }
 }
 
 .ps-empty {
@@ -218,6 +250,201 @@
     border-radius: 14px;
     background: @panel;
     text-align: center;
+}
+
+// ---- botão de ajuda
+
+.ps-help {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    background: @panel;
+    color: @dark;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: box-shadow .15s ease, filter .15s ease;
+
+    &:hover {
+        filter: brightness(.96);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .18) !important;
+    }
+
+    &:focus-visible {
+        outline: 2px solid @primary;
+        outline-offset: 1px;
+    }
+
+    svg {
+        flex: 0 0 auto;
+    }
+}
+
+// ---- pop-up de ajuda
+
+.ps-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 43, 69, .35);
+}
+
+.ps-dialog {
+    display: flex;
+    flex-direction: column;
+    max-width: calc(100% - 16px);
+    max-height: calc(100% - 16px);
+    overflow: hidden;
+    background: @white;
+    outline: none;
+    user-select: text;
+}
+
+.ps-dialog-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ps-dialog-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.ps-close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(0, 0, 0, .08);
+    }
+}
+
+.ps-dialog-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+// ---- guia de medidas (para quem desenvolve)
+
+.ps-guide {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    user-select: text;
+}
+
+.ps-guide-close {
+    float: right;
+    margin: 0 0 8px 12px;
+    padding: 4px 12px;
+    border: 1px solid rgba(15, 43, 69, .3);
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+}
+
+// ---- blocos de texto (pop-up e guia)
+
+.ps-h {
+    margin: 16px 0 6px;
+    line-height: 1.3;
+}
+
+.ps-p {
+    margin: 0 0 8px;
+    line-height: 1.5;
+}
+
+.ps-list,
+.ps-checks {
+    margin: 0 0 8px;
+    padding-left: 20px;
+    line-height: 1.5;
+
+    li + li {
+        margin-top: 3px;
+    }
+}
+
+.ps-checks {
+    list-style: none;
+    padding-left: 0;
+}
+
+.ps-check-mark {
+    display: inline-block;
+    width: 20px;
+}
+
+.ps-terms {
+    margin: 0;
+    line-height: 1.5;
+
+    dt {
+        margin-top: 8px;
+    }
+
+    dd {
+        margin: 0;
+    }
+}
+
+.ps-steps {
+    margin: 4px 0 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: @panel;
+}
+
+.ps-step {
+    display: grid;
+    grid-template-columns: minmax(110px, 38%) 1fr;
+    gap: 4px 14px;
+    padding: 5px 0;
+    line-height: 1.4;
+
+    & + & {
+        border-top: 1px solid rgba(0, 0, 0, .06);
+    }
+}
+
+// Pop-up estreito: rótulo em cima da conta.
+.ps-narrow .ps-step {
+    grid-template-columns: 1fr;
+}
+
+.ps-step-note {
+    font-size: .88em;
+    opacity: .75;
+}
+
+.ps-code {
+    margin: 4px 0 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: @white;
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    line-height: 1.45;
+    white-space: pre;
+    overflow-x: auto;
 }
 
 .ps-empty-title {

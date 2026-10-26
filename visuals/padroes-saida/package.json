@@ -1,7 +1,7 @@
 {
   "name": "padroes-saida-visual",
   "description": "Padrões de saída (turnover) com destaques e insights para Power BI.",
-  "version": "1.0.0.0",
+  "version": "1.1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/zLanchus/powerbi-custom-visual"

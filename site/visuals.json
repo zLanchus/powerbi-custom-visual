@@ -124,12 +124,15 @@
     "features": [
       "Regra em destaque combinando atributos (ex.: Sem liderança · Até 1 ano · Comercial)",
       "Com Base (headcount, clientes): taxa de cada perfil contra a média, com teste estatístico",
-      "Sem Base: onde as saídas se concentram",
-      "Funciona para qualquer saída: desligamentos, cancelamentos, perda de clientes…",
-      "Textos editáveis, filtro cruzado e formatação completa"
+      "Botão de ajuda com pop-up (tamanho editável) que mostra a conta passo a passo com os números atuais",
+      "Guia de medidas para quem desenvolve, com conferência automática dos dados",
+      "Fonte, cor, fundo e borda de cada parte configuráveis; serve para desligamentos, cancelamentos e qualquer saída"
     ],
     "cover": "1-taxa.png",
     "images": [
+      "4-ajuda.png",
+      "5-guia.png",
+      "6-personalizado.png",
       "2-concentracao.png",
       "3-churn.png"
     ]
