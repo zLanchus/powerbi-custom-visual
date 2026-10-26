@@ -9,15 +9,18 @@ Réplica do gráfico nativo **"Gráfico de colunas empilhadas e de linhas"** do 
 | ![Medidas e rótulos](docs/3-medidas-rotulos.png) | ![Personalizado](docs/4-personalizado.png) |
 | **Ano e Mês aninhados no Eixo X** | **Colunas abaixo, rótulos das linhas afastados** |
 | ![Ano e Mês](docs/5-ano-mes.png) | ![Colunas abaixo, linhas afastadas](docs/6-colunas-abaixo-linhas-afastadas.png) |
+| **Legenda da linha (uma linha por região)** | |
+| ![Legenda da linha](docs/7-legenda-da-linha.png) | |
 
 ## Como usar
 
-1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.5.1.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.6.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos (os mesmos nomes do visual nativo):
    - **Eixo X**: cada valor vira uma coluna (ex.: Mês, Região). Aceita **vários campos aninhados**, até 6 (ex.: *Ano* e *Mês* da tabela Calendário): cada mês aparece dentro do seu ano.
    - **Eixo Y da coluna**: uma ou várias medidas empilhadas. Sem legenda, cada medida vira um segmento da pilha.
    - **Legenda da coluna** (opcional): divide a coluna em segmentos (ex.: Produto). Com legenda, use uma medida só no Eixo Y da coluna, como no nativo.
    - **Eixo Y da linha**: uma ou mais medidas desenhadas como linhas (ex.: Margem %, Meta).
+   - **Legenda da linha** (opcional): uma linha por item (ex.: uma linha de *Margem %* por *Região*). Cada item vira um botão na legenda interativa e tem cor, estilo e rótulos próprios em **Linhas — por série**. A linha de cada item é calculada só com o filtro dele (sem o filtro da legenda das colunas), e as colunas continuam com o valor do mês inteiro.
    - **Dicas de ferramenta** (opcional): medidas extras mostradas ao passar o mouse.
    - **Mínimo / Máximo do eixo Y (colunas)** e **Mínimo / Máximo do eixo Y secundário (linhas)** (opcionais): medidas que fixam o início e o fim de cada eixo. Use o menor (mínimo) ou o maior (máximo) valor da medida entre as categorias; uma medida constante (ex.: `Teto = 800000`) vira o valor exato. Têm prioridade sobre o valor digitado no painel.
 
@@ -75,4 +78,5 @@ Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com
 
 - Até 1000 categorias no eixo X e 60 itens na legenda.
 - O que foi escondido na legenda vale enquanto o relatório está aberto. Para definir o estado inicial, use as opções "visíveis ao abrir".
-- Os dados chegam no formato matriz (linhas = Eixo X, colunas = Legenda, com subtotal), para que a linha seja calculada sem o filtro da legenda.
+- Os dados chegam no formato matriz (linhas = Eixo X e, embaixo, a Legenda da linha; colunas = Legenda da coluna; com subtotais), para que cada linha e cada coluna sejam calculadas só com os filtros delas.
+- A cor e os ajustes de um item da Legenda da linha ficam guardados junto da primeira categoria em que ele aparece; se essa categoria sair do filtro, o item volta à cor automática.

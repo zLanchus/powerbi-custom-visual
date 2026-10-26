@@ -137,6 +137,23 @@ function toNumber(value: PrimitiveValue | undefined): number | null {
     return typeof value === "number" && isFinite(value) ? value : null;
 }
 
+/** Nó com a soma dos valores de vários nós (categoria sem subtotal: soma dos itens da legenda da linha). */
+function sumNodes(nodes: DataViewMatrixNode[], base: DataViewMatrixNode): DataViewMatrixNode {
+    const values: { [id: number]: powerbi.DataViewMatrixNodeValue } = {};
+    for (const node of nodes) {
+        for (const [j, cellValue] of Object.entries(node.values || {})) {
+            const v = toNumber(cellValue?.value);
+            const k = Number(j);
+            if (v !== null) {
+                values[k] = { value: (toNumber(values[k]?.value) ?? 0) + v, valueSourceIndex: cellValue.valueSourceIndex };
+            } else if (!values[k]) {
+                values[k] = { value: null, valueSourceIndex: cellValue?.valueSourceIndex };
+            }
+        }
+    }
+    return { ...base, values };
+}
+
 /** Data vinda do Power BI (objeto Date ou texto ISO, como "2024-01-31T00:00:00"). */
 function asDate(value: PrimitiveValue | undefined): Date | undefined {
     if (value instanceof Date) {
@@ -667,7 +684,16 @@ export class Visual implements IVisual {
 
         // ---- categorias (linhas da matriz)
         // Vários campos no Eixo X (ex.: Ano e Mês): cada folha da hierarquia vira uma categoria.
+        // A Legenda da linha, se houver, vem como último nível das linhas da matriz (ex.: Mês › Região).
+        const lineLevel = rowLevels.findIndex(l => !!l?.sources?.some(src => src.roles?.["lineSeries"]));
+        const catLevelCount = lineLevel >= 0 ? lineLevel : rowLevels.length;
+        const hasValues = (n: DataViewMatrixNode | undefined): boolean => !!n?.values && Object.keys(n.values).length > 0;
+        /** Nó com os valores da categoria inteira (sem o filtro da legenda da linha). */
         const rowNodes: DataViewMatrixNode[] = [];
+        /** Nó da categoria (para o filtro cruzado). */
+        const catNodes: DataViewMatrixNode[] = [];
+        /** Itens da legenda da linha dentro de cada categoria. */
+        const legendNodes: DataViewMatrixNode[][] = [];
         const paths: string[][] = [];
         const keyPaths: string[][] = [];
         // Formato de cada campo: o do nível da matriz ou, se faltar, o da coluna nos metadados (ex.: Data abreviada).
@@ -688,14 +714,22 @@ export class Visual implements IVisual {
                     continue;
                 }
                 const level = child.level ?? path.length;
+                if (level >= catLevelCount) {
+                    continue;
+                }
                 const value = child.levelValues?.[0]?.value ?? child.value;
                 const source = rowLevels[level]?.sources?.[child.levelValues?.[0]?.levelSourceIndex ?? 0];
                 const nextPath = path.concat(memberLabel(value, withFormat(source), locale, xDateFormat));
                 const nextKeys = keys.concat(asDate(value)?.getTime().toString() ?? String(value));
-                if ((child.children || []).some(c => !c.isSubtotal)) {
+                const kids = (child.children || []).filter(c => !c.isSubtotal);
+                if (level < catLevelCount - 1 && kids.length) {
                     collect(child, nextPath, nextKeys);
                 } else {
-                    rowNodes.push(child);
+                    // Valores da categoria: no próprio nó, no subtotal dele ou, sem subtotal, a soma dos itens da legenda da linha.
+                    const subtotal = (child.children || []).find(c => c.isSubtotal);
+                    rowNodes.push(hasValues(child) ? child : hasValues(subtotal) ? subtotal as DataViewMatrixNode : sumNodes(kids, child));
+                    catNodes.push(child);
+                    legendNodes.push(lineLevel >= 0 ? kids : []);
                     paths.push(nextPath);
                     keyPaths.push(nextKeys);
                 }
@@ -703,10 +737,10 @@ export class Visual implements IVisual {
         };
         collect(rowRoot, [], []);
         const xs = this.formattingSettings.xAxisCard;
-        const mode = rowLevels.length > 1 ? enumValue(xs.hierarchy) : "inner";
+        const mode = catLevelCount > 1 ? enumValue(xs.hierarchy) : "inner";
         const separator = xs.concatSeparator.value ?? " ";
         const innerFirst = enumValue(xs.concatOrder) !== "outerFirst";
-        const categories: Category[] = rowNodes.map((node, index) => {
+        const categories: Category[] = catNodes.map((node, index) => {
             const path = paths[index];
             return {
                 index,
@@ -777,8 +811,48 @@ export class Visual implements IVisual {
             columns = columnMeasures.map((measure, k) => this.measureSeries("column", sources[measure], k, rowNodes,
                 row => total(row, measure), rowLevels, formatOf));
         }
-        const lines = lineMeasures.map((measure, k) => this.measureSeries("line", sources[measure], k, rowNodes,
-            row => total(row, measure), rowLevels, formatOf));
+        let lines: Series[];
+        if (lineLevel >= 0 && lineMeasures.length > 0) {
+            // Legenda da linha: uma linha por item (ex.: uma por Região), com o valor exato de cada item.
+            const legendSource = withFormat(rowLevels[lineLevel]?.sources?.[0]);
+            const items: Array<{ key: string; label: string; nodes: Array<DataViewMatrixNode | undefined> }> = [];
+            const byKey = new Map<string, typeof items[number]>();
+            legendNodes.forEach((kids, i) => kids.forEach(node => {
+                const value = node.levelValues?.[0]?.value ?? node.value;
+                const key = asDate(value)?.getTime().toString() ?? String(value);
+                let item = byKey.get(key);
+                if (!item) {
+                    item = { key, label: memberLabel(value, legendSource, locale), nodes: new Array(rowNodes.length).fill(undefined) };
+                    byKey.set(key, item);
+                    items.push(item);
+                }
+                item.nodes[i] = node;
+            }));
+            const palette = [...LINE_PALETTE, ...SERIES_PALETTE.filter(c => !LINE_PALETTE.includes(c))];
+            lines = [];
+            for (const measure of lineMeasures) {
+                for (const item of items) {
+                    const first = item.nodes.find(n => !!n) as DataViewMatrixNode;
+                    // Cor e ajustes salvos ficam no item de uma das categorias: vale o primeiro encontrado.
+                    const objects = item.nodes.find(n => !!n?.objects?.["lineColors"])?.objects;
+                    lines.push({
+                        key: "lg:" + measure + ":" + item.key,
+                        kind: "line",
+                        name: lineMeasures.length > 1 ? `${sources[measure].displayName} · ${item.label}` : item.label,
+                        color: colorOf(objects, "lineColors") || palette[lines.length % palette.length],
+                        selector: builder().withMatrixNode(first, rowLevels).createSelectionId().getSelector(),
+                        source: sources[measure],
+                        format: formatOf(sources[measure]),
+                        values: item.nodes.map(n => (n ? toNumber(total(n, measure)) : null)),
+                        selectionIds: item.nodes.map((n, i) => (n ? builder().withMatrixNode(n, rowLevels).createSelectionId() : categories[i].selectionId)),
+                        options: this.lineOptions(objects)
+                    });
+                }
+            }
+        } else {
+            lines = lineMeasures.map((measure, k) => this.measureSeries("line", sources[measure], k, rowNodes,
+                row => total(row, measure), rowLevels, formatOf));
+        }
         const extras: ExtraColumn[] = extraMeasures.map(measure => ({
             name: sources[measure].displayName,
             format: formatOf(sources[measure]),
@@ -788,8 +862,8 @@ export class Visual implements IVisual {
         if (categories.length === 0 || columns.length + lines.length === 0) {
             return undefined;
         }
-        const categoryName = rowLevels.map(l => l.sources?.[0]?.displayName || "").filter(Boolean).join(" › ");
-        return { categoryName, categories, columns, lines, extras, hasLegend, levels: rowLevels.length, groupedAxis: mode === "grouped", bounds };
+        const categoryName = rowLevels.slice(0, catLevelCount).map(l => l.sources?.[0]?.displayName || "").filter(Boolean).join(" › ");
+        return { categoryName, categories, columns, lines, extras, hasLegend, levels: catLevelCount, groupedAxis: mode === "grouped", bounds };
     }
 
     private lineOptions(objects: powerbi.DataViewObjects | undefined): LineOptions {

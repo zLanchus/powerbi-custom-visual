@@ -107,6 +107,7 @@
       "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
       "Linha calculada na categoria inteira, com eixo Y secundário",
       "Vários campos aninhados no Eixo X (ex.: Ano e Mês), agrupados ou concatenados",
+      "Legenda da linha: uma linha por item (ex.: Margem % por Região)",
       "Mínimo e máximo dos eixos por medida, colunas sempre abaixo das linhas e linhas em faixas",
       "Rótulos de segmento, total da pilha e das linhas, sem sobreposição",
       "Linhas retas, suaves ou em degraus, com marcadores e área",
@@ -118,7 +119,8 @@
       "5-ano-mes.png",
       "3-medidas-rotulos.png",
       "4-personalizado.png",
-      "6-colunas-abaixo-linhas-afastadas.png"
+      "6-colunas-abaixo-linhas-afastadas.png",
+      "7-legenda-da-linha.png"
     ]
   },
   {
@@ -129,6 +131,7 @@
       "Colunas lado a lado por item da legenda ou por medida, com rótulo acima de cada coluna",
       "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
       "Linhas no mesmo eixo secundário, com rótulos afastados para não se sobrepor",
+      "Legenda da linha: uma linha por item (ex.: Margem % por Região)",
       "Colunas sempre abaixo das linhas, mínimo e máximo dos eixos por medida e Ano/Mês aninhados",
       "Praticamente tudo personalizável: fontes, botões, cores, eixos, grade, rótulos e cada linha"
     ],
@@ -137,7 +140,8 @@
       "2-legenda-interativa.png",
       "3-colunas-abaixo.png",
       "4-ano-mes.png",
-      "5-medidas-negativos.png"
+      "5-medidas-negativos.png",
+      "6-legenda-da-linha.png"
     ]
   }
 ]

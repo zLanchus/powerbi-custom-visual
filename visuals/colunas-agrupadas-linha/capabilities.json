@@ -25,6 +25,12 @@
             "kind": "Measure"
         },
         {
+            "displayName": "Legenda da linha",
+            "description": "Uma linha por item (ex.: uma linha de Margem % por Região).",
+            "name": "lineSeries",
+            "kind": "Grouping"
+        },
+        {
             "displayName": "Dicas de ferramenta",
             "description": "Medidas extras mostradas ao passar o mouse.",
             "name": "tooltips",
@@ -2122,6 +2128,9 @@
                     "series": {
                         "max": 0
                     },
+                    "lineSeries": {
+                        "max": 1
+                    },
                     "y1Min": {
                         "max": 1
                     },
@@ -2145,6 +2154,9 @@
                     "columnValues": {
                         "max": 1
                     },
+                    "lineSeries": {
+                        "max": 1
+                    },
                     "y1Min": {
                         "max": 1
                     },
@@ -2161,12 +2173,21 @@
             ],
             "matrix": {
                 "rows": {
-                    "for": {
-                        "in": "category"
-                    },
+                    "select": [
+                        {
+                            "for": {
+                                "in": "category"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "lineSeries"
+                            }
+                        }
+                    ],
                     "dataReductionAlgorithm": {
                         "top": {
-                            "count": 1000
+                            "count": 3000
                         }
                     }
                 },
@@ -2229,7 +2250,7 @@
                     "objectName": "totals",
                     "propertyName": "rowSubtotals"
                 },
-                "defaultValue": false
+                "defaultValue": true
             },
             "rowSubtotalsPerLevel": {
                 "propertyIdentifier": {
