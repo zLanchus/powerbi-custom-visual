@@ -1,0 +1,246 @@
+// Visual "Big Number". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação via variáveis CSS (applyStyles em visual.ts).
+// --bn-scale diminui todas as fontes quando o conteúdo não cabe no visual.
+
+.bn-root {
+    --bn-scale: 1;
+    --bn-font: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    --bn-align: flex-start;
+    --bn-text-align: left;
+    --bn-valign: center;
+    --bn-bg: #FFFFFF;
+    --bn-radius: 14px;
+    --bn-bw: 0px;
+    --bn-bc: #E4EDF5;
+    --bn-pad: 16px;
+    --bn-gap: 8px;
+    --bn-accent: #6CBEEB;
+    --bn-accent-width: 6px;
+    --bn-title-size: 14px;
+    --bn-title-color: #4E6175;
+    --bn-title-weight: 600;
+    --bn-title-case: none;
+    --bn-subtitle-size: 11px;
+    --bn-subtitle-color: #8FA7BC;
+    --bn-value-size: 44px;
+    --bn-value-color: #0F2B45;
+    --bn-value-weight: 700;
+    --bn-good: #2E8B57;
+    --bn-bad: #D64545;
+    --bn-neutral: #4E6175;
+    --bn-result-size: 14px;
+    --bn-label-size: 12px;
+    --bn-label-color: #4E6175;
+    --bn-prev-color: #8FA7BC;
+    --bn-divider: #E4EDF5;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: var(--bn-valign);
+    padding: var(--bn-pad);
+    padding-left: calc(var(--bn-pad) + var(--bn-accent-width));
+    border: var(--bn-bw) solid var(--bn-bc);
+    border-radius: var(--bn-radius);
+    background: var(--bn-bg);
+    font-family: var(--bn-font);
+    color: var(--bn-value-color);
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    // Faixa de destaque à esquerda.
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: var(--bn-accent-width);
+        background: var(--bn-accent);
+    }
+}
+
+.bn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: var(--bn-align);
+    text-align: var(--bn-text-align);
+    gap: calc(var(--bn-gap) * var(--bn-scale));
+    min-width: 0;
+}
+
+.bn-head {
+    display: flex;
+    flex-direction: column;
+    align-items: var(--bn-align);
+    gap: calc(2px * var(--bn-scale));
+    max-width: 100%;
+}
+
+.bn-title,
+.bn-subtitle,
+.bn-value {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.15;
+}
+
+.bn-title {
+    font-size: calc(var(--bn-title-size) * var(--bn-scale));
+    font-weight: var(--bn-title-weight);
+    text-transform: var(--bn-title-case);
+    letter-spacing: 0.02em;
+    color: var(--bn-title-color);
+}
+
+.bn-subtitle {
+    font-size: calc(var(--bn-subtitle-size) * var(--bn-scale));
+    color: var(--bn-subtitle-color);
+}
+
+.bn-value {
+    font-size: calc(var(--bn-value-size) * var(--bn-scale));
+    font-weight: var(--bn-value-weight);
+    color: var(--bn-value-color);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+}
+
+// ---- comparações
+.bn-comps {
+    display: flex;
+    flex-direction: column;
+    align-items: var(--bn-align);
+    gap: calc(6px * var(--bn-scale));
+    max-width: 100%;
+
+    &.bn-side {
+        flex-direction: row;
+        align-items: stretch;
+        gap: calc(16px * var(--bn-scale));
+    }
+}
+
+.bn-comp {
+    display: flex;
+    align-items: center;
+    gap: calc(6px * var(--bn-scale));
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    line-height: 1.2;
+
+    .bn-side & {
+        flex-direction: column;
+        align-items: var(--bn-align);
+        gap: calc(3px * var(--bn-scale));
+    }
+
+    .bn-dividers:not(.bn-side) & + & {
+        padding-top: calc(6px * var(--bn-scale));
+        border-top: 1px solid var(--bn-divider);
+    }
+
+    .bn-dividers.bn-side & + & {
+        padding-left: calc(16px * var(--bn-scale));
+        border-left: 1px solid var(--bn-divider);
+    }
+}
+
+.bn-result {
+    position: relative;
+    isolation: isolate;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: calc(var(--bn-result-size) * var(--bn-scale));
+    font-weight: 600;
+    color: var(--bn-neutral);
+
+    &[data-tone="good"] {
+        color: var(--bn-good);
+    }
+
+    &[data-tone="bad"] {
+        color: var(--bn-bad);
+    }
+
+    // Selo: fundo suave na cor do resultado.
+    &.bn-pill {
+        padding: 0.15em 0.55em;
+        border-radius: 999px;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: currentColor;
+            opacity: 0.12;
+            z-index: -1;
+        }
+    }
+
+    &.bn-result-empty {
+        font-weight: 400;
+        font-style: italic;
+        color: var(--bn-prev-color);
+
+        &::before {
+            display: none;
+        }
+    }
+}
+
+.bn-arrow {
+    font-size: 0.7em;
+}
+
+.bn-label,
+.bn-prev {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: calc(var(--bn-label-size) * var(--bn-scale));
+}
+
+.bn-label {
+    color: var(--bn-label-color);
+}
+
+.bn-prev {
+    color: var(--bn-prev-color);
+}
+
+// ---- vazio
+.bn-empty {
+    margin: auto;
+    max-width: 320px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: #F1F8FD;
+    text-align: center;
+}
+
+.bn-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #0F2B45;
+}
+
+.bn-empty-text {
+    font-size: 12px;
+    color: #4E6175;
+    line-height: 1.4;
+}

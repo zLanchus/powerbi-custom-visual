@@ -15,6 +15,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Card Comparativo**](visuals/card-comparativo/) | Card de KPI com o valor principal em destaque, o período selecionado (medida do calendário) e até 5 comparações com outras medidas (meta, mês anterior, ano anterior), com diferença ou variação %, cores e setas. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/card-comparativo.pbiviz) |
 | [**Barras com Insight**](visuals/barras-ranking/) | Barras horizontais com trilho no estilo de ranking: valor e detalhe ao lado (ex.: 24,2% (18)), top N, ordenação por outro campo (ex.: ordem do nível), cor com fx e frase de insight automática (maior ou menor valor). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-ranking.pbiviz) |
 | [**Exportar Página**](visuals/exportar-pagina/) | Botão que exporta a página do relatório para PDF, PNG ou JPG sem configuração do administrador nem certificação: abre a [página de exportação](https://zlanchus.github.io/powerbi-custom-visual/exportar/), que captura a aba do relatório, recorta sozinha só a página do relatório (sem menus e painéis) e gera o arquivo no próprio navegador. PDF com várias páginas, nome e rodapé por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/exportar-pagina.pbiviz) |
+| [**Big Number**](visuals/big-number/) | Card com o número em destaque, título editável e até 3 comparações (mês anterior, ano anterior, meta), cada uma com sua unidade de diferença (variação %, absoluta ou pontos percentuais), sentido de "melhor" (para cima ou para baixo), cores e valor anterior opcional. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/big-number.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -42,7 +43,8 @@ powerbi-custom-visual/
 │   ├── piramide/
 │   ├── card-comparativo/
 │   ├── barras-ranking/
-│   └── exportar-pagina/
+│   ├── exportar-pagina/
+│   └── big-number/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone

@@ -116,5 +116,22 @@
       "2-escolher-aba.png",
       "4-pdf.png"
     ]
+  },
+  {
+    "id": "big-number",
+    "name": "Big Number",
+    "summary": "Card com um número em destaque, título e até 3 comparações (mês anterior, ano anterior, meta).",
+    "features": [
+      "Até 3 comparações, cada uma com seu título",
+      "Diferença em variação %, absoluta ou pontos percentuais (p.p.)",
+      "Melhor para cima ou para baixo, com verde/vermelho e setas",
+      "Valor anterior opcional, selo ou texto, empilhadas ou lado a lado",
+      "Título, fontes, cores e faixa de destaque configuráveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-pontos-percentuais.png",
+      "3-personalizado.png"
+    ]
   }
 ]

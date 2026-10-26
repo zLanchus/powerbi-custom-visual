@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/bigNumber84F7DBE5AD19445FA94E34EF0E0FCA42.pbiviz.json"
+			}
+		],
+		"visual": {"name":"bigNumber","displayName":"Big Number","guid":"bigNumber84F7DBE5AD19445FA94E34EF0E0FCA42","visualClassName":"Visual","version":"1.0.0.0","description":"Card de Big Number com título e até 3 comparações (diferença absoluta, variação % ou pontos percentuais).","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}

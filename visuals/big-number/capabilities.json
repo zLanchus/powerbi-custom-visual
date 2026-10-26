@@ -1,0 +1,693 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Big Number",
+            "name": "main",
+            "kind": "Measure",
+            "description": "A medida em destaque no card."
+        },
+        {
+            "displayName": "Comparação 1",
+            "name": "comp1",
+            "kind": "Measure",
+            "description": "Medida comparada com o Big Number (mês anterior, ano anterior, meta…)."
+        },
+        {
+            "displayName": "Comparação 2",
+            "name": "comp2",
+            "kind": "Measure",
+            "description": "Medida comparada com o Big Number (mês anterior, ano anterior, meta…)."
+        },
+        {
+            "displayName": "Comparação 3",
+            "name": "comp3",
+            "kind": "Measure",
+            "description": "Medida comparada com o Big Number (mês anterior, ano anterior, meta…)."
+        }
+    ],
+    "objects": {
+        "card": {
+            "properties": {
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "align": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "left",
+                                "displayName": "Esquerda"
+                            },
+                            {
+                                "value": "center",
+                                "displayName": "Centro"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "Direita"
+                            }
+                        ]
+                    }
+                },
+                "verticalAlign": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "center",
+                                "displayName": "Centro"
+                            },
+                            {
+                                "value": "top",
+                                "displayName": "Topo"
+                            }
+                        ]
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "padding": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "gap": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "accent": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "accentColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "accentWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "title": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "text": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "size": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "color": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "upper": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "subtitle": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "subtitleSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "subtitleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "value": {
+            "properties": {
+                "size": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "color": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "displayUnits": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Nenhuma"
+                            },
+                            {
+                                "value": "k",
+                                "displayName": "Mil"
+                            },
+                            {
+                                "value": "m",
+                                "displayName": "Milhões"
+                            },
+                            {
+                                "value": "b",
+                                "displayName": "Bilhões"
+                            }
+                        ]
+                    }
+                },
+                "decimals": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "0",
+                                "displayName": "0"
+                            },
+                            {
+                                "value": "1",
+                                "displayName": "1"
+                            },
+                            {
+                                "value": "2",
+                                "displayName": "2"
+                            },
+                            {
+                                "value": "3",
+                                "displayName": "3"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "comparisons": {
+            "properties": {
+                "count": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "0",
+                                "displayName": "Nenhuma"
+                            },
+                            {
+                                "value": "1",
+                                "displayName": "1"
+                            },
+                            {
+                                "value": "2",
+                                "displayName": "2"
+                            },
+                            {
+                                "value": "3",
+                                "displayName": "3"
+                            }
+                        ]
+                    }
+                },
+                "layout": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "stacked",
+                                "displayName": "Empilhadas"
+                            },
+                            {
+                                "value": "side",
+                                "displayName": "Lado a lado"
+                            }
+                        ]
+                    }
+                },
+                "style": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "pill",
+                                "displayName": "Selo (fundo suave)"
+                            },
+                            {
+                                "value": "text",
+                                "displayName": "Só o texto colorido"
+                            }
+                        ]
+                    }
+                },
+                "showArrow": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showSign": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "goodColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "badColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "neutralColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "resultSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "labelSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "labelColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "previousTemplate": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "previousColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "emptyText": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "dividers": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "dividerColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "comparison1": {
+            "properties": {
+                "label": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "direction": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "up",
+                                "displayName": "Melhor para cima (maior é melhor)"
+                            },
+                            {
+                                "value": "down",
+                                "displayName": "Melhor para baixo (menor é melhor)"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Neutro (sem bom / ruim)"
+                            }
+                        ]
+                    }
+                },
+                "unit": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "pct",
+                                "displayName": "Variação % ((atual ÷ anterior) − 1)"
+                            },
+                            {
+                                "value": "abs",
+                                "displayName": "Absoluta (no formato da medida)"
+                            },
+                            {
+                                "value": "pp",
+                                "displayName": "Pontos percentuais (p.p.)"
+                            }
+                        ]
+                    }
+                },
+                "decimals": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "0",
+                                "displayName": "0"
+                            },
+                            {
+                                "value": "1",
+                                "displayName": "1"
+                            },
+                            {
+                                "value": "2",
+                                "displayName": "2"
+                            },
+                            {
+                                "value": "3",
+                                "displayName": "3"
+                            }
+                        ]
+                    }
+                },
+                "showPrevious": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "comparison2": {
+            "properties": {
+                "label": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "direction": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "up",
+                                "displayName": "Melhor para cima (maior é melhor)"
+                            },
+                            {
+                                "value": "down",
+                                "displayName": "Melhor para baixo (menor é melhor)"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Neutro (sem bom / ruim)"
+                            }
+                        ]
+                    }
+                },
+                "unit": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "pct",
+                                "displayName": "Variação % ((atual ÷ anterior) − 1)"
+                            },
+                            {
+                                "value": "abs",
+                                "displayName": "Absoluta (no formato da medida)"
+                            },
+                            {
+                                "value": "pp",
+                                "displayName": "Pontos percentuais (p.p.)"
+                            }
+                        ]
+                    }
+                },
+                "decimals": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "0",
+                                "displayName": "0"
+                            },
+                            {
+                                "value": "1",
+                                "displayName": "1"
+                            },
+                            {
+                                "value": "2",
+                                "displayName": "2"
+                            },
+                            {
+                                "value": "3",
+                                "displayName": "3"
+                            }
+                        ]
+                    }
+                },
+                "showPrevious": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "comparison3": {
+            "properties": {
+                "label": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "direction": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "up",
+                                "displayName": "Melhor para cima (maior é melhor)"
+                            },
+                            {
+                                "value": "down",
+                                "displayName": "Melhor para baixo (menor é melhor)"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "Neutro (sem bom / ruim)"
+                            }
+                        ]
+                    }
+                },
+                "unit": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "pct",
+                                "displayName": "Variação % ((atual ÷ anterior) − 1)"
+                            },
+                            {
+                                "value": "abs",
+                                "displayName": "Absoluta (no formato da medida)"
+                            },
+                            {
+                                "value": "pp",
+                                "displayName": "Pontos percentuais (p.p.)"
+                            }
+                        ]
+                    }
+                },
+                "decimals": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "0",
+                                "displayName": "0"
+                            },
+                            {
+                                "value": "1",
+                                "displayName": "1"
+                            },
+                            {
+                                "value": "2",
+                                "displayName": "2"
+                            },
+                            {
+                                "value": "3",
+                                "displayName": "3"
+                            }
+                        ]
+                    }
+                },
+                "showPrevious": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "main": {
+                        "max": 1
+                    },
+                    "comp1": {
+                        "max": 1
+                    },
+                    "comp2": {
+                        "max": 1
+                    },
+                    "comp3": {
+                        "max": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "values": {
+                    "select": [
+                        {
+                            "bind": {
+                                "to": "main"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "comp1"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "comp2"
+                            }
+                        },
+                        {
+                            "bind": {
+                                "to": "comp3"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "suppressDefaultTitle": false,
+    "privileges": []
+}
