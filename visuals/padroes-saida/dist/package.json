@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/padroesSaidaA60F1C0244064A00B5604B4C1557A0AE.pbiviz.json"
+			}
+		],
+		"visual": {"name":"padroesSaida","displayName":"Padrões de Saída","guid":"padroesSaidaA60F1C0244064A00B5604B4C1557A0AE","visualClassName":"Visual","version":"1.0.0.0","description":"Destaques e insights de turnover: encontra os perfis (combinações de atributos) que concentram as saídas ou têm taxa acima da média, nos filtros da página.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}

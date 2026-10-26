@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        visual: [filtro-popup, segmentacao, matriz, piramide, card-comparativo, barras-ranking, exportar-pagina]
+        visual: [filtro-popup, segmentacao, matriz, piramide, card-comparativo, barras-ranking, exportar-pagina, padroes-saida]
     defaults:
       run:
         working-directory: visuals/${{ matrix.visual }}

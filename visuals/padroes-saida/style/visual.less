@@ -1,0 +1,233 @@
+// Visual "Padrões de Saída". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (aplicados em visual.ts).
+
+@primary: #6CBEEB;
+@dark: #0F2B45;
+@panel: #F1F8FD;
+@white: #FFFFFF;
+@muted: #4E6175;
+
+.ps-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 6px;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    color: @dark;
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.ps-header {
+    flex: 0 0 auto;
+    padding-bottom: 10px;
+}
+
+.ps-title {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.ps-subtitle {
+    margin-top: 4px;
+    line-height: 1.3;
+}
+
+.ps-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 2px;
+}
+
+// ---- destaque
+
+.ps-hero {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: @primary;
+    color: @dark;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+    transition: opacity .15s ease, box-shadow .15s ease;
+
+    &:hover {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .18);
+    }
+}
+
+.ps-hero-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ps-hero-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    opacity: .85;
+}
+
+.ps-hero-text {
+    line-height: 1.4;
+}
+
+.ps-hero-metric {
+    flex: 0 0 auto;
+    text-align: right;
+    padding-left: 16px;
+    border-left: 1px solid rgba(15, 43, 69, .25);
+    border-left-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.ps-hero-value {
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.ps-hero-caption {
+    margin-top: 2px;
+    opacity: .85;
+    white-space: nowrap;
+}
+
+// ---- etiquetas (condições do padrão)
+
+.ps-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ps-chip {
+    max-width: 100%;
+    padding: 3px 9px;
+    border-radius: 8px;
+    background: @white;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ---- lista de padrões
+
+.ps-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.ps-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: @panel;
+    cursor: pointer;
+    outline: none;
+    transition: opacity .15s ease, background-color .15s ease;
+
+    &:hover {
+        filter: brightness(.98);
+    }
+}
+
+.ps-hero:focus-visible,
+.ps-card:focus-visible {
+    box-shadow: 0 0 0 2px @dark;
+}
+
+.ps-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ps-card-metric {
+    flex: 0 0 auto;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.ps-card-text {
+    line-height: 1.4;
+}
+
+.ps-track {
+    position: relative;
+    height: 8px;
+    border-radius: 999px;
+    background: @white;
+}
+
+.ps-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: @primary;
+    transition: width .25s ease;
+}
+
+.ps-avg {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: @dark;
+}
+
+// ---- rodapé e estados vazios
+
+.ps-footer {
+    flex: 0 0 auto;
+    padding-top: 8px;
+    line-height: 1.4;
+    color: @muted;
+}
+
+.ps-empty {
+    margin: auto;
+    max-width: 360px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: @panel;
+    text-align: center;
+}
+
+.ps-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.ps-empty-text {
+    font-size: 12px;
+    color: @muted;
+    line-height: 1.4;
+}

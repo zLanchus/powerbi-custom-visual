@@ -1,0 +1,522 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Atributos",
+            "description": "Características para procurar padrões (ex.: Senioridade, Liderança, Faixa de tempo de casa). Até 6.",
+            "name": "attributes",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Saídas",
+            "description": "Medida com a contagem de saídas (desligamentos, cancelamentos, perdas…).",
+            "name": "exits",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Base (opcional)",
+            "description": "População para comparar (ex.: headcount, clientes ativos). Com ela o visual compara taxas com a média; sem ela, mostra a concentração das saídas.",
+            "name": "base",
+            "kind": "Measure"
+        }
+    ],
+    "objects": {
+        "general": {
+            "properties": {
+                "fontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                }
+            }
+        },
+        "header": {
+            "properties": {
+                "title": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "titleSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "titleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "subtitle": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "subtitleSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "subtitleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "analysis": {
+            "properties": {
+                "mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático (taxa, se houver Base)"
+                            },
+                            {
+                                "value": "rate",
+                                "displayName": "Taxa comparada à média"
+                            },
+                            {
+                                "value": "share",
+                                "displayName": "Concentração das saídas"
+                            }
+                        ]
+                    }
+                },
+                "maxDepth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "minExits": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "minLift": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "confidence": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "none",
+                                "displayName": "Nenhuma"
+                            },
+                            {
+                                "value": "90",
+                                "displayName": "90%"
+                            },
+                            {
+                                "value": "95",
+                                "displayName": "95%"
+                            },
+                            {
+                                "value": "99",
+                                "displayName": "99%"
+                            }
+                        ]
+                    }
+                },
+                "minShare": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "dominance": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "rankBy": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático"
+                            },
+                            {
+                                "value": "excess",
+                                "displayName": "Saídas acima do esperado"
+                            },
+                            {
+                                "value": "lift",
+                                "displayName": "Quanto acima da média (×)"
+                            },
+                            {
+                                "value": "exits",
+                                "displayName": "Número de saídas"
+                            }
+                        ]
+                    }
+                },
+                "hideBlanks": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "highlight": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "content": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "profile",
+                                "displayName": "Perfil (regra com vários atributos)"
+                            },
+                            {
+                                "value": "top",
+                                "displayName": "Padrão mais forte da lista"
+                            }
+                        ]
+                    }
+                },
+                "label": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "showMetric": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "labelSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "textSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "metricSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "patterns": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "count": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "minWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "textSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "metricSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showBar": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "barColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "trackColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "averageColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "selectedOpacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "chips": {
+            "properties": {
+                "showAttribute": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "background": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "borderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "texts": {
+            "properties": {
+                "rateTemplate": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "shareTemplate": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "term": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "showFooter": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "footerColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "footerSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "conditions": [
+                {
+                    "attributes": {
+                        "max": 6
+                    },
+                    "exits": {
+                        "max": 1
+                    },
+                    "base": {
+                        "max": 1
+                    }
+                }
+            ],
+            "categorical": {
+                "categories": {
+                    "for": {
+                        "in": "attributes"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {
+                            "count": 30000
+                        }
+                    }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "exits"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "base"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": true
+        }
+    },
+    "supportsMultiVisualSelection": true,
+    "supportsKeyboardFocus": true,
+    "supportsLandingPage": false,
+    "suppressDefaultTitle": false,
+    "privileges": []
+}

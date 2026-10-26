@@ -116,5 +116,22 @@
       "2-escolher-aba.png",
       "4-pdf.png"
     ]
+  },
+  {
+    "id": "padroes-saida",
+    "name": "Padrões de Saída",
+    "summary": "Destaques de turnover: encontra os perfis que concentram as saídas ou saem acima da média, nos filtros da página.",
+    "features": [
+      "Regra em destaque combinando atributos (ex.: Sem liderança · Até 1 ano · Comercial)",
+      "Com Base (headcount, clientes): taxa de cada perfil contra a média, com teste estatístico",
+      "Sem Base: onde as saídas se concentram",
+      "Funciona para qualquer saída: desligamentos, cancelamentos, perda de clientes…",
+      "Textos editáveis, filtro cruzado e formatação completa"
+    ],
+    "cover": "1-taxa.png",
+    "images": [
+      "2-concentracao.png",
+      "3-churn.png"
+    ]
   }
 ]
