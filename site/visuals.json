@@ -116,5 +116,23 @@
       "2-escolher-aba.png",
       "4-pdf.png"
     ]
+  },
+  {
+    "id": "barras-base",
+    "name": "Barras com Base Nominal",
+    "summary": "Barras empilhadas com legenda e, ao lado, a base nominal (tabela de registros) filtrada pelo clique nas barras.",
+    "features": [
+      "Clique num segmento, numa barra ou na legenda e a base mostra só aqueles registros",
+      "Pesquisa, ordenação por coluna e contagem de registros",
+      "Colunas ou barras horizontais, base à direita, à esquerda ou embaixo",
+      "Também filtra os outros visuais da página (opcional)",
+      "Cores, rótulos, eixos, cabeçalho e linhas da tabela configuráveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-filtrado.png",
+      "3-legenda.png",
+      "4-horizontal.png"
+    ]
   }
 ]

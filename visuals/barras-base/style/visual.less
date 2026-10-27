@@ -1,0 +1,481 @@
+// Visual "Barras com Base Nominal". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (aplicados em visual.ts, na base via variáveis CSS).
+
+.bb-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    color: #0F2B45;
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    &.bb-reverse {
+        flex-direction: row-reverse;
+    }
+
+    &.bb-col {
+        flex-direction: column;
+    }
+}
+
+.bb-icon {
+    display: block;
+    flex: 0 0 auto;
+}
+
+// ----------------------------------------------------------------- gráfico
+
+.bb-chart-pane {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.bb-chart {
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.bb-svg {
+    display: block;
+    overflow: visible;
+}
+
+.bb-seg {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.bb-seg:hover {
+    filter: brightness(1.08);
+}
+
+.bb-cat-hit {
+    fill: transparent;
+    cursor: pointer;
+}
+
+.bb-seg-label,
+.bb-cat-label,
+.bb-total-label,
+.bb-axis-label {
+    dominant-baseline: central;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+.bb-seg-label,
+.bb-total-label {
+    font-weight: 600;
+}
+
+.bb-seg-label {
+    text-anchor: middle;
+}
+
+.bb-baseline {
+    stroke-width: 1.5;
+}
+
+.bb-legend {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 10px;
+    padding: 4px 8px 8px;
+    line-height: 1.2;
+}
+
+.bb-legend-title {
+    font-weight: 600;
+}
+
+.bb-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 3px 9px 3px 5px;
+    border-radius: 999px;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.bb-legend-item:hover {
+    background: #F1F8FD;
+}
+
+.bb-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+}
+
+// ------------------------------------------------------------ base nominal
+
+.bb-table-pane {
+    flex: 0 0 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.bb-panel {
+    --bb-panel-bg: #F1F8FD;
+    --bb-panel-radius: 14px;
+    --bb-panel-bw: 0px;
+    --bb-panel-bc: #6CBEEB;
+    --bb-chip-bg: #6CBEEB;
+    --bb-chip-fg: #0F2B45;
+    --bb-title-size: 14px;
+    --bb-title-fg: #0F2B45;
+    --bb-head-bg: #6CBEEB;
+    --bb-head-fg: #0F2B45;
+    --bb-head-size: 12px;
+    --bb-head-case: none;
+    --bb-row-bg: #FFFFFF;
+    --bb-row-fg: #0F2B45;
+    --bb-row-size: 12px;
+    --bb-row-h: 32px;
+    --bb-zebra: #F8FBFE;
+    --bb-grid: #E4EDF5;
+    --bb-table-radius: 10px;
+
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bb-panel-bg);
+    border: var(--bb-panel-bw) solid var(--bb-panel-bc);
+    border-radius: var(--bb-panel-radius);
+    overflow: hidden;
+}
+
+.bb-panel-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+}
+
+.bb-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--bb-title-size);
+    font-weight: 600;
+    color: var(--bb-title-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bb-count {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--bb-title-fg);
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.bb-filterbar {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 26px;
+}
+
+.bb-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--bb-title-fg);
+    opacity: 0.65;
+}
+
+.bb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    height: 26px;
+    padding: 0 4px 0 10px;
+    border-radius: 10px;
+    background: var(--bb-chip-bg);
+    color: var(--bb-chip-fg);
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.bb-chip-more {
+    padding: 0 10px;
+}
+
+.bb-chip-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+}
+
+.bb-chip-text {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bb-chip-x,
+.bb-search-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.bb-chip-x:hover,
+.bb-search-clear:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.bb-clear {
+    height: 26px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--bb-title-fg);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.bb-clear:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.bb-search {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 6px 0 10px;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: var(--bb-row-fg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    cursor: text;
+
+    .bb-icon {
+        opacity: 0.55;
+    }
+
+    input {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 12px;
+        user-select: text;
+    }
+
+    input::placeholder {
+        color: inherit;
+        opacity: 0.5;
+    }
+}
+
+.bb-grid-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: var(--bb-table-radius);
+    background: var(--bb-row-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.bb-grid {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    scrollbar-width: thin;
+}
+
+.bb-inner {
+    position: relative;
+    width: 100%;
+}
+
+.bb-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    background: var(--bb-head-bg);
+    color: var(--bb-head-fg);
+    font-size: var(--bb-head-size);
+    text-transform: var(--bb-head-case);
+    font-weight: 600;
+}
+
+.bb-th {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    &.bb-num {
+        justify-content: flex-end;
+    }
+}
+
+.bb-th-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bb-body {
+    position: relative;
+}
+
+.bb-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: grid;
+    height: var(--bb-row-h);
+    background: var(--bb-row-bg);
+    color: var(--bb-row-fg);
+    font-size: var(--bb-row-size);
+    border-bottom: 1px solid var(--bb-grid);
+    font-variant-numeric: tabular-nums;
+
+    &.bb-odd {
+        background: var(--bb-zebra);
+    }
+
+    &:hover {
+        box-shadow: inset 3px 0 0 var(--bb-head-bg);
+        filter: brightness(0.97);
+    }
+}
+
+.bb-td {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 10px;
+    white-space: nowrap;
+
+    &.bb-num {
+        justify-content: flex-end;
+    }
+}
+
+.bb-td-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bb-row-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.bb-no-rows {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 34px 12px 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--bb-row-fg);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.bb-foot {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--bb-title-fg);
+    opacity: 0.65;
+}
+
+// ------------------------------------------------------------- sem dados
+
+.bb-empty {
+    margin: auto;
+    max-width: 340px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: #F1F8FD;
+    text-align: center;
+}
+
+.bb-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.bb-empty-text {
+    font-size: 12px;
+    color: #4E6175;
+    line-height: 1.4;
+}
+
+.bb-root [hidden] {
+    display: none !important;
+}
