@@ -123,6 +123,7 @@
     "summary": "Barras empilhadas com legenda e, ao lado, a base nominal (tabela de registros) filtrada pelo clique nas barras.",
     "features": [
       "Clique num segmento, numa barra ou na legenda e a base mostra só aqueles registros",
+      "Detalhe ao lado do valor, como 61 (R$ 6.741)",
       "Pesquisa, ordenação por coluna e contagem de registros",
       "Colunas ou barras horizontais, base à direita, à esquerda ou embaixo",
       "Também filtra os outros visuais da página (opcional)",

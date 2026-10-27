@@ -19,6 +19,12 @@
             "kind": "Measure"
         },
         {
+            "displayName": "Detalhe",
+            "description": "Medida mostrada ao lado do valor, ex.: 61 (R$ 420 mil). A barra junta os registros por soma, média, mínimo ou máximo (Formatar → Detalhe).",
+            "name": "detail",
+            "kind": "Measure"
+        },
+        {
             "displayName": "Colunas da base",
             "description": "Colunas da base nominal, na ordem em que forem adicionadas (ex.: Nome, Matrícula, Cidade).",
             "name": "columns",
@@ -310,6 +316,94 @@
                 }
             }
         },
+        "detail": {
+            "properties": {
+                "show": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "where": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "total",
+                                "displayName": "No total da barra"
+                            },
+                            {
+                                "value": "segment",
+                                "displayName": "Nos segmentos"
+                            },
+                            {
+                                "value": "both",
+                                "displayName": "No total e nos segmentos"
+                            }
+                        ]
+                    }
+                },
+                "style": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "paren",
+                                "displayName": "Entre parênteses: (18)"
+                            },
+                            {
+                                "value": "dot",
+                                "displayName": "Após um ponto: · 18"
+                            },
+                            {
+                                "value": "plain",
+                                "displayName": "Sem separador: 18"
+                            }
+                        ]
+                    }
+                },
+                "aggregation": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "sum",
+                                "displayName": "Soma"
+                            },
+                            {
+                                "value": "avg",
+                                "displayName": "Média"
+                            },
+                            {
+                                "value": "min",
+                                "displayName": "Mínimo"
+                            },
+                            {
+                                "value": "max",
+                                "displayName": "Máximo"
+                            }
+                        ]
+                    }
+                },
+                "fontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "fontColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bold": {
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "legend": {
             "properties": {
                 "show": {
@@ -578,6 +672,9 @@
                     },
                     "value": {
                         "max": 1
+                    },
+                    "detail": {
+                        "max": 1
                     }
                 }
             ],
@@ -608,6 +705,11 @@
                             {
                                 "for": {
                                     "in": "value"
+                                }
+                            },
+                            {
+                                "for": {
+                                    "in": "detail"
                                 }
                             },
                             {

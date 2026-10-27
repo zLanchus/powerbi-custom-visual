@@ -30,8 +30,8 @@ const num = (name: string, displayName: string, value: number, description?: str
     new formattingSettings.NumUpDown({ name, displayName, value, description });
 const toggle = (name: string, displayName: string, value: boolean): formattingSettings.ToggleSwitch =>
     new formattingSettings.ToggleSwitch({ name, displayName, value });
-const dropdown = (name: string, displayName: string, items: powerbi.IEnumMember[], index = 0): formattingSettings.ItemDropdown =>
-    new formattingSettings.ItemDropdown({ name, displayName, items, value: items[index] });
+const dropdown = (name: string, displayName: string, items: powerbi.IEnumMember[], index = 0, description?: string): formattingSettings.ItemDropdown =>
+    new formattingSettings.ItemDropdown({ name, displayName, items, value: items[index], description });
 const text = (name: string, displayName: string, value: string, placeholder = ""): formattingSettings.TextInput =>
     new formattingSettings.TextInput({ name, displayName, value, placeholder });
 
@@ -39,6 +39,9 @@ export const TABLE_POS_ITEMS = enumItems(["right", "À direita do gráfico"], ["
 export const ORIENTATION_ITEMS = enumItems(["vertical", "Colunas (verticais)"], ["horizontal", "Barras (horizontais)"]);
 export const ORDER_ITEMS = enumItems(["data", "Ordem do Power BI"], ["desc", "Maior total primeiro"], ["asc", "Menor total primeiro"], ["alpha", "Categoria (A–Z)"]);
 export const SEGMENT_LABEL_ITEMS = enumItems(["none", "Nenhum"], ["value", "Valor"], ["percent", "% da barra"], ["both", "Valor e %"]);
+export const DETAIL_STYLE_ITEMS = enumItems(["paren", "Entre parênteses: (18)"], ["dot", "Após um ponto: · 18"], ["plain", "Sem separador: 18"]);
+export const DETAIL_WHERE_ITEMS = enumItems(["total", "No total da barra"], ["segment", "Nos segmentos"], ["both", "No total e nos segmentos"]);
+export const DETAIL_AGG_ITEMS = enumItems(["sum", "Soma"], ["avg", "Média"], ["min", "Mínimo"], ["max", "Máximo"]);
 export const LEGEND_POS_ITEMS = enumItems(["top", "Em cima"], ["bottom", "Embaixo"]);
 
 class GeneralCard extends FormattingSettingsCard {
@@ -111,6 +114,24 @@ class DataLabelsCard extends FormattingSettingsCard {
     displayName = "Rótulos de dados";
     slices: FormattingSettingsSlice[] = [
         this.segment, this.segmentFontSize, this.autoContrast, this.segmentColor, this.showTotal, this.totalFontSize, this.totalColor
+    ];
+}
+
+class DetailCard extends FormattingSettingsCard {
+    show = toggle("show", "Mostrar", true);
+    where = dropdown("where", "Onde mostrar", DETAIL_WHERE_ITEMS, 0);
+    style = dropdown("style", "Estilo", DETAIL_STYLE_ITEMS, 0);
+    aggregation = dropdown("aggregation", "Como juntar os registros", DETAIL_AGG_ITEMS, 0,
+        "A barra junta o detalhe de cada registro da base: soma (contagens, valores), média, mínimo ou máximo.");
+    fontSize = num("fontSize", "Tamanho da fonte", 11);
+    fontColor = color("fontColor", "Cor do texto (no total)", MUTED);
+    bold = toggle("bold", "Negrito", false);
+
+    name = "detail";
+    displayName = "Detalhe";
+    description = "Medida do campo Detalhe, mostrada ao lado do valor.";
+    slices: FormattingSettingsSlice[] = [
+        this.show, this.where, this.style, this.aggregation, this.fontSize, this.fontColor, this.bold
     ];
 }
 
@@ -195,6 +216,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     barsCard = new BarsCard();
     axesCard = new AxesCard();
     dataLabelsCard = new DataLabelsCard();
+    detailCard = new DetailCard();
     legendCard = new LegendCard();
     tableCard = new TableCard();
     panelCard = new PanelCard();
@@ -202,7 +224,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     rowsCard = new RowsCard();
 
     cards: Array<formattingSettings.Cards> = [
-        this.generalCard, this.layoutCard, this.barsCard, this.axesCard, this.dataLabelsCard, this.legendCard,
+        this.generalCard, this.layoutCard, this.barsCard, this.axesCard, this.dataLabelsCard, this.detailCard, this.legendCard,
         this.tableCard, this.panelCard, this.headerCard, this.rowsCard
     ];
 }

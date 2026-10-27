@@ -8,11 +8,12 @@ Gráfico de **barras empilhadas** (colunas ou barras horizontais) com legenda e,
 
 ## Como usar
 
-1. Baixe [`dist/barrasBase8FC090A640FA4FB18B23DCC0577A38CF.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/barrasBase8FC090A640FA4FB18B23DCC0577A38CF.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
    - **Eixo**: cada valor vira uma barra (ex.: Região, Cargo).
    - **Legenda** (opcional): divide as barras em segmentos coloridos (ex.: Status).
    - **Valores**: a medida que define o tamanho das barras. Para contar pessoas, arraste a matrícula (ou o ID) e escolha **Contagem**.
+   - **Detalhe** (opcional): medida mostrada ao lado do valor, como `61 (R$ 6.741)`. Os registros da barra são juntados por **soma**, **média**, **mínimo** ou **máximo** (**Formatar → Detalhe**).
    - **Colunas da base**: as colunas da tabela, na ordem em que forem adicionadas (ex.: Nome, Matrícula, Cargo, Admissão). Inclua uma coluna que identifique o registro (matrícula, CPF, ID), senão registros iguais viram uma linha só.
    - **Medidas da base** (opcional): medidas mostradas como colunas, calculadas para cada registro (ex.: Salário).
 
@@ -23,6 +24,7 @@ Gráfico de **barras empilhadas** (colunas ou barras horizontais) com legenda e,
 | Eixo | Região |
 | Legenda | Status |
 | Valores | Contagem de Matrícula |
+| Detalhe | Salário (Formatar → Detalhe → Como juntar os registros = Média) |
 | Colunas da base | Nome, Matrícula, Cargo, Admissão |
 | Medidas da base | Salário |
 
@@ -36,6 +38,7 @@ Gráfico de **barras empilhadas** (colunas ou barras horizontais) com legenda e,
   - O filtro ativo aparece em **chips** em cima da base, com **×** para tirar um item e **Limpar** para tirar tudo. O que não está selecionado fica esmaecido no gráfico.
 - **Filtrar os outros visuais da página** (ligado por padrão, **Formatar → Geral**): o mesmo clique filtra o restante do relatório, com filtros JSON como a segmentação nativa (o estado volta com favoritos e troca de página).
 - **Base nominal:** pesquisa (sem diferenciar acentos e maiúsculas), ordenação clicando no cabeçalho (crescente → decrescente → original), contagem `41 de 175`, marcador com a cor da legenda, rolagem leve mesmo com dezenas de milhares de registros (só as linhas visíveis são desenhadas) e menu do botão direito na linha (ex.: **Detalhamento**).
+- **Detalhe ao lado do valor:** uma segunda medida entre parênteses `61 (R$ 6.741)`, após um ponto `61 · R$ 6.741` ou sem separador, no total da barra, nos segmentos ou nos dois (no segmento, só aparece se couber). Fonte, tamanho, cor e negrito próprios; também aparece na dica de ferramenta.
 - **Gráfico:** colunas verticais ou barras horizontais; ordem do Power BI, maior total, menor total ou A–Z; rótulos dentro dos segmentos (valor, % da barra ou ambos) com cor automática pelo contraste; total na ponta; dicas de ferramenta com % da barra, % do total e nº de registros.
 - **Layout:** base à direita, à esquerda ou embaixo, com tamanho em %; em visuais estreitos a base passa sozinha para baixo.
 - **Números e datas** no formato de cada campo e no idioma do relatório.
@@ -48,6 +51,7 @@ Gráfico de **barras empilhadas** (colunas ou barras horizontais) com legenda e,
 - **Cores da legenda:** uma cor por item (sem legenda: cor das barras).
 - **Eixos:** rótulos das categorias (tamanho, cor, largura), eixo de valores (tamanho, cor) e linhas de grade (cor).
 - **Rótulos de dados:** rótulo dos segmentos, tamanho, cor (ou automática) e total da barra.
+- **Detalhe:** mostrar, onde mostrar, estilo, como juntar os registros (soma, média, mínimo, máximo), tamanho, cor e negrito.
 - **Legenda:** mostrar, posição, título, tamanho e cor.
 - **Base nominal:** título (em branco = sem título), tamanho e cor do título, contagem, pesquisa, colunas do Eixo / Legenda / Valores, marcador de cor, texto para vazio e máximo de registros lidos.
 - **Painel da base:** cor de fundo, arredondamento, espessura e cor da borda, cores do filtro ativo.
@@ -56,7 +60,7 @@ Gráfico de **barras empilhadas** (colunas ou barras horizontais) com legenda e,
 
 ## Observações
 
-- As barras **somam o valor de cada registro** da base. Use medidas que somam (contagem, soma). Uma medida de contagem distinta ou média não fecha com o valor que ela teria no gráfico nativo.
+- As barras **somam o valor de cada registro** da base (e o detalhe junta os registros como configurado). Use medidas que somam (contagem, soma). Uma medida de contagem distinta ou média não fecha com o valor que ela teria no gráfico nativo.
 - O Power BI envia a base em partes de 10 mil registros; o visual lê até **30 mil** por padrão (**Formatar → Base nominal → Máximo de registros lidos**). Passando disso, aparece um aviso embaixo da tabela.
 - Até 30 itens na legenda.
 - Valores negativos são tratados como zero no tamanho da barra.

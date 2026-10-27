@@ -51,6 +51,7 @@ interface Series {
     valueColumn: DataViewValueColumn;
     /** Medidas da base deste item da legenda, na ordem das colunas. */
     measureColumns: Array<DataViewValueColumn | undefined>;
+    detailColumn: DataViewValueColumn | undefined;
 }
 
 /** Uma barra (um valor do eixo). */
@@ -61,6 +62,15 @@ interface Cat {
     parts: number[];
     counts: number[];
     total: number;
+    /** Detalhe de cada segmento, juntando os registros (soma, quantidade, mínimo e máximo). */
+    detail: DetailAcc[];
+}
+
+interface DetailAcc {
+    sum: number;
+    n: number;
+    min: number;
+    max: number;
 }
 
 /** Um registro da base nominal: uma linha do Power BI num item da legenda. */
@@ -90,6 +100,8 @@ interface Model {
     columns: Column[];
     format: (v: PrimitiveValue) => string;
     valueFormat: string | undefined;
+    detailName: string | undefined;
+    detailFormat: (v: PrimitiveValue) => string;
     grandTotal: number;
     catTarget: IFilterTarget;
     catIsDate: boolean;
@@ -369,6 +381,8 @@ export class Visual implements IVisual {
         labels.segmentColor.visible = !labels.autoContrast.value;
         settings.axesCard.categoryWidth.visible = enumValue(settings.barsCard.orientation) === "horizontal";
         settings.rowsCard.zebraColor.visible = settings.rowsCard.zebra.value;
+        const det = settings.detailCard;
+        det.where.visible = !!this.model?.hasLegend;
         const table = settings.tableCard;
         table.showLegendColumn.visible = table.colorMarker.visible = !!this.model?.hasLegend;
 
@@ -439,6 +453,7 @@ export class Visual implements IVisual {
                 continue;
             }
             const measureColumns = measureSources.map(m => columns.find(c => c.source.roles?.["columnMeasures"] && sameMeasure(c.source, m)));
+            const detailColumn = columns.find(c => c.source.roles?.["detail"]);
             if (hasLegend) {
                 const group = groups[k];
                 const selectionId = builder().withSeries(values, group).createSelectionId();
@@ -451,7 +466,8 @@ export class Visual implements IVisual {
                     selectionId,
                     selector: selectionId.getSelector(),
                     valueColumn,
-                    measureColumns
+                    measureColumns,
+                    detailColumn
                 });
             } else {
                 const queryName = valueColumn.source.queryName || valueColumn.source.displayName;
@@ -464,7 +480,8 @@ export class Visual implements IVisual {
                     selectionId: builder().withMeasure(queryName).createSelectionId(),
                     selector: { metadata: queryName },
                     valueColumn,
-                    measureColumns
+                    measureColumns,
+                    detailColumn
                 });
             }
         }
@@ -484,14 +501,16 @@ export class Visual implements IVisual {
             if (!cat) {
                 cat = {
                     key, raw, label: label(raw, category.source.format, locale),
-                    parts: series.map(() => 0), counts: series.map(() => 0), total: 0
+                    parts: series.map(() => 0), counts: series.map(() => 0), total: 0,
+                    detail: series.map(() => ({ sum: 0, n: 0, min: Infinity, max: -Infinity }))
                 };
                 catMap.set(key, cat);
                 cats.push(cat);
             }
             for (const s of series) {
                 const value = s.valueColumn.values[row];
-                const present = !isBlank(value) || s.measureColumns.some(c => c && !isBlank(c.values[row]));
+                const detail = s.detailColumn?.values[row];
+                const present = !isBlank(value) || !isBlank(detail) || s.measureColumns.some(c => c && !isBlank(c.values[row]));
                 if (!present) {
                     continue;
                 }
@@ -499,6 +518,13 @@ export class Visual implements IVisual {
                 cat.parts[s.index] += v;
                 cat.counts[s.index]++;
                 cat.total += v;
+                if (typeof detail === "number" && isFinite(detail)) {
+                    const acc = cat.detail[s.index];
+                    acc.sum += detail;
+                    acc.n++;
+                    acc.min = Math.min(acc.min, detail);
+                    acc.max = Math.max(acc.max, detail);
+                }
                 records.push({ row, cat, series: s.index });
             }
         }
@@ -571,6 +597,8 @@ export class Visual implements IVisual {
         }
 
         const formatter = valueFormatter.create({ format: firstValue.source.format, cultureSelector: locale });
+        const detailSource = series.find(x => x.detailColumn)?.detailColumn?.source;
+        const detailFormatter = valueFormatter.create({ format: detailSource?.format, cultureSelector: locale });
         return {
             categoryName: category.source.displayName,
             legendName: legendSource?.displayName || "",
@@ -582,6 +610,8 @@ export class Visual implements IVisual {
             columns,
             format: v => formatter.format(v),
             valueFormat: firstValue.source.format,
+            detailName: detailSource?.displayName,
+            detailFormat: v => detailFormatter.format(v),
             grandTotal: cats.reduce((a, c) => a + c.total, 0),
             catTarget: getTarget(category.source),
             catIsDate: !!category.source.type?.dateTime,
@@ -841,7 +871,18 @@ export class Visual implements IVisual {
         const valSize = axes.valueFontSize.value;
         const showTotal = labels.showTotal.value;
         const totalTexts = model.cats.map(c => model.format(c.total));
-        const totalW = showTotal ? Math.max(...totalTexts.map(t => textWidth(t, totalSize, font, true))) + 10 : 0;
+        const det = s.detailCard;
+        const detailWhere = enumValue(det.where);
+        const hasDetail = det.show.value && !!model.detailName;
+        // Com um segmento só, o rótulo de dentro repetiria o total: o detalhe vai para o total.
+        const single = model.series.length === 1 && showTotal;
+        const detailOnTotal = hasDetail && showTotal && (detailWhere !== "segment" || single);
+        const detailOnSegment = hasDetail && detailWhere !== "total" && !single;
+        const totalDetails = model.cats.map(c => (detailOnTotal ? this.detailText(model, c) : ""));
+        const totalW = showTotal
+            ? Math.max(...totalTexts.map((t, i) => textWidth(t, totalSize, font, true)
+                + (totalDetails[i] ? textWidth(" " + totalDetails[i], det.fontSize.value, font, det.bold.value) : 0))) + 10
+            : 0;
 
         // Espaço do eixo de valores e escala.
         const valueSpan = horizontal ? width : height;
@@ -926,7 +967,7 @@ export class Visual implements IVisual {
         const radius = Math.max(0, bars.radius.value);
         const borderW = Math.max(0, bars.borderWidth.value);
         // Com um segmento só, o rótulo de dentro repetiria o total.
-        const segMode = model.series.length === 1 && showTotal ? "none" : enumValue(labels.segment);
+        const segMode = single ? "none" : enumValue(labels.segment);
         const segSize = labels.segmentFontSize.value;
 
         model.cats.forEach((cat, i) => {
@@ -983,7 +1024,11 @@ export class Visual implements IVisual {
                             : `${model.format(value)} (${this.pct(shareOfBar)})`;
                     const along = horizontal ? size : thick;
                     const across = horizontal ? thick : size;
-                    if (textWidth(text, segSize, font, true) + 8 <= along && segSize + 4 <= across) {
+                    // O detalhe só entra se couber junto; senão, fica só o valor.
+                    const detail = detailOnSegment ? this.detailText(model, cat, k) : "";
+                    const width = textWidth(text, segSize, font, true);
+                    const withDetail = !!detail && width + textWidth(" " + detail, det.fontSize.value, font, det.bold.value) + 8 <= along;
+                    if (width + 8 <= along && segSize + 4 <= across) {
                         const t = svg("text", {
                             x: horizontal ? plotX + acc + size / 2 : offset + thick / 2,
                             y: horizontal ? offset + thick / 2 : plotY + plotH - acc - size / 2,
@@ -994,6 +1039,9 @@ export class Visual implements IVisual {
                         t.dataset.cat = String(i);
                         t.dataset.series = String(k);
                         t.textContent = text;
+                        if (withDetail) {
+                            this.appendDetail(t, detail, undefined);
+                        }
                         textLayer.appendChild(t);
                     }
                 }
@@ -1010,6 +1058,9 @@ export class Visual implements IVisual {
                 t.setAttribute("class", "bb-total-label");
                 t.dataset.cat = String(i);
                 t.textContent = totalTexts[i];
+                if (totalDetails[i]) {
+                    this.appendDetail(t, totalDetails[i], det.fontColor.value.value);
+                }
                 textLayer.appendChild(t);
             }
 
@@ -1036,6 +1087,48 @@ export class Visual implements IVisual {
             : { x1: plotX, x2: plotX + plotW, y1: plotY + plotH, y2: plotY + plotH, class: "bb-baseline", stroke: axes.gridColor.value.value }));
     }
 
+    /** Detalhe de um segmento (k) ou da barra inteira (sem k), juntando os registros como configurado. */
+    private detailValue(cat: Cat, k?: number): number | undefined {
+        const parts = k === undefined ? cat.detail : [cat.detail[k]];
+        const n = parts.reduce((a, d) => a + d.n, 0);
+        if (n === 0) {
+            return undefined;
+        }
+        const sum = parts.reduce((a, d) => a + d.sum, 0);
+        switch (enumValue(this.formattingSettings.detailCard.aggregation)) {
+            case "avg": return sum / n;
+            case "min": return Math.min(...parts.map(d => d.min));
+            case "max": return Math.max(...parts.map(d => d.max));
+            default: return sum;
+        }
+    }
+
+    /** Texto do detalhe no estilo escolhido: (18), · 18 ou 18. */
+    private detailText(model: Model, cat: Cat, k?: number): string {
+        const v = this.detailValue(cat, k);
+        if (v === undefined) {
+            return "";
+        }
+        const text = model.detailFormat(v);
+        const style = enumValue(this.formattingSettings.detailCard.style);
+        return style === "paren" ? `(${text})` : style === "dot" ? `· ${text}` : text;
+    }
+
+    /** Acrescenta o detalhe ao rótulo, num trecho com fonte e cor próprias. */
+    private appendDetail(label: SVGTextElement, text: string, color: string | undefined): void {
+        const det = this.formattingSettings.detailCard;
+        const span = svg("tspan", {
+            "font-size": det.fontSize.value,
+            "font-weight": det.bold.value ? 600 : 400,
+            class: "bb-detail"
+        });
+        if (color) {
+            span.setAttribute("fill", color);
+        }
+        span.textContent = " " + text;
+        label.appendChild(span);
+    }
+
     private bindSegment(rect: SVGRectElement, model: Model, cat: Cat, series: Series): void {
         const k = series.index;
         const tooltip = (): VisualTooltipDataItem[] => {
@@ -1050,6 +1143,10 @@ export class Visual implements IVisual {
                 items.push({ displayName: "Total da barra", value: model.format(cat.total) });
             }
             items.push({ displayName: "% do total geral", value: this.pct(model.grandTotal > 0 ? value / model.grandTotal : 0) });
+            const detail = this.detailValue(cat, k);
+            if (model.detailName && detail !== undefined) {
+                items.push({ displayName: model.detailName, value: model.detailFormat(detail) });
+            }
             items.push({ displayName: "Registros na base", value: this.count(cat.counts[k]) });
             return items;
         };
