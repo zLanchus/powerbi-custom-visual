@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/tabelaAvaliacaoC8386E97BF4D43C39C6E4C6B96873485.pbiviz.json"
+			}
+		],
+		"visual": {"name":"tabelaAvaliacao","displayName":"Tabela de Avaliação","guid":"tabelaAvaliacaoC8386E97BF4D43C39C6E4C6B96873485","visualClassName":"Visual","version":"1.0.0.0","description":"Tabela com notas de pesquisa (1 a 5) em estrelas: várias medidas, nº de respostas, média, ordenação por coluna e cores por faixa.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}

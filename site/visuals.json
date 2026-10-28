@@ -116,5 +116,23 @@
       "2-escolher-aba.png",
       "4-pdf.png"
     ]
+  },
+  {
+    "id": "tabela-avaliacao",
+    "name": "Tabela de Avaliação",
+    "summary": "Tabela com notas de pesquisa (1 a 5) em estrelas, com várias medidas, respostas e média.",
+    "features": [
+      "Estrelas com preenchimento exato (4,3 = 4 estrelas e 30%), meia ou inteira",
+      "Várias medidas: uma coluna por pergunta, ou uma linha por medida",
+      "Nº de respostas, coluna e linha de média",
+      "Ordenação ao clicar no cabeçalho e cores por faixa de nota",
+      "Filtro cruzado, dicas de ferramenta e formatação completa"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-faixas.png",
+      "3-medidas.png",
+      "4-selecao.png"
+    ]
   }
 ]
