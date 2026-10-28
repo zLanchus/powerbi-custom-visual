@@ -3,7 +3,7 @@
 import powerbi from "powerbi-visuals-api";
 import { FormattingSettingsService, formattingSettings } from "powerbi-visuals-utils-formattingmodel";
 import { valueFormatter } from "powerbi-visuals-utils-formattingutils";
-import { IFilterTarget } from "powerbi-models";
+import { IBasicFilter, IFilterTarget, ITupleFilter } from "powerbi-models";
 import "./../style/visual.less";
 
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
@@ -19,15 +19,19 @@ import FilterAction = powerbi.FilterAction;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
 import { DARK, VisualFormattingSettingsModel, enumValue } from "./settings";
-import { Cat, Model, Rec, Series, accumulate, buildModel, compareRaw, isBlank, label } from "./model";
+import { Cat, Column, Model, Rec, Series, accumulate, buildModel, compareRaw, detectMode, isBlank, label, recompute } from "./model";
 import {
     Selection,
     SelectionItem,
     SelectionKind,
+    buildColumnFilter,
     buildFilter,
+    canonicalFilters,
+    columnFiltersFrom,
     emptySelection,
     getTarget,
     itemKey,
+    mergeFilters,
     sameTarget,
     selectionFromFilters,
     valueKey
@@ -78,6 +82,9 @@ const ICON_CLOSE = ["M6 6l12 12", "M18 6L6 18"];
 const ICON_FILTER = ["M4 5h16l-6 7.5V19l-4-2v-4.5z"];
 const ICON_SORT_UP = ["M8 14l4-4 4 4"];
 const ICON_SORT_DOWN = ["M8 10l4 4 4-4"];
+const ICON_CHECK = ["M5 12.5l4.5 4.5L19 7.5"];
+/** Quantos valores o pop-up de filtro da coluna mostra de uma vez (o resto aparece pesquisando). */
+const FILTER_LIST_MAX = 300;
 
 function hexToRgb(hex: string): [number, number, number] | undefined {
     const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -182,6 +189,14 @@ export class Visual implements IVisual {
     private crossFilterWasOn: boolean | undefined;
     /** Posição de cada barra na ordem do gráfico (para o acumulado). */
     private catIndex = new Map<string, number>();
+    /** Barras como o Power BI calculou (antes dos filtros das colunas e do acumulado). */
+    private baseCats: Cat[] = [];
+    /** Filtros das colunas da base: id da coluna → valores marcados (chave → valor). */
+    private columnFilters = new Map<string, Map<string, PrimitiveValue>>();
+    /** Último conjunto de filtros enviado ao Power BI (para reconhecer quando ele traz um estado novo, ex.: favorito). */
+    private lastApplied: string | undefined;
+    private chartArea: { pane: HTMLElement; width: number; height: number } | undefined;
+    private popover: { columnId: string; el: HTMLElement; list: HTMLElement; search: string; info: HTMLElement } | undefined;
     private lastCatTarget: IFilterTarget | undefined;
 
     // Partes da base nominal atualizadas sem redesenhar tudo.
@@ -223,6 +238,9 @@ export class Visual implements IVisual {
         // Clique no vazio do gráfico limpa a seleção.
         this.root.addEventListener("click", (e: MouseEvent) => {
             const target = e.target as Element;
+            if (this.popover && !target.closest(".bb-pop, .bb-th-filter")) {
+                this.closePopover();
+            }
             if (!target.closest(".bb-seg, .bb-legend-item, .bb-cat-hit, .bb-panel")) {
                 this.setSelection(emptySelection());
             }
@@ -268,13 +286,9 @@ export class Visual implements IVisual {
                 }
             }
 
-            if (this.model) {
-                if (this.cumulative() === "sum") {
-                    accumulate(this.model);
-                }
-                this.catIndex = new Map(this.model.cats.map((c, i) => [c.key, i]));
-            }
+            this.baseCats = this.model?.cats || [];
             this.syncSelection(options);
+            this.refreshBars();
             this.render();
             this.events?.renderingFinished(options);
         } catch (e) {
@@ -333,6 +347,15 @@ export class Visual implements IVisual {
             return;
         }
         if (crossFilter) {
+            // Só lê o estado do Power BI quando ele mudou por fora (favorito, troca de página, outro visual);
+            // senão vale o que está na tela (ex.: um filtro de coluna no Eixo não vira clique na barra).
+            const incoming = canonicalFilters(options.jsonFilters);
+            if (incoming === this.lastApplied) {
+                this.lastCatTarget = model.catTarget;
+                return;
+            }
+            this.lastApplied = incoming;
+            this.columnFilters = columnFiltersFrom(options.jsonFilters, model.columns, [model.catTarget, model.legTarget]);
             this.selection = selectionFromFilters(
                 options.jsonFilters,
                 { target: model.catTarget, isDate: model.catIsDate },
@@ -340,6 +363,7 @@ export class Visual implements IVisual {
             );
         } else if (this.lastCatTarget && !sameTarget(this.lastCatTarget, model.catTarget)) {
             this.selection = emptySelection();
+            this.columnFilters.clear();
         }
         this.lastCatTarget = model.catTarget;
     }
@@ -374,15 +398,287 @@ export class Visual implements IVisual {
             this.table.grid.scrollTop = 0;
         }
         this.refreshTable();
+        this.refreshPopover();
+        this.pushFilters();
+    }
+
+    /** Envia ao Power BI a barra/legenda clicada e os filtros das colunas, para filtrar os outros visuais. */
+    private pushFilters(): void {
         const model = this.model;
-        if (model && this.formattingSettings.generalCard.crossFilter.value) {
-            const filter = buildFilter(this.expandCumulative(selection), model.catTarget, model.legTarget);
-            if (filter) {
-                this.host.applyJsonFilter(filter, "general", "filter", FilterAction.merge);
-            } else {
-                this.host.applyJsonFilter(null, "general", "filter", FilterAction.remove);
+        if (!model || !this.formattingSettings.generalCard.crossFilter.value) {
+            return;
+        }
+        const list: Array<IBasicFilter | ITupleFilter> = [];
+        const bar = buildFilter(this.expandCumulative(this.selection), model.catTarget, model.legTarget);
+        if (bar) {
+            list.push(bar);
+        }
+        for (const column of model.columns) {
+            const values = this.columnFilters.get(column.id);
+            if (column.filter && values?.size) {
+                list.push(buildColumnFilter(column.filter.target, Array.from(values.values())));
             }
         }
+        const filters = mergeFilters(list);
+        this.lastApplied = canonicalFilters(filters as unknown as powerbi.IFilter[]);
+        if (filters.length) {
+            this.host.applyJsonFilter(filters as unknown as powerbi.IFilter[], "general", "filter", FilterAction.merge);
+        } else {
+            this.host.applyJsonFilter(null, "general", "filter", FilterAction.remove);
+        }
+    }
+
+    // ------------------------------------------------------------- filtros das colunas
+
+    private passesColumns(rec: Rec, skip?: string): boolean {
+        const model = this.model;
+        if (!model || this.columnFilters.size === 0) {
+            return true;
+        }
+        for (const [id, values] of this.columnFilters) {
+            if (id === skip || values.size === 0) {
+                continue;
+            }
+            const column = model.columns.find(c => c.id === id);
+            if (column && !values.has(valueKey(column.value(rec)))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Como refazer a barra com os registros filtrados: o escolhido, ou o que bate com o cálculo do Power BI. */
+    private recalcMode(model: Model, which: "value" | "detail"): string {
+        const mode = enumValue(this.formattingSettings.tableCard.recalc);
+        const isPercent = which === "value" ? model.isPercent : model.detailIsPercent;
+        if (mode !== "auto" && (which === "value" || mode !== "count")) {
+            return mode;
+        }
+        return detectMode(this.baseCats, model.records, which) ?? (isPercent ? "avg" : "sum");
+    }
+
+    /** Barras exibidas: as do Power BI ou, com filtros nas colunas, recalculadas pelos registros filtrados; depois o acumulado. */
+    private refreshBars(): void {
+        const model = this.model;
+        if (!model) {
+            return;
+        }
+        const active = Array.from(this.columnFilters.values()).some(v => v.size > 0);
+        if (active) {
+            model.cats = recompute(model, this.baseCats, model.records.filter(r => this.passesColumns(r)),
+                this.recalcMode(model, "value"), this.recalcMode(model, "detail"));
+        } else {
+            model.cats = this.baseCats.map(c => ({ ...c }));
+        }
+        model.grandTotal = model.cats.reduce((a, c) => a + c.stack, 0);
+        if (this.cumulative() === "sum") {
+            accumulate(model);
+        }
+        this.catIndex = new Map(model.cats.map((c, i) => [c.key, i]));
+    }
+
+    private redrawChart(): void {
+        const area = this.chartArea;
+        const model = this.model;
+        if (!area || !model) {
+            return;
+        }
+        area.pane.replaceChildren();
+        if (area.width > 40 && area.height > 40) {
+            this.renderChartPane(area.pane, model, area.width, area.height);
+        }
+        this.paintSelection();
+    }
+
+    /** Um filtro de coluna mudou: barras, gráfico, base, pop-up e outros visuais acompanham. */
+    private columnFiltersChanged(): void {
+        this.refreshBars();
+        this.redrawChart();
+        if (this.table) {
+            this.table.grid.scrollTop = 0;
+        }
+        this.refreshTable();
+        this.refreshPopover();
+        this.pushFilters();
+    }
+
+    private toggleColumnValue(column: Column, key: string, raw: PrimitiveValue): void {
+        const values = new Map(this.columnFilters.get(column.id) || []);
+        if (values.has(key)) {
+            values.delete(key);
+        } else {
+            values.set(key, raw);
+        }
+        if (values.size) {
+            this.columnFilters.set(column.id, values);
+        } else {
+            this.columnFilters.delete(column.id);
+        }
+        this.columnFiltersChanged();
+    }
+
+    /** Valores da coluna nos registros que passam no clique do gráfico e nos filtros das outras colunas (em cascata). */
+    private columnValues(column: Column): Array<{ key: string; raw: PrimitiveValue; text: string; count: number }> {
+        const model = this.model;
+        if (!model) {
+            return [];
+        }
+        const map = new Map<string, { key: string; raw: PrimitiveValue; text: string; count: number }>();
+        const c = model.columns.indexOf(column);
+        for (const rec of model.records) {
+            if ((this.selection.items.size && !this.recordOn(rec)) || !this.passesColumns(rec, column.id)) {
+                continue;
+            }
+            const raw = column.value(rec);
+            const key = valueKey(raw);
+            const item = map.get(key);
+            if (item) {
+                item.count++;
+            } else {
+                map.set(key, { key, raw, text: this.cellText(rec, c), count: 1 });
+            }
+        }
+        // Valores marcados que sumiram com outros filtros continuam na lista (para poder desmarcar).
+        for (const [key, raw] of this.columnFilters.get(column.id) || []) {
+            if (!map.has(key)) {
+                map.set(key, { key, raw, text: column.format(raw), count: 0 });
+            }
+        }
+        return Array.from(map.values()).sort((a, b) => compareRaw(a.raw, b.raw));
+    }
+
+    private closePopover(): void {
+        this.popover?.el.remove();
+        this.popover = undefined;
+    }
+
+    private openPopover(column: Column, anchor: HTMLElement, panel: HTMLElement, search = ""): void {
+        const same = this.popover?.columnId === column.id;
+        this.closePopover();
+        if (same) {
+            return;
+        }
+        const pop = el("div", "bb-pop");
+        const head = el("div", "bb-pop-head");
+        head.appendChild(el("span", "bb-pop-title", column.name));
+        const close = el("button", "bb-chip-x");
+        close.type = "button";
+        close.title = "Fechar";
+        close.appendChild(icon(ICON_CLOSE, 12));
+        close.addEventListener("click", () => this.closePopover());
+        head.appendChild(close);
+        pop.appendChild(head);
+
+        const box = el("label", "bb-search bb-pop-search");
+        box.appendChild(icon(ICON_SEARCH));
+        const input = el("input");
+        input.type = "text";
+        input.placeholder = "Pesquisar valores…";
+        input.value = search;
+        box.appendChild(input);
+        pop.appendChild(box);
+
+        const list = el("div", "bb-pop-list");
+        pop.appendChild(list);
+        const foot = el("div", "bb-pop-foot");
+        const info = el("span", "bb-pop-info");
+        const clear = el("button", "bb-clear", "Limpar filtro");
+        clear.type = "button";
+        clear.addEventListener("click", () => {
+            this.columnFilters.delete(column.id);
+            this.columnFiltersChanged();
+        });
+        foot.append(info, clear);
+        pop.appendChild(foot);
+
+        // Posição: logo abaixo do cabeçalho da coluna, dentro do painel.
+        const pr = panel.getBoundingClientRect();
+        const ar = anchor.getBoundingClientRect();
+        const width = Math.min(260, pr.width - 16);
+        pop.style.width = width + "px";
+        pop.style.left = Math.max(8, Math.min(ar.left - pr.left, pr.width - width - 8)) + "px";
+        const top = ar.bottom - pr.top + 4;
+        pop.style.top = top + "px";
+        pop.style.maxHeight = Math.max(160, pr.height - top - 8) + "px";
+        panel.appendChild(pop);
+
+        this.popover = { columnId: column.id, el: pop, list, search, info };
+        input.addEventListener("input", () => {
+            if (this.popover) {
+                this.popover.search = input.value;
+                this.refreshPopover();
+            }
+        });
+        input.addEventListener("keydown", (e: KeyboardEvent) => {
+            e.stopPropagation();
+            if (e.key === "Escape") {
+                this.closePopover();
+            }
+        });
+        this.refreshPopover();
+        input.focus();
+    }
+
+    /** Redesenha a lista de valores do pop-up aberto (marcados, contagens e pesquisa). */
+    private refreshPopover(): void {
+        const pop = this.popover;
+        const column = pop && this.model?.columns.find(c => c.id === pop.columnId);
+        if (!pop || !column) {
+            this.closePopover();
+            return;
+        }
+        const selected = this.columnFilters.get(column.id);
+        const query = normalize(pop.search.trim());
+        const all = this.columnValues(column);
+        const matches = query ? all.filter(v => normalize(v.text).includes(query)) : all;
+        const shown = matches.slice(0, FILTER_LIST_MAX);
+
+        const rows: HTMLElement[] = [];
+        const row = (text: string, checked: boolean, count: string, onClick: () => void, extra = ""): HTMLElement => {
+            const item = el("div", "bb-pop-item" + extra + (checked ? " bb-checked" : ""));
+            const check = el("span", "bb-check");
+            check.appendChild(icon(ICON_CHECK, 11));
+            item.appendChild(check);
+            const t = el("span", "bb-pop-text", text);
+            t.title = text;
+            item.appendChild(t);
+            item.appendChild(el("span", "bb-pop-count", count));
+            item.addEventListener("click", (e: MouseEvent) => {
+                e.stopPropagation();
+                onClick();
+            });
+            return item;
+        };
+        if (matches.length > 1) {
+            const allOn = matches.every(v => selected?.has(v.key));
+            rows.push(row(query ? "Selecionar os resultados" : "Selecionar tudo", allOn, "", () => {
+                const values = new Map(selected || []);
+                for (const v of matches) {
+                    if (allOn) {
+                        values.delete(v.key);
+                    } else {
+                        values.set(v.key, v.raw);
+                    }
+                }
+                if (values.size) {
+                    this.columnFilters.set(column.id, values);
+                } else {
+                    this.columnFilters.delete(column.id);
+                }
+                this.columnFiltersChanged();
+            }, " bb-pop-all"));
+        }
+        for (const v of shown) {
+            rows.push(row(v.text, !!selected?.has(v.key), this.count(v.count), () => this.toggleColumnValue(column, v.key, v.raw)));
+        }
+        if (matches.length === 0) {
+            rows.push(el("div", "bb-pop-empty", "Nenhum valor encontrado."));
+        }
+        pop.list.replaceChildren(...rows);
+        const marked = selected?.size || 0;
+        pop.info.textContent = matches.length > shown.length
+            ? `Mostrando ${this.count(shown.length)} de ${this.count(matches.length)}. Pesquise para ver outros.`
+            : marked ? `${this.count(marked)} ${marked === 1 ? "marcado" : "marcados"}` : `${this.count(all.length)} valores`;
     }
 
     private segmentItem(cat: Cat, series: Series): { kind: SelectionKind; item: SelectionItem } {
@@ -532,11 +828,27 @@ export class Visual implements IVisual {
         tablePane.style.height = tableH + "px";
         root.append(chartPane, tablePane);
 
+        this.chartArea = { pane: chartPane, width: chartW, height: chartH };
+        // O Power BI redesenha o visual depois de cada filtro aplicado: o pop-up aberto volta no mesmo lugar.
+        const reopen = this.popover && { columnId: this.popover.columnId, search: this.popover.search, scroll: this.popover.list.scrollTop };
+        this.popover = undefined;
         if (chartW > 40 && chartH > 40) {
             this.renderChartPane(chartPane, model, chartW, chartH);
         }
         this.renderTable(tablePane, model);
         this.paintSelection();
+        if (reopen) {
+            const column = model.columns.find(c => c.id === reopen.columnId);
+            const button = this.root.querySelector<HTMLElement>(`.bb-th-filter[data-column="${CSS.escape(reopen.columnId)}"]`);
+            const cell = button?.closest<HTMLElement>(".bb-th");
+            const panel = this.root.querySelector<HTMLElement>(".bb-panel");
+            if (column && cell && panel) {
+                this.openPopover(column, cell, panel, reopen.search);
+                if (this.popover) {
+                    this.popover.list.scrollTop = reopen.scroll;
+                }
+            }
+        }
     }
 
     private renderChartPane(pane: HTMLElement, model: Model, width: number, height: number): void {
@@ -1040,6 +1352,15 @@ export class Visual implements IVisual {
             }
             return Math.round(Math.min(300, Math.max(64, w)));
         });
+        const filterable = t.columnFilters.value;
+        if (filterable) {
+            // Espaço para o funil no cabeçalho.
+            model.columns.forEach((column, c) => {
+                if (column.filter) {
+                    widths[c] = Math.min(320, widths[c] + 22);
+                }
+            });
+        }
         const template = widths.map(w => `minmax(${w}px, ${w}fr)`).join(" ");
         inner.style.minWidth = widths.reduce((a, b) => a + b, 0) + "px";
         headRow.style.gridTemplateColumns = template;
@@ -1049,6 +1370,18 @@ export class Visual implements IVisual {
             cell.appendChild(el("span", "bb-th-text", column.name));
             cell.title = "Clique para ordenar por " + column.name;
             cell.dataset.col = String(c);
+            if (filterable && column.filter) {
+                const button = el("button", "bb-th-filter");
+                button.type = "button";
+                button.title = "Filtrar " + column.name;
+                button.dataset.column = column.id;
+                button.appendChild(icon(ICON_FILTER, 12));
+                button.addEventListener("click", (e: MouseEvent) => {
+                    e.stopPropagation();
+                    this.openPopover(column, cell, panel);
+                });
+                cell.appendChild(button);
+            }
             cell.addEventListener("click", () => {
                 const current = this.sort;
                 if (!current || current.column !== column.name) {
@@ -1116,7 +1449,10 @@ export class Visual implements IVisual {
         if (!model || !table) {
             return;
         }
-        let rows = this.selection.items.size ? model.records.filter(r => this.recordOn(r)) : model.records.slice();
+        const byColumns = this.columnFilters.size > 0;
+        let rows = this.selection.items.size || byColumns
+            ? model.records.filter(r => (!this.selection.items.size || this.recordOn(r)) && (!byColumns || this.passesColumns(r)))
+            : model.records.slice();
         const query = normalize(this.search.trim());
         if (query) {
             rows = rows.filter(r => this.searchText(r).includes(query));
@@ -1151,8 +1487,10 @@ export class Visual implements IVisual {
             if (on && this.sort) {
                 const arrow = icon(this.sort.dir === 1 ? ICON_SORT_UP : ICON_SORT_DOWN, 12);
                 arrow.classList.add("bb-sort");
-                cell.appendChild(arrow);
+                cell.insertBefore(arrow, cell.querySelector(".bb-th-filter"));
             }
+            const filterButton = cell.querySelector<HTMLElement>(".bb-th-filter");
+            filterButton?.classList.toggle("bb-active", !!this.columnFilters.get(filterButton.dataset.column || "")?.size);
         });
 
         this.renderFilterBar(model, table.filterBar);
@@ -1165,7 +1503,8 @@ export class Visual implements IVisual {
     private renderFilterBar(model: Model, bar: HTMLElement): void {
         bar.replaceChildren();
         const sel = this.selection;
-        if (sel.items.size === 0) {
+        const columnChips = this.columnChips(model);
+        if (sel.items.size === 0 && columnChips.length === 0) {
             const hint = el("div", "bb-hint");
             hint.appendChild(icon(ICON_FILTER, 12));
             hint.appendChild(el("span", undefined, this.cumulative() !== "none"
@@ -1225,13 +1564,56 @@ export class Visual implements IVisual {
         if (items.length > shown.length) {
             bar.appendChild(el("span", "bb-chip bb-chip-more", "+" + (items.length - shown.length)));
         }
+        for (const chip of columnChips) {
+            bar.appendChild(chip);
+        }
         const clear = el("button", "bb-clear", "Limpar");
         clear.type = "button";
         clear.addEventListener("click", (e: MouseEvent) => {
             e.stopPropagation();
-            this.setSelection(emptySelection());
+            // Limpa tudo: clique no gráfico e filtros das colunas.
+            const hadColumns = this.columnFilters.size > 0;
+            this.columnFilters.clear();
+            if (hadColumns) {
+                this.refreshBars();
+                this.redrawChart();
+            }
+            this.selection = emptySelection();
+            this.paintSelection();
+            this.refreshTable();
+            this.refreshPopover();
+            this.pushFilters();
         });
         bar.appendChild(clear);
+    }
+
+    /** Um chip por coluna filtrada: "Cargo: Analista, Gerente" (ou "+N"). */
+    private columnChips(model: Model): HTMLElement[] {
+        const chips: HTMLElement[] = [];
+        for (const column of model.columns) {
+            const values = this.columnFilters.get(column.id);
+            if (!values?.size) {
+                continue;
+            }
+            const texts = Array.from(values.values()).map(v => column.format(v));
+            const text = `${column.name}: ${texts.slice(0, 2).join(", ")}${texts.length > 2 ? ` +${texts.length - 2}` : ""}`;
+            const chip = el("span", "bb-chip bb-chip-column");
+            chip.appendChild(icon(ICON_FILTER, 11));
+            chip.appendChild(el("span", "bb-chip-text", text));
+            chip.title = `${column.name}: ${texts.join(", ")}`;
+            const remove = el("button", "bb-chip-x");
+            remove.type = "button";
+            remove.title = "Remover este filtro";
+            remove.appendChild(icon(ICON_CLOSE, 11));
+            remove.addEventListener("click", (e: MouseEvent) => {
+                e.stopPropagation();
+                this.columnFilters.delete(column.id);
+                this.columnFiltersChanged();
+            });
+            chip.appendChild(remove);
+            chips.push(chip);
+        }
+        return chips;
     }
 
     /** Desenha só as linhas visíveis (com folga), para aguentar dezenas de milhares de registros. */

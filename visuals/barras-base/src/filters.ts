@@ -140,6 +140,82 @@ export function buildFilter(selection: Selection, catTarget: IFilterTarget, legT
     return new TupleFilter([catTarget, legTarget], "In", tuples).toJSON();
 }
 
+/** Filtro de uma coluna da base (lista de valores marcados). */
+export function buildColumnFilter(target: IFilterTarget, values: PrimitiveValue[]): IBasicFilter {
+    return new BasicFilter(target, "In", values.map(toFilterValue)).toJSON();
+}
+
+function targetKey(target: IFilterTarget): string {
+    const t = target as unknown as Record<string, unknown>;
+    return [t.table, t.column, t.hierarchy, t.hierarchyLevel].join("\u0001");
+}
+
+/** Junta filtros do mesmo campo (ex.: barra clicada + filtro da coluna do Eixo) pela interseção dos valores. */
+export function mergeFilters(filters: Array<IBasicFilter | ITupleFilter>): Array<IBasicFilter | ITupleFilter> {
+    const out: Array<IBasicFilter | ITupleFilter> = [];
+    const basic = new Map<string, IBasicFilter>();
+    for (const f of filters) {
+        if (f.filterType !== FilterType.Basic || Array.isArray(f.target)) {
+            out.push(f);
+            continue;
+        }
+        const b = f as IBasicFilter;
+        const key = targetKey(b.target as IFilterTarget);
+        const current = basic.get(key);
+        if (!current) {
+            basic.set(key, b);
+            out.push(b);
+        } else {
+            const keep = new Set(b.values.map(v => JSON.stringify(v)));
+            current.values = current.values.filter(v => keep.has(JSON.stringify(v)));
+        }
+    }
+    return out;
+}
+
+/** Forma comparável de uma lista de filtros (só campos e valores), para saber se o Power BI trouxe um estado novo. */
+export function canonicalFilters(filters: powerbi.IFilter[] | undefined): string {
+    // Aceita lista aninhada (alguns hosts devolvem o grupo de filtros aplicado de uma vez como um item só).
+    const flat = (filters || []).flat() as powerbi.IFilter[];
+    const list = flat.map(f => {
+        const x = f as unknown as { target?: IFilterTarget | IFilterTarget[]; values?: unknown[] };
+        const targets = Array.isArray(x.target) ? x.target : x.target ? [x.target] : [];
+        const values = (x.values || []).map(v => JSON.stringify(v)).sort();
+        return targets.map(targetKey).join("+") + "=" + values.join(",");
+    });
+    return list.sort().join("|");
+}
+
+/** Filtros de colunas da base (campos que não são o Eixo nem a Legenda) vindos de options.jsonFilters. */
+export function columnFiltersFrom(
+    filters: powerbi.IFilter[] | undefined,
+    columns: Array<{ id: string; filter?: { target: IFilterTarget; isDate: boolean } }>,
+    exclude: Array<IFilterTarget | undefined>
+): Map<string, Map<string, PrimitiveValue>> {
+    const out = new Map<string, Map<string, PrimitiveValue>>();
+    for (const f of (filters || []).flat() as powerbi.IFilter[]) {
+        const filter = f as unknown as IBasicFilter;
+        if (filter?.filterType !== FilterType.Basic || !filter.target || Array.isArray(filter.target)) {
+            continue;
+        }
+        const target = filter.target as IFilterTarget;
+        if (exclude.some(t => sameTarget(t, target))) {
+            continue;
+        }
+        const column = columns.find(c => c.filter && sameTarget(c.filter.target, target));
+        if (!column?.filter) {
+            continue;
+        }
+        const values = new Map<string, PrimitiveValue>();
+        for (const v of filter.values || []) {
+            const raw = fromFilterValue(v, column.filter.isDate);
+            values.set(valueKey(raw), raw);
+        }
+        out.set(column.id, values);
+    }
+    return out;
+}
+
 /** Reconstrói a seleção a partir do filtro que o Power BI devolve em options.jsonFilters. */
 export function selectionFromFilters(
     filters: powerbi.IFilter[] | undefined,
@@ -147,7 +223,7 @@ export function selectionFromFilters(
     leg: { target: IFilterTarget; isDate: boolean } | undefined
 ): Selection {
     const selection = emptySelection();
-    for (const f of filters || []) {
+    for (const f of (filters || []).flat() as powerbi.IFilter[]) {
         const filter = f as unknown as IBasicFilter | ITupleFilter;
         if (!filter?.target) {
             continue;

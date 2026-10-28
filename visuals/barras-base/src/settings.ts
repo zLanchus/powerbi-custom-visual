@@ -47,6 +47,9 @@ export const SEGMENT_LABEL_ITEMS = enumItems(["none", "Nenhum"], ["value", "Valo
 export const DETAIL_STYLE_ITEMS = enumItems(["paren", "Entre parênteses: (18)"], ["dot", "Após um ponto: · 18"], ["plain", "Sem separador: 18"]);
 export const DETAIL_WHERE_ITEMS = enumItems(["total", "No total da barra"], ["segment", "Nos segmentos"], ["both", "No total e nos segmentos"]);
 export const TOTAL_MODE_ITEMS = enumItems(["measure", "Medida calculada para a barra"], ["sum", "Soma dos segmentos"]);
+export const RECALC_ITEMS = enumItems(
+    ["auto", "Automático (o que bate com o Power BI)"], ["sum", "Soma dos registros"], ["avg", "Média dos registros"], ["count", "Contagem de registros"]
+);
 export const LEGEND_POS_ITEMS = enumItems(["top", "Em cima"], ["bottom", "Embaixo"]);
 
 class GeneralCard extends FormattingSettingsCard {
@@ -162,6 +165,11 @@ class TableCard extends FormattingSettingsCard {
     titleColor = color("titleColor", "Cor do título", DARK);
     showCount = toggle("showCount", "Mostrar contagem de registros", true);
     showSearch = toggle("showSearch", "Mostrar pesquisa", true);
+    columnFilters = toggle("columnFilters", "Filtros nas colunas (funil no cabeçalho)", true);
+    recalc = dropdown("recalc", "Com filtro nas colunas, recalcular as barras por", RECALC_ITEMS, 0,
+        "O Power BI não recalcula o próprio visual: com um filtro de coluna, as barras são refeitas a partir dos registros filtrados. " +
+        "Automático: o visual compara o valor de cada barra com a soma, a média e a contagem dos registros e usa o que bate " +
+        "(ex.: Contagem = soma; Salário médio ou % por pessoa = média).");
     showCategoryColumn = toggle("showCategoryColumn", "Mostrar coluna do Eixo", true);
     showLegendColumn = toggle("showLegendColumn", "Mostrar coluna da Legenda", true);
     showValueColumn = toggle("showValueColumn", "Mostrar coluna de Valores", false);
@@ -173,7 +181,7 @@ class TableCard extends FormattingSettingsCard {
     name = "table";
     displayName = "Base nominal";
     slices: FormattingSettingsSlice[] = [
-        this.title, this.titleFontSize, this.titleColor, this.showCount, this.showSearch,
+        this.title, this.titleFontSize, this.titleColor, this.showCount, this.showSearch, this.columnFilters, this.recalc,
         this.showCategoryColumn, this.showLegendColumn, this.showValueColumn, this.colorMarker, this.emptyText, this.maxRows
     ];
 }

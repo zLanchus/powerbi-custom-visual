@@ -491,6 +491,33 @@
                         "bool": true
                     }
                 },
+                "columnFilters": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "recalc": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Automático (o que bate com o Power BI)"
+                            },
+                            {
+                                "value": "sum",
+                                "displayName": "Soma dos registros"
+                            },
+                            {
+                                "value": "avg",
+                                "displayName": "Média dos registros"
+                            },
+                            {
+                                "value": "count",
+                                "displayName": "Contagem de registros"
+                            }
+                        ]
+                    }
+                },
                 "showCategoryColumn": {
                     "type": {
                         "bool": true

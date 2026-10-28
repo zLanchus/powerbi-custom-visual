@@ -51,13 +51,19 @@ export interface Rec {
     /** Valores dos campos das linhas, por nível (Eixo, Colunas da base…). */
     path: PrimitiveValue[];
     node: DataViewMatrixNode;
+    /** Valores e Detalhe calculados para o registro (para recalcular as barras com os filtros das colunas). */
+    value: number | undefined;
+    detail: number | undefined;
     text?: string[];
     search?: string;
 }
 
 export interface Column {
+    id: string;
     name: string;
     numeric: boolean;
+    /** Campo que dá para filtrar pela coluna (Eixo, Legenda e Colunas da base; medidas não). */
+    filter?: { target: IFilterTarget; isDate: boolean };
     value: (rec: Rec) => PrimitiveValue;
     format: (value: PrimitiveValue) => string;
 }
@@ -75,6 +81,7 @@ export interface Model {
     valueFormat: string | undefined;
     /** A medida de Valores é um percentual (não faz sentido "% da barra"). */
     isPercent: boolean;
+    detailIsPercent: boolean;
     detailName: string | undefined;
     detailFormat: (v: PrimitiveValue) => string;
     grandTotal: number;
@@ -206,6 +213,92 @@ function readColumns(levels: DataViewHierarchyLevel[], root: DataViewMatrixNode 
     return { members, index };
 }
 
+/** Junta os valores dos registros: soma, média ou contagem. */
+function aggregate(values: Array<number | undefined>, mode: string): number | undefined {
+    if (mode === "count") {
+        return values.length;
+    }
+    const nums = values.filter((v): v is number => v !== undefined);
+    if (nums.length === 0) {
+        return undefined;
+    }
+    const sum = nums.reduce((a, b) => a + b, 0);
+    return mode === "avg" ? sum / nums.length : sum;
+}
+
+/**
+ * Descobre como a medida se comporta nos registros, comparando o valor que o Power BI calculou para cada barra
+ * com a soma, a média e a contagem dos registros dela (ex.: Contagem = soma; Salário médio ou % por pessoa = média).
+ */
+export function detectMode(cats: Cat[], records: Rec[], which: "value" | "detail"): string | undefined {
+    const byCat = new Map<string, Rec[]>();
+    for (const rec of records) {
+        const list = byCat.get(rec.cat.key);
+        if (list) {
+            list.push(rec);
+        } else {
+            byCat.set(rec.cat.key, [rec]);
+        }
+    }
+    const close = (a: number | undefined, b: number | undefined): boolean =>
+        a !== undefined && b !== undefined && Math.abs(a - b) <= 0.005 * Math.max(1, Math.abs(a), Math.abs(b));
+    const modes = ["sum", "avg", "count"];
+    const ok = new Set(modes);
+    let tested = 0;
+    for (const cat of cats) {
+        const recs = byCat.get(cat.key);
+        const target = which === "value" ? cat.total : cat.detailTotal;
+        if (!recs || target === undefined) {
+            continue;
+        }
+        tested++;
+        const values = recs.map(r => (which === "value" ? r.value : r.detail));
+        for (const mode of modes) {
+            if (!close(aggregate(values, mode), target)) {
+                ok.delete(mode);
+            }
+        }
+    }
+    return tested > 0 ? modes.find(m => ok.has(m)) : undefined;
+}
+
+/**
+ * Barras recalculadas a partir dos registros que passam nos filtros das colunas da base
+ * (o Power BI não recalcula o próprio visual com um filtro aplicado por ele).
+ * Barras sem nenhum registro somem, como num gráfico nativo filtrado.
+ */
+export function recompute(model: Model, cats: Cat[], records: Rec[], valueMode: string, detailMode: string): Cat[] {
+    const n = model.series.length;
+    const byCat = new Map<string, Rec[]>();
+    for (const rec of records) {
+        const list = byCat.get(rec.cat.key);
+        if (list) {
+            list.push(rec);
+        } else {
+            byCat.set(rec.cat.key, [rec]);
+        }
+    }
+    const out: Cat[] = [];
+    for (const cat of cats) {
+        const recs = byCat.get(cat.key);
+        if (!recs) {
+            continue;
+        }
+        const bySeries = Array.from({ length: n }, (_, k) => recs.filter(r => r.series === k));
+        const parts = bySeries.map(list => (list.length ? Math.max(0, aggregate(list.map(r => r.value), valueMode) ?? 0) : 0));
+        out.push({
+            ...cat,
+            parts,
+            stack: parts.reduce((a, b) => a + b, 0),
+            total: aggregate(recs.map(r => r.value), valueMode),
+            detail: bySeries.map(list => (list.length ? aggregate(list.map(r => r.detail), detailMode) : undefined)),
+            detailTotal: aggregate(recs.map(r => r.detail), detailMode),
+            counts: bySeries.map(list => list.length)
+        });
+    }
+    return out;
+}
+
 /** Acumulado: cada barra passa a somar ela mesma e as anteriores, na ordem do gráfico. */
 export function accumulate(model: Model): void {
     const n = model.series.length;
@@ -315,7 +408,11 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
             const present = [valueIndex, detailIndex, ...measureIndexes].some(m => !isBlank(cell(leaf, s.key, m)));
             if (present) {
                 cat.counts[s.index]++;
-                records.push({ cat, series: s.index, path, node: leaf });
+                records.push({
+                    cat, series: s.index, path, node: leaf,
+                    value: numberOrUndefined(cell(leaf, s.key, valueIndex)),
+                    detail: numberOrUndefined(cell(leaf, s.key, detailIndex))
+                });
             }
         }
     };
@@ -398,9 +495,14 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
     const isNumeric = (source: DataViewMetadataColumn | undefined): boolean => !!(source?.type?.numeric || source?.type?.integer);
     const levelColumn = (level: number): Column => {
         const source = rowLevels[level].sources[0];
-        return { name: source.displayName, numeric: isNumeric(source), value: rec => rec.path[level] ?? null, format: formatOf(source) };
+        return {
+            id: "r:" + (source.queryName || source.displayName), name: source.displayName, numeric: isNumeric(source),
+            filter: { target: getTarget(source), isDate: !!source.type?.dateTime },
+            value: rec => rec.path[level] ?? null, format: formatOf(source)
+        };
     };
     const measureColumn = (i: number): Column => ({
+        id: "m:" + (valueSources[i].queryName || valueSources[i].displayName),
         name: valueSources[i].displayName,
         numeric: !valueSources[i].type?.text,
         value: rec => cell(rec.node, series[rec.series].key, i) ?? null,
@@ -417,8 +519,10 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
     }
     if (hasLegend && options.showLegendColumn) {
         columns.push({
+            id: "l:" + (legendSource.queryName || legendSource.displayName),
             name: legendSource.displayName,
             numeric: isNumeric(legendSource),
+            filter: { target: getTarget(legendSource), isDate: !!legendSource.type?.dateTime },
             value: rec => series[rec.series].raw,
             format: formatOf(legendSource)
         });
@@ -448,6 +552,7 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
         format: v => formatter.format(v),
         valueFormat: valueSource.format,
         isPercent: /%/.test(valueSource.format || ""),
+        detailIsPercent: /%/.test(detailSource?.format || ""),
         detailName: detailSource?.displayName,
         detailFormat: v => detailFormatter.format(v),
         grandTotal: cats.reduce((a, c) => a + c.stack, 0),
