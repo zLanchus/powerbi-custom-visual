@@ -1,7 +1,7 @@
 {
   "name": "barras-base-nominal-visual",
   "description": "Barras empilhadas para Power BI com base nominal filtrável ao lado.",
-  "version": "1.1.0.0",
+  "version": "1.2.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/zLanchus/powerbi-custom-visual"

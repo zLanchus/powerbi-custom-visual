@@ -14,13 +14,13 @@
         },
         {
             "displayName": "Valores",
-            "description": "Medida que define o tamanho das barras. Para contar pessoas, arraste o ID ou o nome e escolha Contagem.",
+            "description": "Medida que define o tamanho das barras (contagem, soma, %…), calculada pelo Power BI para cada barra e segmento. Para contar pessoas, arraste a matrícula e escolha Contagem.",
             "name": "value",
             "kind": "Measure"
         },
         {
             "displayName": "Detalhe",
-            "description": "Medida mostrada ao lado do valor, ex.: 61 (R$ 420 mil). A barra junta os registros por soma, média, mínimo ou máximo (Formatar → Detalhe).",
+            "description": "Outra medida mostrada ao lado do valor, ex.: 24,2% (18). Calculada pelo Power BI para cada barra e segmento.",
             "name": "detail",
             "kind": "Measure"
         },
@@ -298,6 +298,20 @@
                         "bool": true
                     }
                 },
+                "totalMode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "measure",
+                                "displayName": "Medida calculada para a barra"
+                            },
+                            {
+                                "value": "sum",
+                                "displayName": "Soma dos segmentos"
+                            }
+                        ]
+                    }
+                },
                 "totalFontSize": {
                     "type": {
                         "formatting": {
@@ -355,28 +369,6 @@
                             {
                                 "value": "plain",
                                 "displayName": "Sem separador: 18"
-                            }
-                        ]
-                    }
-                },
-                "aggregation": {
-                    "type": {
-                        "enumeration": [
-                            {
-                                "value": "sum",
-                                "displayName": "Soma"
-                            },
-                            {
-                                "value": "avg",
-                                "displayName": "Média"
-                            },
-                            {
-                                "value": "min",
-                                "displayName": "Mínimo"
-                            },
-                            {
-                                "value": "max",
-                                "displayName": "Máximo"
                             }
                         ]
                     }
@@ -597,6 +589,49 @@
                 }
             }
         },
+        "totals": {
+            "properties": {
+                "rowSubtotals": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnSubtotals": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "rowSubtotalsPerLevel": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnSubtotalsPerLevel": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "levelSubtotalEnabled": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "rowSubtotalsType": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Top",
+                                "displayName": "Em cima"
+                            },
+                            {
+                                "value": "Bottom",
+                                "displayName": "Embaixo"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "rows": {
             "properties": {
                 "fill": {
@@ -678,8 +713,8 @@
                     }
                 }
             ],
-            "categorical": {
-                "categories": {
+            "matrix": {
+                "rows": {
                     "select": [
                         {
                             "for": {
@@ -698,36 +733,84 @@
                         }
                     }
                 },
-                "values": {
-                    "group": {
-                        "by": "legend",
-                        "select": [
-                            {
-                                "for": {
-                                    "in": "value"
-                                }
-                            },
-                            {
-                                "for": {
-                                    "in": "detail"
-                                }
-                            },
-                            {
-                                "for": {
-                                    "in": "columnMeasures"
-                                }
-                            }
-                        ],
-                        "dataReductionAlgorithm": {
-                            "top": {
-                                "count": 30
-                            }
+                "columns": {
+                    "for": {
+                        "in": "legend"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {
+                            "count": 30
                         }
                     }
+                },
+                "values": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "value"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "detail"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "columnMeasures"
+                            }
+                        }
+                    ]
                 }
             }
         }
     ],
+    "subtotals": {
+        "matrix": {
+            "rowSubtotals": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "rowSubtotals"
+                },
+                "defaultValue": true
+            },
+            "rowSubtotalsPerLevel": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "rowSubtotalsPerLevel"
+                },
+                "defaultValue": false
+            },
+            "columnSubtotals": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "columnSubtotals"
+                },
+                "defaultValue": true
+            },
+            "columnSubtotalsPerLevel": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "columnSubtotalsPerLevel"
+                },
+                "defaultValue": false
+            },
+            "levelSubtotalEnabled": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "levelSubtotalEnabled"
+                },
+                "defaultValue": true
+            },
+            "rowSubtotalsType": {
+                "propertyIdentifier": {
+                    "objectName": "totals",
+                    "propertyName": "rowSubtotalsType"
+                },
+                "defaultValue": "Bottom"
+            }
+        }
+    },
     "sorting": {
         "default": {}
     },

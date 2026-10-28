@@ -15,13 +15,11 @@ import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ISelectionId = powerbi.visuals.ISelectionId;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataView = powerbi.DataView;
-import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
-import DataViewValueColumn = powerbi.DataViewValueColumn;
-import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import FilterAction = powerbi.FilterAction;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
-import { DARK, SERIES_PALETTE, VisualFormattingSettingsModel, enumValue } from "./settings";
+import { DARK, VisualFormattingSettingsModel, enumValue } from "./settings";
+import { Cat, Model, Rec, Series, buildModel, compareRaw, isBlank, label } from "./model";
 import {
     Selection,
     SelectionItem,
@@ -38,77 +36,6 @@ import {
 const SVG_NS = "http://www.w3.org/2000/svg";
 /** Quantas linhas a mais são desenhadas acima e abaixo da área visível da base. */
 const OVERSCAN = 8;
-
-/** Um item da legenda (um segmento de cada barra). */
-interface Series {
-    index: number;
-    key: string;
-    raw: PrimitiveValue;
-    name: string;
-    color: string;
-    selectionId: ISelectionId;
-    selector: powerbi.data.Selector;
-    valueColumn: DataViewValueColumn;
-    /** Medidas da base deste item da legenda, na ordem das colunas. */
-    measureColumns: Array<DataViewValueColumn | undefined>;
-    detailColumn: DataViewValueColumn | undefined;
-}
-
-/** Uma barra (um valor do eixo). */
-interface Cat {
-    key: string;
-    raw: PrimitiveValue;
-    label: string;
-    parts: number[];
-    counts: number[];
-    total: number;
-    /** Detalhe de cada segmento, juntando os registros (soma, quantidade, mínimo e máximo). */
-    detail: DetailAcc[];
-}
-
-interface DetailAcc {
-    sum: number;
-    n: number;
-    min: number;
-    max: number;
-}
-
-/** Um registro da base nominal: uma linha do Power BI num item da legenda. */
-interface Rec {
-    row: number;
-    cat: Cat;
-    series: number;
-    text?: string[];
-    search?: string;
-}
-
-interface Column {
-    name: string;
-    numeric: boolean;
-    value: (rec: Rec) => PrimitiveValue;
-    format: (value: PrimitiveValue) => string;
-}
-
-interface Model {
-    categoryName: string;
-    legendName: string;
-    valueName: string;
-    hasLegend: boolean;
-    series: Series[];
-    cats: Cat[];
-    records: Rec[];
-    columns: Column[];
-    format: (v: PrimitiveValue) => string;
-    valueFormat: string | undefined;
-    detailName: string | undefined;
-    detailFormat: (v: PrimitiveValue) => string;
-    grandTotal: number;
-    catTarget: IFilterTarget;
-    catIsDate: boolean;
-    legTarget: IFilterTarget | undefined;
-    legIsDate: boolean;
-    rowId: (rec: Rec) => ISelectionId;
-}
 
 interface SortState {
     column: string;
@@ -174,46 +101,9 @@ function readableText(background: string, dark: string): string {
     return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? dark : "#FFFFFF";
 }
 
-function toNumber(value: PrimitiveValue | undefined): number {
-    return typeof value === "number" && isFinite(value) ? value : 0;
-}
-
-function isBlank(value: PrimitiveValue | undefined): boolean {
-    return value === null || value === undefined || value === "";
-}
-
-function label(value: PrimitiveValue, format: string | undefined, locale: string): string {
-    if (isBlank(value)) {
-        return "(Em branco)";
-    }
-    if (format || value instanceof Date) {
-        return valueFormatter.format(value, format, false, locale);
-    }
-    return String(value);
-}
-
-function colorOf(objects: powerbi.DataViewObjects | undefined): string | undefined {
-    const fill = objects?.["dataColors"]?.["fill"] as powerbi.Fill | undefined;
-    return fill?.solid?.color || undefined;
-}
-
 /** Texto em minúsculas e sem acentos (para a pesquisa). */
 function normalize(text: string): string {
     return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-}
-
-function compareRaw(a: PrimitiveValue, b: PrimitiveValue): number {
-    const blankA = isBlank(a);
-    const blankB = isBlank(b);
-    if (blankA || blankB) {
-        return blankA === blankB ? 0 : blankA ? 1 : -1;
-    }
-    const x = a instanceof Date ? a.getTime() : a;
-    const y = b instanceof Date ? b.getTime() : b;
-    if (typeof x === "number" && typeof y === "number") {
-        return x - y;
-    }
-    return String(x).localeCompare(String(y), "pt-BR", { numeric: true, sensitivity: "base" });
 }
 
 /** Largura aproximada de um texto (para decidir se o rótulo cabe). */
@@ -353,8 +243,18 @@ export class Visual implements IVisual {
             this.width = options.viewport.width;
             this.height = options.viewport.height;
 
+            const table = this.formattingSettings.tableCard;
+            this.model = buildModel(dataView, {
+                locale: this.locale,
+                order: enumValue(this.formattingSettings.barsCard.order),
+                emptyText: String(table.emptyText.value ?? ""),
+                showCategoryColumn: table.showCategoryColumn.value,
+                showLegendColumn: table.showLegendColumn.value,
+                showValueColumn: table.showValueColumn.value,
+                builder: () => this.host.createSelectionIdBuilder()
+            });
             // Base em partes: pede a próxima até chegar ao máximo configurado.
-            const rows = dataView?.categorical?.categories?.[0]?.values.length || 0;
+            const rows = this.model?.records.length || 0;
             const limit = Math.max(1, this.formattingSettings.tableCard.maxRows.value || 30) * 1000;
             this.loading = false;
             this.truncated = false;
@@ -366,7 +266,6 @@ export class Visual implements IVisual {
                 }
             }
 
-            this.model = this.buildModel(dataView);
             this.syncSelection(options);
             this.render();
             this.events?.renderingFinished(options);
@@ -410,228 +309,6 @@ export class Visual implements IVisual {
     }
 
     // ------------------------------------------------------------- dados
-
-    private buildModel(dataView: DataView | undefined): Model | undefined {
-        const categorical = dataView?.categorical;
-        const categories = categorical?.categories || [];
-        const category = categories.find(c => c.source.roles?.["category"]);
-        const values = categorical?.values;
-        if (!category || !values || values.length === 0) {
-            return undefined;
-        }
-        const firstValue = values.find(c => c.source.roles?.["value"]);
-        if (!firstValue) {
-            return undefined;
-        }
-
-        const locale = this.locale;
-        const legendSource = values.source;
-        const hasLegend = !!legendSource;
-        const groups = values.grouped();
-        const builder = (): powerbi.visuals.ISelectionIdBuilder => this.host.createSelectionIdBuilder();
-        const roleIndex = (source: DataViewMetadataColumn, role: string): number =>
-            (source as unknown as { rolesIndex?: Record<string, number[]> }).rolesIndex?.[role]?.[0] ?? 0;
-        const byRole = (role: string) => (a: { source: DataViewMetadataColumn }, b: { source: DataViewMetadataColumn }): number =>
-            roleIndex(a.source, role) - roleIndex(b.source, role);
-
-        // Medidas da base: a ordem e os nomes vêm do primeiro grupo; em cada grupo, a mesma medida pelo queryName.
-        const groupColumns = (k: number): DataViewValueColumn[] =>
-            hasLegend ? groups[k].values : Array.from(values);
-        const measureSources = groupColumns(0)
-            .filter(c => c.source.roles?.["columnMeasures"])
-            .sort(byRole("columnMeasures"))
-            .map(c => c.source);
-        const sameMeasure = (a: DataViewMetadataColumn, b: DataViewMetadataColumn): boolean =>
-            (a.queryName || a.displayName) === (b.queryName || b.displayName);
-
-        const series: Series[] = [];
-        const groupCount = hasLegend ? groups.length : 1;
-        for (let k = 0; k < groupCount; k++) {
-            const columns = groupColumns(k);
-            const valueColumn = columns.find(c => c.source.roles?.["value"]);
-            if (!valueColumn) {
-                continue;
-            }
-            const measureColumns = measureSources.map(m => columns.find(c => c.source.roles?.["columnMeasures"] && sameMeasure(c.source, m)));
-            const detailColumn = columns.find(c => c.source.roles?.["detail"]);
-            if (hasLegend) {
-                const group = groups[k];
-                const selectionId = builder().withSeries(values, group).createSelectionId();
-                series.push({
-                    index: series.length,
-                    key: valueKey(group.name),
-                    raw: group.name,
-                    name: label(group.name, legendSource?.format, locale),
-                    color: colorOf(group.objects) || SERIES_PALETTE[series.length % SERIES_PALETTE.length],
-                    selectionId,
-                    selector: selectionId.getSelector(),
-                    valueColumn,
-                    measureColumns,
-                    detailColumn
-                });
-            } else {
-                const queryName = valueColumn.source.queryName || valueColumn.source.displayName;
-                series.push({
-                    index: 0,
-                    key: "",
-                    raw: null,
-                    name: valueColumn.source.displayName,
-                    color: colorOf(valueColumn.source.objects) || SERIES_PALETTE[0],
-                    selectionId: builder().withMeasure(queryName).createSelectionId(),
-                    selector: { metadata: queryName },
-                    valueColumn,
-                    measureColumns,
-                    detailColumn
-                });
-            }
-        }
-        if (series.length === 0) {
-            return undefined;
-        }
-
-        // Barras (somando os registros) e registros da base.
-        const catMap = new Map<string, Cat>();
-        const cats: Cat[] = [];
-        const records: Rec[] = [];
-        const n = category.values.length;
-        for (let row = 0; row < n; row++) {
-            const raw = category.values[row];
-            const key = valueKey(raw);
-            let cat = catMap.get(key);
-            if (!cat) {
-                cat = {
-                    key, raw, label: label(raw, category.source.format, locale),
-                    parts: series.map(() => 0), counts: series.map(() => 0), total: 0,
-                    detail: series.map(() => ({ sum: 0, n: 0, min: Infinity, max: -Infinity }))
-                };
-                catMap.set(key, cat);
-                cats.push(cat);
-            }
-            for (const s of series) {
-                const value = s.valueColumn.values[row];
-                const detail = s.detailColumn?.values[row];
-                const present = !isBlank(value) || !isBlank(detail) || s.measureColumns.some(c => c && !isBlank(c.values[row]));
-                if (!present) {
-                    continue;
-                }
-                const v = Math.max(0, toNumber(value));
-                cat.parts[s.index] += v;
-                cat.counts[s.index]++;
-                cat.total += v;
-                if (typeof detail === "number" && isFinite(detail)) {
-                    const acc = cat.detail[s.index];
-                    acc.sum += detail;
-                    acc.n++;
-                    acc.min = Math.min(acc.min, detail);
-                    acc.max = Math.max(acc.max, detail);
-                }
-                records.push({ row, cat, series: s.index });
-            }
-        }
-
-        const order = enumValue(this.formattingSettings.barsCard.order);
-        if (order === "desc") {
-            cats.sort((a, b) => b.total - a.total);
-        } else if (order === "asc") {
-            cats.sort((a, b) => a.total - b.total);
-        } else if (order === "alpha") {
-            cats.sort((a, b) => compareRaw(a.raw, b.raw));
-        }
-
-        // Colunas da base nominal.
-        const table = this.formattingSettings.tableCard;
-        const emptyText = String(table.emptyText.value ?? "");
-        const formatOf = (source: DataViewMetadataColumn): ((v: PrimitiveValue) => string) => {
-            const f = source.format ? valueFormatter.create({ format: source.format, cultureSelector: locale }) : undefined;
-            return v => {
-                if (isBlank(v)) {
-                    return emptyText;
-                }
-                if (f) {
-                    return f.format(v);
-                }
-                if (v instanceof Date) {
-                    return v.toLocaleDateString(locale);
-                }
-                if (typeof v === "boolean") {
-                    return v ? "Verdadeiro" : "Falso";
-                }
-                if (typeof v === "number") {
-                    return Number.isInteger(v) ? String(v) : v.toLocaleString(locale);
-                }
-                return String(v);
-            };
-        };
-        const isNumeric = (source: DataViewMetadataColumn): boolean => !!(source.type?.numeric || source.type?.integer);
-        const columns: Column[] = [];
-        const detail = categories.filter(c => c.source.roles?.["columns"]).sort(byRole("columns"));
-        if (table.showCategoryColumn.value && !category.source.roles?.["columns"]) {
-            columns.push(this.categoryColumn(category, formatOf));
-        }
-        if (hasLegend && legendSource && table.showLegendColumn.value) {
-            columns.push({
-                name: legendSource.displayName,
-                numeric: isNumeric(legendSource),
-                value: rec => series[rec.series].raw,
-                format: formatOf(legendSource)
-            });
-        }
-        for (const column of detail) {
-            columns.push(this.categoryColumn(column, formatOf));
-        }
-        measureSources.forEach((source, m) => {
-            columns.push({
-                name: source.displayName,
-                numeric: isNumeric(source),
-                value: rec => series[rec.series].measureColumns[m]?.values[rec.row] ?? null,
-                format: formatOf(source)
-            });
-        });
-        if (table.showValueColumn.value || columns.length === 0) {
-            columns.push({
-                name: firstValue.source.displayName,
-                numeric: true,
-                value: rec => series[rec.series].valueColumn.values[rec.row],
-                format: formatOf(firstValue.source)
-            });
-        }
-
-        const formatter = valueFormatter.create({ format: firstValue.source.format, cultureSelector: locale });
-        const detailSource = series.find(x => x.detailColumn)?.detailColumn?.source;
-        const detailFormatter = valueFormatter.create({ format: detailSource?.format, cultureSelector: locale });
-        return {
-            categoryName: category.source.displayName,
-            legendName: legendSource?.displayName || "",
-            valueName: firstValue.source.displayName,
-            hasLegend,
-            series,
-            cats,
-            records,
-            columns,
-            format: v => formatter.format(v),
-            valueFormat: firstValue.source.format,
-            detailName: detailSource?.displayName,
-            detailFormat: v => detailFormatter.format(v),
-            grandTotal: cats.reduce((a, c) => a + c.total, 0),
-            catTarget: getTarget(category.source),
-            catIsDate: !!category.source.type?.dateTime,
-            legTarget: legendSource ? getTarget(legendSource) : undefined,
-            legIsDate: !!legendSource?.type?.dateTime,
-            rowId: rec => {
-                const b = builder().withCategory(category, rec.row);
-                return (hasLegend ? b.withSeries(values, groups[rec.series]) : b).createSelectionId();
-            }
-        };
-    }
-
-    private categoryColumn(column: DataViewCategoryColumn, formatOf: (s: DataViewMetadataColumn) => (v: PrimitiveValue) => string): Column {
-        return {
-            name: column.source.displayName,
-            numeric: !!(column.source.type?.numeric || column.source.type?.integer),
-            value: rec => column.values[rec.row],
-            format: formatOf(column.source)
-        };
-    }
 
     // ------------------------------------------------------------- seleção
 
@@ -865,12 +542,12 @@ export class Visual implements IVisual {
             return;
         }
 
-        const maxTotal = Math.max(...model.cats.map(c => c.total), 0);
+        const maxTotal = Math.max(...model.cats.map(c => c.stack), 0);
         const totalSize = labels.totalFontSize.value;
         const catSize = axes.categoryFontSize.value;
         const valSize = axes.valueFontSize.value;
         const showTotal = labels.showTotal.value;
-        const totalTexts = model.cats.map(c => model.format(c.total));
+        const totalTexts = model.cats.map(c => model.format(this.barTotal(c)));
         const det = s.detailCard;
         const detailWhere = enumValue(det.where);
         const hasDetail = det.show.value && !!model.detailName;
@@ -972,7 +649,7 @@ export class Visual implements IVisual {
 
         model.cats.forEach((cat, i) => {
             const offset = (horizontal ? plotY : plotX) + slot * i + (slot - thick) / 2;
-            const full = scale(cat.total);
+            const full = scale(cat.stack);
 
             // Área clicável da categoria (a faixa inteira): filtra a barra toda.
             const hit = horizontal
@@ -1018,7 +695,7 @@ export class Visual implements IVisual {
                 group.appendChild(rect);
 
                 if (segMode !== "none") {
-                    const shareOfBar = cat.total > 0 ? value / cat.total : 0;
+                    const shareOfBar = cat.stack > 0 ? value / cat.stack : 0;
                     const text = segMode === "value" ? model.format(value)
                         : segMode === "percent" ? this.pct(shareOfBar)
                             : `${model.format(value)} (${this.pct(shareOfBar)})`;
@@ -1087,20 +764,14 @@ export class Visual implements IVisual {
             : { x1: plotX, x2: plotX + plotW, y1: plotY + plotH, y2: plotY + plotH, class: "bb-baseline", stroke: axes.gridColor.value.value }));
     }
 
-    /** Detalhe de um segmento (k) ou da barra inteira (sem k), juntando os registros como configurado. */
+    /** Detalhe de um segmento (k) ou da barra inteira (sem k), calculado pelo Power BI. */
     private detailValue(cat: Cat, k?: number): number | undefined {
-        const parts = k === undefined ? cat.detail : [cat.detail[k]];
-        const n = parts.reduce((a, d) => a + d.n, 0);
-        if (n === 0) {
-            return undefined;
-        }
-        const sum = parts.reduce((a, d) => a + d.sum, 0);
-        switch (enumValue(this.formattingSettings.detailCard.aggregation)) {
-            case "avg": return sum / n;
-            case "min": return Math.min(...parts.map(d => d.min));
-            case "max": return Math.max(...parts.map(d => d.max));
-            default: return sum;
-        }
+        return k === undefined ? cat.detailTotal : cat.detail[k];
+    }
+
+    /** Total no rótulo da barra: a medida calculada para a barra (padrão) ou a soma dos segmentos. */
+    private barTotal(cat: Cat): number {
+        return enumValue(this.formattingSettings.dataLabelsCard.totalMode) === "sum" ? cat.stack : cat.total ?? cat.stack;
     }
 
     /** Texto do detalhe no estilo escolhido: (18), · 18 ou 18. */
@@ -1139,10 +810,14 @@ export class Visual implements IVisual {
             }
             items.push({ displayName: model.valueName, value: model.format(value), color: model.hasLegend ? undefined : series.color });
             if (model.series.length > 1) {
-                items.push({ displayName: "% da barra", value: this.pct(cat.total > 0 ? value / cat.total : 0) });
-                items.push({ displayName: "Total da barra", value: model.format(cat.total) });
+                if (!model.isPercent) {
+                    items.push({ displayName: "% da barra", value: this.pct(cat.stack > 0 ? value / cat.stack : 0) });
+                }
+                items.push({ displayName: "Total da barra", value: model.format(this.barTotal(cat)) });
             }
-            items.push({ displayName: "% do total geral", value: this.pct(model.grandTotal > 0 ? value / model.grandTotal : 0) });
+            if (!model.isPercent) {
+                items.push({ displayName: "% do total geral", value: this.pct(model.grandTotal > 0 ? value / model.grandTotal : 0) });
+            }
             const detail = this.detailValue(cat, k);
             if (model.detailName && detail !== undefined) {
                 items.push({ displayName: model.detailName, value: model.detailFormat(detail) });
@@ -1395,7 +1070,7 @@ export class Visual implements IVisual {
                 if (isBlank(va) || isBlank(vb)) {
                     return compareRaw(va, vb);
                 }
-                return dir * compareRaw(va, vb) || a.row - b.row;
+                return dir * compareRaw(va, vb);
             });
         }
         table.rows = rows;

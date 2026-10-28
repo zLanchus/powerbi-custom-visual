@@ -41,7 +41,7 @@ export const ORDER_ITEMS = enumItems(["data", "Ordem do Power BI"], ["desc", "Ma
 export const SEGMENT_LABEL_ITEMS = enumItems(["none", "Nenhum"], ["value", "Valor"], ["percent", "% da barra"], ["both", "Valor e %"]);
 export const DETAIL_STYLE_ITEMS = enumItems(["paren", "Entre parênteses: (18)"], ["dot", "Após um ponto: · 18"], ["plain", "Sem separador: 18"]);
 export const DETAIL_WHERE_ITEMS = enumItems(["total", "No total da barra"], ["segment", "Nos segmentos"], ["both", "No total e nos segmentos"]);
-export const DETAIL_AGG_ITEMS = enumItems(["sum", "Soma"], ["avg", "Média"], ["min", "Mínimo"], ["max", "Máximo"]);
+export const TOTAL_MODE_ITEMS = enumItems(["measure", "Medida calculada para a barra"], ["sum", "Soma dos segmentos"]);
 export const LEGEND_POS_ITEMS = enumItems(["top", "Em cima"], ["bottom", "Embaixo"]);
 
 class GeneralCard extends FormattingSettingsCard {
@@ -107,13 +107,15 @@ class DataLabelsCard extends FormattingSettingsCard {
     autoContrast = toggle("autoContrast", "Ajustar cor do texto ao fundo automaticamente", true);
     segmentColor = color("segmentColor", "Cor do texto dos segmentos", DARK);
     showTotal = toggle("showTotal", "Mostrar total da barra", true);
+    totalMode = dropdown("totalMode", "Valor do total", TOTAL_MODE_ITEMS, 0,
+        "Medida calculada para a barra: o Power BI calcula a medida para a barra inteira (certo para %, médias e contagens distintas).");
     totalFontSize = num("totalFontSize", "Tamanho da fonte do total", 12);
     totalColor = color("totalColor", "Cor do total", DARK);
 
     name = "dataLabels";
     displayName = "Rótulos de dados";
     slices: FormattingSettingsSlice[] = [
-        this.segment, this.segmentFontSize, this.autoContrast, this.segmentColor, this.showTotal, this.totalFontSize, this.totalColor
+        this.segment, this.segmentFontSize, this.autoContrast, this.segmentColor, this.showTotal, this.totalMode, this.totalFontSize, this.totalColor
     ];
 }
 
@@ -121,8 +123,6 @@ class DetailCard extends FormattingSettingsCard {
     show = toggle("show", "Mostrar", true);
     where = dropdown("where", "Onde mostrar", DETAIL_WHERE_ITEMS, 0);
     style = dropdown("style", "Estilo", DETAIL_STYLE_ITEMS, 0);
-    aggregation = dropdown("aggregation", "Como juntar os registros", DETAIL_AGG_ITEMS, 0,
-        "A barra junta o detalhe de cada registro da base: soma (contagens, valores), média, mínimo ou máximo.");
     fontSize = num("fontSize", "Tamanho da fonte", 11);
     fontColor = color("fontColor", "Cor do texto (no total)", MUTED);
     bold = toggle("bold", "Negrito", false);
@@ -131,7 +131,7 @@ class DetailCard extends FormattingSettingsCard {
     displayName = "Detalhe";
     description = "Medida do campo Detalhe, mostrada ao lado do valor.";
     slices: FormattingSettingsSlice[] = [
-        this.show, this.where, this.style, this.aggregation, this.fontSize, this.fontColor, this.bold
+        this.show, this.where, this.style, this.fontSize, this.fontColor, this.bold
     ];
 }
 
