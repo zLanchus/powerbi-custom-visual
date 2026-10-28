@@ -134,6 +134,24 @@
                         ]
                     }
                 },
+                "cumulative": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "none",
+                                "displayName": "Não acumular"
+                            },
+                            {
+                                "value": "sum",
+                                "displayName": "Acumular (cada barra soma as anteriores)"
+                            },
+                            {
+                                "value": "measure",
+                                "displayName": "A medida já é acumulada (só a base acompanha)"
+                            }
+                        ]
+                    }
+                },
                 "gap": {
                     "type": {
                         "numeric": true

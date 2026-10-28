@@ -124,6 +124,7 @@
     "features": [
       "Clique num segmento, numa barra ou na legenda e a base mostra só aqueles registros",
       "Detalhe ao lado do valor: percentual com o número absoluto, como 22,2% (4)",
+      "Modo acumulado: clicar numa barra mostra a base até ela",
       "Pesquisa, ordenação por coluna e contagem de registros",
       "Colunas ou barras horizontais, base à direita, à esquerda ou embaixo",
       "Também filtra os outros visuais da página (opcional)",
@@ -132,6 +133,7 @@
     "cover": "1-padrao.png",
     "images": [
       "5-percentual.png",
+      "6-acumulado.png",
       "2-filtrado.png",
       "3-legenda.png",
       "4-horizontal.png"

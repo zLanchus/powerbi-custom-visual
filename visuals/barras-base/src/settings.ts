@@ -38,6 +38,11 @@ const text = (name: string, displayName: string, value: string, placeholder = ""
 export const TABLE_POS_ITEMS = enumItems(["right", "À direita do gráfico"], ["left", "À esquerda do gráfico"], ["bottom", "Abaixo do gráfico"]);
 export const ORIENTATION_ITEMS = enumItems(["vertical", "Colunas (verticais)"], ["horizontal", "Barras (horizontais)"]);
 export const ORDER_ITEMS = enumItems(["data", "Ordem do Power BI"], ["desc", "Maior total primeiro"], ["asc", "Menor total primeiro"], ["alpha", "Categoria (A–Z)"]);
+export const CUMULATIVE_ITEMS = enumItems(
+    ["none", "Não acumular"],
+    ["sum", "Acumular (cada barra soma as anteriores)"],
+    ["measure", "A medida já é acumulada (só a base acompanha)"]
+);
 export const SEGMENT_LABEL_ITEMS = enumItems(["none", "Nenhum"], ["value", "Valor"], ["percent", "% da barra"], ["both", "Valor e %"]);
 export const DETAIL_STYLE_ITEMS = enumItems(["paren", "Entre parênteses: (18)"], ["dot", "Após um ponto: · 18"], ["plain", "Sem separador: 18"]);
 export const DETAIL_WHERE_ITEMS = enumItems(["total", "No total da barra"], ["segment", "Nos segmentos"], ["both", "No total e nos segmentos"]);
@@ -68,6 +73,10 @@ class LayoutCard extends FormattingSettingsCard {
 class BarsCard extends FormattingSettingsCard {
     orientation = dropdown("orientation", "Orientação", ORIENTATION_ITEMS, 0);
     order = dropdown("order", "Ordem das barras", ORDER_ITEMS, 0);
+    cumulative = dropdown("cumulative", "Acumulado", CUMULATIVE_ITEMS, 0,
+        "No acumulado, clicar numa barra mostra na base os registros dela e de todas as anteriores. " +
+        "\"Acumular\" soma as barras na ordem do gráfico (para contagens e somas); para %, crie a medida acumulada no DAX " +
+        "e escolha \"A medida já é acumulada\".");
     gap = num("gap", "Espaço entre barras (%)", 30, "Porcentagem do espaço de cada barra.");
     maxWidth = num("maxWidth", "Espessura máxima da barra (px)", 64, "0 = sem limite.");
     radius = num("radius", "Arredondamento (px)", 6);
@@ -78,7 +87,7 @@ class BarsCard extends FormattingSettingsCard {
     name = "bars";
     displayName = "Barras";
     slices: FormattingSettingsSlice[] = [
-        this.orientation, this.order, this.gap, this.maxWidth, this.radius, this.borderWidth, this.borderColor, this.selectedOpacity
+        this.orientation, this.order, this.cumulative, this.gap, this.maxWidth, this.radius, this.borderWidth, this.borderColor, this.selectedOpacity
     ];
 }
 

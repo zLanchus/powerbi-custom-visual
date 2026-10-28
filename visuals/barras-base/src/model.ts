@@ -206,6 +206,34 @@ function readColumns(levels: DataViewHierarchyLevel[], root: DataViewMatrixNode 
     return { members, index };
 }
 
+/** Acumulado: cada barra passa a somar ela mesma e as anteriores, na ordem do gráfico. */
+export function accumulate(model: Model): void {
+    const n = model.series.length;
+    const parts = new Array<number>(n).fill(0);
+    const detail = new Array<number | undefined>(n).fill(undefined);
+    const counts = new Array<number>(n).fill(0);
+    let total: number | undefined;
+    let detailTotal: number | undefined;
+    const add = (a: number | undefined, b: number | undefined): number | undefined =>
+        a === undefined ? b : b === undefined ? a : a + b;
+    for (const cat of model.cats) {
+        for (let k = 0; k < n; k++) {
+            parts[k] += cat.parts[k];
+            detail[k] = add(detail[k], cat.detail[k]);
+            counts[k] += cat.counts[k];
+        }
+        total = add(total, cat.total ?? cat.stack);
+        detailTotal = add(detailTotal, cat.detailTotal);
+        cat.parts = parts.slice();
+        cat.detail = detail.slice();
+        cat.counts = counts.slice();
+        cat.stack = parts.reduce((a, b) => a + b, 0);
+        cat.total = total;
+        cat.detailTotal = detailTotal;
+    }
+    model.grandTotal = model.cats.length ? model.cats[model.cats.length - 1].stack : 0;
+}
+
 export function buildModel(dataView: DataView | undefined, options: ModelOptions): Model | undefined {
     const matrix = dataView?.matrix;
     const rowLevels = matrix?.rows?.levels || [];

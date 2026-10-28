@@ -19,7 +19,7 @@ import FilterAction = powerbi.FilterAction;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
 import { DARK, VisualFormattingSettingsModel, enumValue } from "./settings";
-import { Cat, Model, Rec, Series, buildModel, compareRaw, isBlank, label } from "./model";
+import { Cat, Model, Rec, Series, accumulate, buildModel, compareRaw, isBlank, label } from "./model";
 import {
     Selection,
     SelectionItem,
@@ -180,6 +180,8 @@ export class Visual implements IVisual {
     /** A base passou do máximo de registros configurado. */
     private truncated = false;
     private crossFilterWasOn: boolean | undefined;
+    /** Posição de cada barra na ordem do gráfico (para o acumulado). */
+    private catIndex = new Map<string, number>();
     private lastCatTarget: IFilterTarget | undefined;
 
     // Partes da base nominal atualizadas sem redesenhar tudo.
@@ -266,6 +268,12 @@ export class Visual implements IVisual {
                 }
             }
 
+            if (this.model) {
+                if (this.cumulative() === "sum") {
+                    accumulate(this.model);
+                }
+                this.catIndex = new Map(this.model.cats.map((c, i) => [c.key, i]));
+            }
             this.syncSelection(options);
             this.render();
             this.events?.renderingFinished(options);
@@ -368,7 +376,7 @@ export class Visual implements IVisual {
         this.refreshTable();
         const model = this.model;
         if (model && this.formattingSettings.generalCard.crossFilter.value) {
-            const filter = buildFilter(selection, model.catTarget, model.legTarget);
+            const filter = buildFilter(this.expandCumulative(selection), model.catTarget, model.legTarget);
             if (filter) {
                 this.host.applyJsonFilter(filter, "general", "filter", FilterAction.merge);
             } else {
@@ -384,12 +392,61 @@ export class Visual implements IVisual {
         return { kind: "segment", item: { cat: cat.key, leg: series.key, catRaw: cat.raw, legRaw: series.raw } };
     }
 
+    private cumulative(): string {
+        return enumValue(this.formattingSettings.barsCard.cumulative);
+    }
+
+    /** No acumulado, a seleção de barras vale "até" a barra: a mais à frente selecionada (por item da legenda nos segmentos). */
+    private cumulativeOn(): boolean {
+        return this.cumulative() !== "none" && this.selection.kind !== "legend" && this.selection.items.size > 0;
+    }
+
+    private cumulativeLimit(leg: string): number {
+        const sel = this.selection;
+        let max = -1;
+        for (const item of sel.items.values()) {
+            if (sel.kind === "category" || item.leg === leg) {
+                max = Math.max(max, this.catIndex.get(item.cat) ?? -1);
+            }
+        }
+        return max;
+    }
+
+    /** Filtro para os outros visuais: no acumulado, inclui todas as barras até a selecionada. */
+    private expandCumulative(selection: Selection): Selection {
+        const model = this.model;
+        if (!model || this.cumulative() === "none" || selection.kind === "legend" || selection.items.size === 0) {
+            return selection;
+        }
+        const limits = new Map<string, SelectionItem>();
+        for (const item of selection.items.values()) {
+            const current = limits.get(item.leg);
+            if (!current || (this.catIndex.get(item.cat) ?? -1) > (this.catIndex.get(current.cat) ?? -1)) {
+                limits.set(item.leg, item);
+            }
+        }
+        const expanded: Selection = { kind: selection.kind, items: new Map() };
+        for (const limit of limits.values()) {
+            const last = this.catIndex.get(limit.cat) ?? -1;
+            for (let i = 0; i <= last; i++) {
+                const cat = model.cats[i];
+                const item: SelectionItem = { ...limit, cat: cat.key, catRaw: cat.raw };
+                expanded.items.set(itemKey(item), item);
+            }
+        }
+        return expanded;
+    }
+
     private segmentOn(cat: Cat, k: number): boolean {
         const sel = this.selection;
         if (sel.items.size === 0) {
             return true;
         }
         const leg = this.model?.series[k]?.key ?? "";
+        if (this.cumulativeOn()) {
+            // Destaca só a barra escolhida (ela já mostra o acumulado).
+            return (this.catIndex.get(cat.key) ?? -2) === this.cumulativeLimit(sel.kind === "category" ? "" : leg);
+        }
         if (sel.kind === "category") {
             return sel.items.has(itemKey({ cat: cat.key, leg: "" }));
         }
@@ -1044,6 +1101,11 @@ export class Visual implements IVisual {
     }
 
     private recordOn(rec: Rec): boolean {
+        if (this.cumulativeOn()) {
+            // A base acompanha o total da barra: registros dela e de todas as anteriores.
+            const leg = this.selection.kind === "category" ? "" : this.model?.series[rec.series]?.key ?? "";
+            return (this.catIndex.get(rec.cat.key) ?? Infinity) <= this.cumulativeLimit(leg);
+        }
         return this.segmentOn(rec.cat, rec.series);
     }
 
@@ -1106,15 +1168,20 @@ export class Visual implements IVisual {
         if (sel.items.size === 0) {
             const hint = el("div", "bb-hint");
             hint.appendChild(icon(ICON_FILTER, 12));
-            hint.appendChild(el("span", undefined, model.hasLegend
-                ? "Clique numa barra ou na legenda para filtrar a base."
-                : "Clique numa barra para filtrar a base."));
+            hint.appendChild(el("span", undefined, this.cumulative() !== "none"
+                ? "Clique numa barra para ver a base acumulada até ela."
+                : model.hasLegend
+                    ? "Clique numa barra ou na legenda para filtrar a base."
+                    : "Clique numa barra para filtrar a base."));
             bar.appendChild(hint);
             return;
         }
         const seriesByKey = new Map(model.series.map(s => [s.key, s]));
         const catByKey = new Map(model.cats.map(c => [c.key, c]));
-        const items = Array.from(sel.items.values());
+        const cumulative = this.cumulativeOn();
+        // No acumulado, um chip por limite ("Até Março"), mesmo quando o filtro restaurado traz todas as barras.
+        const items = Array.from(sel.items.values()).filter(item => !cumulative
+            || (this.catIndex.get(item.cat) ?? -2) === this.cumulativeLimit(sel.kind === "category" ? "" : item.leg));
         const shown = items.slice(0, 3);
         for (const item of shown) {
             const chip = el("span", "bb-chip");
@@ -1131,7 +1198,7 @@ export class Visual implements IVisual {
             if (sel.kind !== "category") {
                 parts.push(series?.name ?? label(item.legRaw ?? null, undefined, this.locale));
             }
-            const text = parts.join(" · ");
+            const text = (cumulative ? "Até " : "") + parts.join(" · ");
             chip.appendChild(el("span", "bb-chip-text", text));
             chip.title = text;
             const remove = el("button", "bb-chip-x");
@@ -1142,6 +1209,14 @@ export class Visual implements IVisual {
                 e.stopPropagation();
                 const next: Selection = { kind: sel.kind, items: new Map(sel.items) };
                 next.items.delete(itemKey(item));
+                if (cumulative) {
+                    // Tira o acumulado inteiro daquele item (as barras anteriores vêm junto no filtro restaurado).
+                    for (const [key, other] of next.items) {
+                        if (sel.kind === "category" || other.leg === item.leg) {
+                            next.items.delete(key);
+                        }
+                    }
+                }
                 this.setSelection(next.items.size ? next : emptySelection());
             });
             chip.appendChild(remove);
