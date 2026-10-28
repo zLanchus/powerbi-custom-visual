@@ -15,12 +15,18 @@ import PrimitiveValue = powerbi.PrimitiveValue;
 import { SERIES_PALETTE } from "./settings";
 import { getTarget, valueKey } from "./filters";
 
-/** Um item da legenda (um segmento de cada barra). */
+/** Um segmento de cada barra: um item da Legenda ou, sem Legenda, uma das medidas de Valores. */
 export interface Series {
     index: number;
     key: string;
     raw: PrimitiveValue;
     name: string;
+    /** Item da Legenda na hierarquia de colunas ("" sem Legenda) e medida de Valores usada. */
+    member: string;
+    measure: number;
+    valueName: string;
+    format: (v: PrimitiveValue) => string;
+    isPercent: boolean;
     color: string;
     selectionId: ISelectionId;
     selector: powerbi.data.Selector;
@@ -44,15 +50,22 @@ export interface Cat {
     counts: number[];
 }
 
-/** Um registro da base nominal: uma linha da matriz num item da legenda. */
+/**
+ * Um registro da base nominal: uma linha da matriz num item da legenda.
+ * Com várias medidas empilhadas, o registro é a linha (uma vez só) e entra nos segmentos em que tem valor.
+ */
 export interface Rec {
     cat: Cat;
+    /** Segmento principal (cor do marcador). */
     series: number;
+    /** Segmentos a que o registro pertence (para o clique no gráfico). */
+    members: number[];
+    /** Valor do registro em cada segmento. */
+    values: Array<number | undefined>;
     /** Valores dos campos das linhas, por nível (Eixo, Colunas da base…). */
     path: PrimitiveValue[];
     node: DataViewMatrixNode;
-    /** Valores e Detalhe calculados para o registro (para recalcular as barras com os filtros das colunas). */
-    value: number | undefined;
+    /** Detalhe calculado para o registro (para recalcular as barras com os filtros das colunas). */
     detail: number | undefined;
     text?: string[];
     search?: string;
@@ -73,6 +86,8 @@ export interface Model {
     legendName: string;
     valueName: string;
     hasLegend: boolean;
+    /** Várias medidas em Valores, cada uma um segmento (sem Legenda). */
+    stackedMeasures: boolean;
     series: Series[];
     cats: Cat[];
     records: Rec[];
@@ -226,11 +241,7 @@ function aggregate(values: Array<number | undefined>, mode: string): number | un
     return mode === "avg" ? sum / nums.length : sum;
 }
 
-/**
- * Descobre como a medida se comporta nos registros, comparando o valor que o Power BI calculou para cada barra
- * com a soma, a média e a contagem dos registros dela (ex.: Contagem = soma; Salário médio ou % por pessoa = média).
- */
-export function detectMode(cats: Cat[], records: Rec[], which: "value" | "detail"): string | undefined {
+function groupByCat(records: Rec[]): Map<string, Rec[]> {
     const byCat = new Map<string, Rec[]>();
     for (const rec of records) {
         const list = byCat.get(rec.cat.key);
@@ -240,26 +251,48 @@ export function detectMode(cats: Cat[], records: Rec[], which: "value" | "detail
             byCat.set(rec.cat.key, [rec]);
         }
     }
-    const close = (a: number | undefined, b: number | undefined): boolean =>
-        a !== undefined && b !== undefined && Math.abs(a - b) <= 0.005 * Math.max(1, Math.abs(a), Math.abs(b));
-    const modes = ["sum", "avg", "count"];
-    const ok = new Set(modes);
-    let tested = 0;
-    for (const cat of cats) {
-        const recs = byCat.get(cat.key);
-        const target = which === "value" ? cat.total : cat.detailTotal;
-        if (!recs || target === undefined) {
-            continue;
-        }
-        tested++;
-        const values = recs.map(r => (which === "value" ? r.value : r.detail));
-        for (const mode of modes) {
-            if (!close(aggregate(values, mode), target)) {
-                ok.delete(mode);
+    return byCat;
+}
+
+/** Registros que entram na conta do segmento k (com medidas empilhadas, quem tem valor naquela medida, mesmo 0). */
+function inSeries(model: Model, rec: Rec, k: number): boolean {
+    return model.stackedMeasures ? rec.values[k] !== undefined : rec.series === k;
+}
+
+/** Primeiro modo (soma, média ou contagem) que reproduz todos os valores calculados pelo Power BI. */
+function matchMode(pairs: Array<{ target: number; values: Array<number | undefined> }>): string | undefined {
+    const close = (a: number | undefined, b: number): boolean =>
+        a !== undefined && Math.abs(a - b) <= 0.005 * Math.max(1, Math.abs(a), Math.abs(b));
+    if (pairs.length === 0) {
+        return undefined;
+    }
+    return ["sum", "avg", "count"].find(mode => pairs.every(p => close(aggregate(p.values, mode), p.target)));
+}
+
+/**
+ * Descobre como cada medida se comporta nos registros, comparando o valor que o Power BI calculou para cada segmento
+ * com a soma, a média e a contagem dos registros dele (ex.: Contagem = soma; Salário médio ou % por pessoa = média).
+ */
+export function detectModes(model: Model, cats: Cat[], records: Rec[]): { values: Array<string | undefined>; detail: string | undefined } {
+    const byCat = groupByCat(records);
+    const values = model.series.map((_, k) => {
+        const pairs: Array<{ target: number; values: Array<number | undefined> }> = [];
+        for (const cat of cats) {
+            const list = (byCat.get(cat.key) || []).filter(r => inSeries(model, r, k));
+            if (list.length) {
+                pairs.push({ target: cat.parts[k], values: list.map(r => r.values[k]) });
             }
         }
+        return matchMode(pairs);
+    });
+    const detailPairs: Array<{ target: number; values: Array<number | undefined> }> = [];
+    for (const cat of cats) {
+        const list = byCat.get(cat.key);
+        if (list && cat.detailTotal !== undefined) {
+            detailPairs.push({ target: cat.detailTotal, values: list.map(r => r.detail) });
+        }
     }
-    return tested > 0 ? modes.find(m => ok.has(m)) : undefined;
+    return { values, detail: matchMode(detailPairs) };
 }
 
 /**
@@ -267,33 +300,29 @@ export function detectMode(cats: Cat[], records: Rec[], which: "value" | "detail
  * (o Power BI não recalcula o próprio visual com um filtro aplicado por ele).
  * Barras sem nenhum registro somem, como num gráfico nativo filtrado.
  */
-export function recompute(model: Model, cats: Cat[], records: Rec[], valueMode: string, detailMode: string): Cat[] {
+export function recompute(model: Model, cats: Cat[], records: Rec[], valueModes: string[], detailMode: string): Cat[] {
     const n = model.series.length;
-    const byCat = new Map<string, Rec[]>();
-    for (const rec of records) {
-        const list = byCat.get(rec.cat.key);
-        if (list) {
-            list.push(rec);
-        } else {
-            byCat.set(rec.cat.key, [rec]);
-        }
-    }
+    const byCat = groupByCat(records);
     const out: Cat[] = [];
     for (const cat of cats) {
         const recs = byCat.get(cat.key);
         if (!recs) {
             continue;
         }
-        const bySeries = Array.from({ length: n }, (_, k) => recs.filter(r => r.series === k));
-        const parts = bySeries.map(list => (list.length ? Math.max(0, aggregate(list.map(r => r.value), valueMode) ?? 0) : 0));
+        const bySeries = Array.from({ length: n }, (_, k) => recs.filter(r => inSeries(model, r, k)));
+        const parts = bySeries.map((list, k) => (list.length ? Math.max(0, aggregate(list.map(r => r.values[k]), valueModes[k]) ?? 0) : 0));
+        const detailTotal = aggregate(recs.map(r => r.detail), detailMode);
         out.push({
             ...cat,
             parts,
             stack: parts.reduce((a, b) => a + b, 0),
-            total: aggregate(recs.map(r => r.value), valueMode),
-            detail: bySeries.map(list => (list.length ? aggregate(list.map(r => r.detail), detailMode) : undefined)),
-            detailTotal: aggregate(recs.map(r => r.detail), detailMode),
-            counts: bySeries.map(list => list.length)
+            // Com medidas empilhadas não há uma medida da barra inteira: o total é a soma dos segmentos.
+            total: model.stackedMeasures ? undefined : n === 1 ? parts[0] : aggregate(recs.map(r => r.values[r.series]), valueModes[0]),
+            detail: model.stackedMeasures ? parts.map(() => undefined)
+                : n === 1 ? [detailTotal]
+                    : bySeries.map(list => (list.length ? aggregate(list.map(r => r.detail), detailMode) : undefined)),
+            detailTotal,
+            counts: model.series.map((_, k) => recs.filter(r => r.members.includes(k)).length)
         });
     }
     return out;
@@ -338,10 +367,15 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
     if (catLevel < 0) {
         return undefined;
     }
-    const valueIndex = valueSources.findIndex(s => s.roles?.["value"]);
-    if (valueIndex < 0) {
+    const valueIndexes = valueSources
+        .map((source, i) => ({ source, i }))
+        .filter(x => x.source.roles?.["value"])
+        .sort((a, b) => roleIndex(a.source, "value") - roleIndex(b.source, "value"))
+        .map(x => x.i);
+    if (valueIndexes.length === 0) {
         return undefined;
     }
+    const valueIndex = valueIndexes[0];
     const detailIndex = valueSources.findIndex(s => s.roles?.["detail"]);
     const measureIndexes = valueSources
         .map((source, i) => ({ source, i }))
@@ -355,10 +389,15 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
     const legendLevel = colLevels.find(l => !l.sources?.[0]?.isMeasure);
     const legendSource = legendLevel?.sources?.[0];
     const hasLegend = !!legendSource;
+    const stackedMeasures = !hasLegend && valueIndexes.length > 1;
     const leaves = readColumns(colLevels, matrix.columns?.root, valueSources.length);
 
-    // Itens da legenda (ou uma série só, a própria medida).
+    // Segmentos: itens da Legenda ou, sem Legenda, as medidas de Valores (uma só = barra simples).
     const valueSource = valueSources[valueIndex];
+    const formatterOf = (source: DataViewMetadataColumn): ((v: PrimitiveValue) => string) => {
+        const f = valueFormatter.create({ format: source.format, cultureSelector: locale });
+        return v => f.format(v);
+    };
     const series: Series[] = hasLegend
         ? leaves.members.map((m, k) => {
             const selectionId = builder().withMatrixNode(m.node, colLevels).createSelectionId();
@@ -368,22 +407,36 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
                 key: m.key,
                 raw: m.raw,
                 name: label(m.raw, legendSource?.format, locale),
+                member: m.key,
+                measure: valueIndex,
+                valueName: valueSource.displayName,
+                format: formatterOf(valueSource),
+                isPercent: /%/.test(valueSource.format || ""),
                 color: colorOf(objects) || SERIES_PALETTE[k % SERIES_PALETTE.length],
                 selectionId,
                 selector: selectionId.getSelector(),
                 node: m.node
             };
         })
-        : [{
-            index: 0,
-            key: "",
-            raw: null,
-            name: valueSource.displayName,
-            color: colorOf(valueSource.objects) || SERIES_PALETTE[0],
-            selectionId: builder().withMeasure(valueSource.queryName || valueSource.displayName).createSelectionId(),
-            selector: { metadata: valueSource.queryName || valueSource.displayName },
-            node: undefined
-        }];
+        : valueIndexes.map((i, k) => {
+            const source = valueSources[i];
+            const queryName = source.queryName || source.displayName;
+            return {
+                index: k,
+                key: "m:" + queryName,
+                raw: source.displayName,
+                name: source.displayName,
+                member: "",
+                measure: i,
+                valueName: source.displayName,
+                format: formatterOf(source),
+                isPercent: /%/.test(source.format || ""),
+                color: colorOf(source.objects) || SERIES_PALETTE[k % SERIES_PALETTE.length],
+                selectionId: builder().withMeasure(queryName).createSelectionId(),
+                selector: { metadata: queryName },
+                node: undefined
+            };
+        });
     if (series.length === 0) {
         return undefined;
     }
@@ -404,14 +457,30 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
     const lastLevel = rowLevels.length - 1;
 
     const addRecords = (leaf: DataViewMatrixNode, cat: Cat, path: PrimitiveValue[]): void => {
+        if (stackedMeasures) {
+            // Uma linha por registro; ele entra nos segmentos das medidas em que tem valor (diferente de 0).
+            const present = [...valueIndexes, detailIndex, ...measureIndexes].some(m => !isBlank(cell(leaf, "", m)));
+            if (!present) {
+                return;
+            }
+            const values = series.map(s => numberOrUndefined(cell(leaf, "", s.measure)));
+            const members = series.filter(s => values[s.index] !== undefined && values[s.index] !== 0).map(s => s.index);
+            members.forEach(k => cat.counts[k]++);
+            records.push({
+                cat, series: members[0] ?? 0, members, values, path, node: leaf,
+                detail: numberOrUndefined(cell(leaf, "", detailIndex))
+            });
+            return;
+        }
         for (const s of series) {
-            const present = [valueIndex, detailIndex, ...measureIndexes].some(m => !isBlank(cell(leaf, s.key, m)));
+            const present = [valueIndex, detailIndex, ...measureIndexes].some(m => !isBlank(cell(leaf, s.member, m)));
             if (present) {
                 cat.counts[s.index]++;
+                const values = series.map(() => undefined as number | undefined);
+                values[s.index] = numberOrUndefined(cell(leaf, s.member, s.measure));
                 records.push({
-                    cat, series: s.index, path, node: leaf,
-                    value: numberOrUndefined(cell(leaf, s.key, valueIndex)),
-                    detail: numberOrUndefined(cell(leaf, s.key, detailIndex))
+                    cat, series: s.index, members: [s.index], values, path, node: leaf,
+                    detail: numberOrUndefined(cell(leaf, s.member, detailIndex))
                 });
             }
         }
@@ -433,14 +502,15 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
                 if (!nodeCat) {
                     // O valor da barra vem do próprio nó ou do nó de subtotal dele (depende do Power BI).
                     const values = hasValues(node) ? node : (node.children || []).find(c => c.isSubtotal);
-                    const parts = series.map(s => Math.max(0, toNumber(cell(values, s.key, valueIndex))));
+                    const parts = series.map(s => Math.max(0, toNumber(cell(values, s.member, s.measure))));
                     nodeCat = {
                         key, raw,
                         label: label(raw, catSource.format, locale),
                         parts,
                         stack: parts.reduce((a, b) => a + b, 0),
-                        total: hasLegend ? numberOrUndefined(cell(values, totalKey, valueIndex)) : parts[0],
-                        detail: series.map(s => numberOrUndefined(cell(values, s.key, detailIndex))),
+                        // Com medidas empilhadas não há uma medida da barra inteira: o total é a soma dos segmentos.
+                        total: hasLegend ? numberOrUndefined(cell(values, totalKey, valueIndex)) : stackedMeasures ? undefined : parts[0],
+                        detail: series.map(s => (stackedMeasures ? undefined : numberOrUndefined(cell(values, s.member, detailIndex)))),
                         detailTotal: numberOrUndefined(cell(values, totalKey, detailIndex)),
                         counts: series.map(() => 0)
                     };
@@ -505,7 +575,7 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
         id: "m:" + (valueSources[i].queryName || valueSources[i].displayName),
         name: valueSources[i].displayName,
         numeric: !valueSources[i].type?.text,
-        value: rec => cell(rec.node, series[rec.series].key, i) ?? null,
+        value: rec => cell(rec.node, series[rec.series].member, i) ?? null,
         format: formatOf(valueSources[i])
     });
 
@@ -526,6 +596,15 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
             value: rec => series[rec.series].raw,
             format: formatOf(legendSource)
         });
+    } else if (stackedMeasures && options.showLegendColumn) {
+        // Em que medidas o registro entra (ex.: "Desligados").
+        columns.push({
+            id: "#medidas",
+            name: "Medidas",
+            numeric: false,
+            value: rec => rec.members.map(k => series[k].name).join(", ") || null,
+            format: formatOf(undefined)
+        });
     }
     for (const x of detailLevels) {
         columns.push(levelColumn(x.level));
@@ -534,7 +613,9 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
         columns.push(measureColumn(i));
     }
     if (options.showValueColumn || columns.length === 0) {
-        columns.push(measureColumn(valueIndex));
+        for (const i of stackedMeasures ? valueIndexes : [valueIndex]) {
+            columns.push(measureColumn(i));
+        }
     }
 
     const formatter = valueFormatter.create({ format: valueSource.format, cultureSelector: locale });
@@ -543,8 +624,9 @@ export function buildModel(dataView: DataView | undefined, options: ModelOptions
     return {
         categoryName: catSource.displayName,
         legendName: legendSource?.displayName || "",
-        valueName: valueSource.displayName,
+        valueName: stackedMeasures ? "Valores" : valueSource.displayName,
         hasLegend,
+        stackedMeasures,
         series,
         cats,
         records,

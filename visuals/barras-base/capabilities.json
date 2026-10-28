@@ -14,7 +14,7 @@
         },
         {
             "displayName": "Valores",
-            "description": "Medida que define o tamanho das barras (contagem, soma, %…), calculada pelo Power BI para cada barra e segmento. Para contar pessoas, arraste a matrícula e escolha Contagem.",
+            "description": "Medida que define o tamanho das barras (contagem, soma, %…), calculada pelo Power BI para cada barra e segmento. Sem Legenda, dá para colocar várias medidas: cada uma vira um segmento empilhado.",
             "name": "value",
             "kind": "Measure"
         },
@@ -743,6 +743,17 @@
     "dataViewMappings": [
         {
             "conditions": [
+                {
+                    "category": {
+                        "max": 1
+                    },
+                    "legend": {
+                        "max": 0
+                    },
+                    "detail": {
+                        "max": 1
+                    }
+                },
                 {
                     "category": {
                         "max": 1

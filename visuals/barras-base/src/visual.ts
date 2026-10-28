@@ -19,7 +19,7 @@ import FilterAction = powerbi.FilterAction;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
 import { DARK, VisualFormattingSettingsModel, enumValue } from "./settings";
-import { Cat, Column, Model, Rec, Series, accumulate, buildModel, compareRaw, detectMode, isBlank, label, recompute } from "./model";
+import { Cat, Column, Model, Rec, Series, accumulate, buildModel, compareRaw, detectModes, isBlank, label, recompute } from "./model";
 import {
     Selection,
     SelectionItem,
@@ -303,9 +303,10 @@ export class Visual implements IVisual {
         settings.axesCard.categoryWidth.visible = enumValue(settings.barsCard.orientation) === "horizontal";
         settings.rowsCard.zebraColor.visible = settings.rowsCard.zebra.value;
         const det = settings.detailCard;
+        const stacked = (this.model?.series.length ?? 0) > 1;
         det.where.visible = !!this.model?.hasLegend;
         const table = settings.tableCard;
-        table.showLegendColumn.visible = table.colorMarker.visible = !!this.model?.hasLegend;
+        table.showLegendColumn.visible = table.colorMarker.visible = stacked;
 
         const cards = settings.cards.slice();
         if (this.model?.series.length) {
@@ -315,7 +316,7 @@ export class Visual implements IVisual {
                 value: { value: s.color },
                 selector: s.selector
             }));
-            const colorsTitle = this.model.hasLegend ? "Cores da legenda" : "Cor das barras";
+            const colorsTitle = this.model.hasLegend ? "Cores da legenda" : this.model.stackedMeasures ? "Cores das medidas" : "Cor das barras";
             class ColorsCard extends formattingSettings.SimpleCard {
                 name = "dataColors";
                 displayName = colorsTitle;
@@ -447,14 +448,15 @@ export class Visual implements IVisual {
         return true;
     }
 
-    /** Como refazer a barra com os registros filtrados: o escolhido, ou o que bate com o cálculo do Power BI. */
-    private recalcMode(model: Model, which: "value" | "detail"): string {
+    /** Como refazer cada segmento com os registros filtrados: o escolhido, ou o que bate com o cálculo do Power BI. */
+    private recalcModes(model: Model): { values: string[]; detail: string } {
         const mode = enumValue(this.formattingSettings.tableCard.recalc);
-        const isPercent = which === "value" ? model.isPercent : model.detailIsPercent;
-        if (mode !== "auto" && (which === "value" || mode !== "count")) {
-            return mode;
-        }
-        return detectMode(this.baseCats, model.records, which) ?? (isPercent ? "avg" : "sum");
+        const detected = detectModes(model, this.baseCats, model.records);
+        const fallback = (isPercent: boolean): string => (isPercent ? "avg" : "sum");
+        return {
+            values: model.series.map((s, k) => (mode !== "auto" ? mode : detected.values[k] ?? fallback(s.isPercent))),
+            detail: mode !== "auto" && mode !== "count" ? mode : detected.detail ?? fallback(model.detailIsPercent)
+        };
     }
 
     /** Barras exibidas: as do Power BI ou, com filtros nas colunas, recalculadas pelos registros filtrados; depois o acumulado. */
@@ -465,8 +467,8 @@ export class Visual implements IVisual {
         }
         const active = Array.from(this.columnFilters.values()).some(v => v.size > 0);
         if (active) {
-            model.cats = recompute(model, this.baseCats, model.records.filter(r => this.passesColumns(r)),
-                this.recalcMode(model, "value"), this.recalcMode(model, "detail"));
+            const modes = this.recalcModes(model);
+            model.cats = recompute(model, this.baseCats, model.records.filter(r => this.passesColumns(r)), modes.values, modes.detail);
         } else {
             model.cats = this.baseCats.map(c => ({ ...c }));
         }
@@ -682,7 +684,7 @@ export class Visual implements IVisual {
     }
 
     private segmentItem(cat: Cat, series: Series): { kind: SelectionKind; item: SelectionItem } {
-        if (!this.model?.hasLegend) {
+        if ((this.model?.series.length ?? 1) <= 1) {
             return { kind: "category", item: { cat: cat.key, leg: "", catRaw: cat.raw } };
         }
         return { kind: "segment", item: { cat: cat.key, leg: series.key, catRaw: cat.raw, legRaw: series.raw } };
@@ -853,7 +855,7 @@ export class Visual implements IVisual {
 
     private renderChartPane(pane: HTMLElement, model: Model, width: number, height: number): void {
         const legendCard = this.formattingSettings.legendCard;
-        const legendEl = legendCard.show.value && model.hasLegend ? this.renderLegend(model) : undefined;
+        const legendEl = legendCard.show.value && model.series.length > 1 ? this.renderLegend(model) : undefined;
         const legendBottom = enumValue(legendCard.position) === "bottom";
         const chart = el("div", "bb-chart");
         if (legendEl && !legendBottom) {
@@ -1065,9 +1067,9 @@ export class Visual implements IVisual {
 
                 if (segMode !== "none") {
                     const shareOfBar = cat.stack > 0 ? value / cat.stack : 0;
-                    const text = segMode === "value" ? model.format(value)
+                    const text = segMode === "value" ? series.format(value)
                         : segMode === "percent" ? this.pct(shareOfBar)
-                            : `${model.format(value)} (${this.pct(shareOfBar)})`;
+                            : `${series.format(value)} (${this.pct(shareOfBar)})`;
                     const along = horizontal ? size : thick;
                     const across = horizontal ? thick : size;
                     // O detalhe só entra se couber junto; senão, fica só o valor.
@@ -1177,9 +1179,9 @@ export class Visual implements IVisual {
             if (model.hasLegend) {
                 items.push({ displayName: model.legendName, value: series.name, color: series.color });
             }
-            items.push({ displayName: model.valueName, value: model.format(value), color: model.hasLegend ? undefined : series.color });
+            items.push({ displayName: series.valueName, value: series.format(value), color: model.hasLegend ? undefined : series.color });
             if (model.series.length > 1) {
-                if (!model.isPercent) {
+                if (!series.isPercent) {
                     items.push({ displayName: "% da barra", value: this.pct(cat.stack > 0 ? value / cat.stack : 0) });
                 }
                 items.push({ displayName: "Total da barra", value: model.format(this.barTotal(cat)) });
@@ -1213,7 +1215,7 @@ export class Visual implements IVisual {
         rect.addEventListener("contextmenu", (e: MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            this.selectionManager.showContextMenu(model.hasLegend ? series.selectionId : {} as ISelectionId, { x: e.clientX, y: e.clientY });
+            this.selectionManager.showContextMenu(model.series.length > 1 ? series.selectionId : {} as ISelectionId, { x: e.clientX, y: e.clientY });
         });
     }
 
@@ -1338,7 +1340,7 @@ export class Visual implements IVisual {
         }
 
         // Larguras das colunas a partir do cabeçalho e de uma amostra das linhas.
-        const marker = t.colorMarker.value && model.hasLegend;
+        const marker = t.colorMarker.value && model.series.length > 1;
         const rowSize = s.rowsCard.fontSize.value;
         const headSize = s.headerCard.fontSize.value;
         const sample = model.records.slice(0, 300);
@@ -1434,12 +1436,16 @@ export class Visual implements IVisual {
     }
 
     private recordOn(rec: Rec): boolean {
+        const byCategory = this.selection.kind === "category";
         if (this.cumulativeOn()) {
             // A base acompanha o total da barra: registros dela e de todas as anteriores.
-            const leg = this.selection.kind === "category" ? "" : this.model?.series[rec.series]?.key ?? "";
-            return (this.catIndex.get(rec.cat.key) ?? Infinity) <= this.cumulativeLimit(leg);
+            const index = this.catIndex.get(rec.cat.key) ?? Infinity;
+            return byCategory
+                ? index <= this.cumulativeLimit("")
+                : rec.members.some(k => index <= this.cumulativeLimit(this.model?.series[k]?.key ?? ""));
         }
-        return this.segmentOn(rec.cat, rec.series);
+        // Barra inteira: todos os registros dela; segmento ou legenda: os registros daquele segmento.
+        return byCategory ? this.segmentOn(rec.cat, rec.series) : rec.members.some(k => this.segmentOn(rec.cat, k));
     }
 
     /** Filtra (seleção + pesquisa), ordena e redesenha a base. */
@@ -1509,7 +1515,7 @@ export class Visual implements IVisual {
             hint.appendChild(icon(ICON_FILTER, 12));
             hint.appendChild(el("span", undefined, this.cumulative() !== "none"
                 ? "Clique numa barra para ver a base acumulada até ela."
-                : model.hasLegend
+                : model.series.length > 1
                     ? "Clique numa barra ou na legenda para filtrar a base."
                     : "Clique numa barra para filtrar a base."));
             bar.appendChild(hint);
@@ -1629,7 +1635,7 @@ export class Visual implements IVisual {
         const viewH = table.grid.clientHeight || 400;
         const start = Math.max(0, Math.floor(viewTop / h) - OVERSCAN);
         const end = Math.min(table.rows.length, Math.ceil((viewTop + viewH) / h) + OVERSCAN);
-        const marker = this.formattingSettings.tableCard.colorMarker.value && model.hasLegend;
+        const marker = this.formattingSettings.tableCard.colorMarker.value && model.series.length > 1;
 
         const fragment = document.createDocumentFragment();
         for (let i = start; i < end; i++) {
@@ -1640,7 +1646,7 @@ export class Visual implements IVisual {
             model.columns.forEach((column, c) => {
                 const text = this.cellText(rec, c);
                 const cell = el("div", "bb-td" + (column.numeric ? " bb-num" : ""));
-                if (c === 0 && marker) {
+                if (c === 0 && marker && rec.members.length) {
                     const dot = el("span", "bb-row-dot");
                     dot.style.background = model.series[rec.series].color;
                     cell.appendChild(dot);

@@ -124,6 +124,7 @@
     "features": [
       "Clique num segmento, numa barra ou na legenda e a base mostra só aqueles registros",
       "Detalhe ao lado do valor: percentual com o número absoluto, como 22,2% (4)",
+      "Empilha por legenda ou por várias medidas (ex.: Ativos + Afastados + Desligados)",
       "Modo acumulado: clicar numa barra mostra a base até ela",
       "Filtro em cada coluna da base, que também refaz as barras (e vice-versa)",
       "Pesquisa, ordenação por coluna e contagem de registros",
@@ -136,6 +137,7 @@
       "5-percentual.png",
       "6-acumulado.png",
       "7-filtro-colunas.png",
+      "8-medidas.png",
       "2-filtrado.png",
       "3-legenda.png",
       "4-horizontal.png"
