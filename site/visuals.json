@@ -126,12 +126,14 @@
       "Faixa de composição e % do total e do motivo",
       "Pesquisa sem acentos que abre os motivos achados pelo detalhamento",
       "Filtro cruzado por motivo ou detalhamento e navegação por teclado",
-      "Insight automático com texto editável"
+      "Insight automático com texto editável",
+      "Mais de 160 opções: fonte, tamanho, negrito/itálico e cor de cada texto, cores de tudo, layout e textos"
     ],
     "cover": "1-padrao.png",
     "images": [
       "2-pesquisa.png",
-      "3-filtro.png"
+      "3-filtro.png",
+      "4-personalizado.png"
     ]
   }
 ]

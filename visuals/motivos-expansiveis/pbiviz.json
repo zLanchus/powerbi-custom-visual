@@ -4,7 +4,7 @@
         "displayName": "Motivos Expansíveis",
         "guid": "motivosExpansiveis5E8B4DD7DA854EB5ABE37E7ADD5E5227",
         "visualClassName": "Visual",
-        "version": "1.0.0.0",
+        "version": "1.1.0.0",
         "description": "Ranking de motivos principais que abre, ao clicar, os motivos de detalhamento, com pesquisa, percentuais e insight automático.",
         "supportUrl": "https://github.com/zLanchus/powerbi-custom-visual/issues",
         "gitHubUrl": "https://github.com/zLanchus/powerbi-custom-visual"
@@ -22,5 +22,5 @@
     "capabilities": "capabilities.json",
     "dependencies": null,
     "stringResources": [],
-    "version": "1.0.0.0"
+    "version": "1.1.0.0"
 }

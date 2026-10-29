@@ -15,6 +15,8 @@ export interface Measure {
     index: number;
     name: string;
     isValue: boolean;
+    /** Formato da medida no modelo (ex.: "#,0"). */
+    formatString: string | undefined;
     format: Formatter;
 }
 
@@ -104,6 +106,7 @@ export function buildModel(dataView: DataView | undefined, locale: string): Mode
             index,
             name: source.displayName,
             isValue: !!source.roles?.["value"],
+            formatString: source.format,
             format: (v: PrimitiveValue) => (v === null || v === undefined ? "—" : formatter.format(v))
         };
     });

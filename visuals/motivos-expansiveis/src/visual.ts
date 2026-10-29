@@ -15,8 +15,8 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataView = powerbi.DataView;
 
-import { Item, Model, buildModel, rawValue } from "./model";
-import { VisualFormattingSettingsModel, enumValue } from "./settings";
+import { Formatter, Item, Model, buildModel, rawValue } from "./model";
+import { FONT, Font, NO_RESULT_TEMPLATE, VisualFormattingSettingsModel, enumValue } from "./settings";
 
 /** Um motivo como aparece na lista (depois de ordenar e pesquisar). */
 interface ReasonView {
@@ -128,6 +128,7 @@ export class Visual implements IVisual {
     private root: HTMLElement;
     private toolbar: HTMLElement;
     private searchBox: HTMLElement;
+    private searchIcon: SVGSVGElement;
     private searchInput: HTMLInputElement;
     private searchCount: HTMLElement;
     private searchClear: HTMLButtonElement;
@@ -136,6 +137,8 @@ export class Visual implements IVisual {
     private list: HTMLElement;
 
     private model: Model | undefined;
+    /** Formatador dos valores da renderização atual. */
+    private fmt: Formatter = v => String(v);
     private views: ReasonView[] = [];
     private ids = new Map<string, ISelectionId>();
     private locale = "pt-BR";
@@ -213,17 +216,11 @@ export class Visual implements IVisual {
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
         const s = this.formattingSettings;
-        const header = s.headerCard;
-        header.summary.visible = header.summarySize.visible = header.summaryColor.visible = header.showSummary.value;
-        s.toolbarCard.placeholder.visible = s.toolbarCard.showSearch.value;
-        s.reasonsCard.rankFill.visible = s.reasonsCard.rankColor.visible = s.reasonsCard.showRank.value;
-        const bars = s.reasonBarsCard;
-        bars.fill.visible = bars.trackColor.visible = bars.thickness.visible = bars.radius.visible = bars.show.value;
-        const values = s.valuesCard;
-        values.decimals.visible = values.percentColor.visible = values.showPercent.value;
-        values.valueColor.visible = values.bold.visible = values.showValue.value;
-        const insight = s.insightCard;
-        insight.template.visible = insight.fontSize.visible = insight.fontColor.visible = insight.fill.visible = insight.show.value;
+        // Os grupos com chave (Resumo, Posição, Seta…) já ficam desativados quando a chave está desligada.
+        s.generalCard.background.visible = s.generalCard.showBackground.value;
+        s.interactionCard.duration.visible = s.interactionCard.animate.value;
+        s.reasonBarsCard.highlightColor.visible = s.reasonBarsCard.highlightTop.value;
+        s.insightCard.iconColor.visible = s.insightCard.showIcon.value;
         return this.formattingSettingsService.buildFormattingModel(s);
     }
 
@@ -343,13 +340,60 @@ export class Visual implements IVisual {
         return this.query.trim() ? this.searchOpen : this.expanded;
     }
 
-    // ------------------------------------------------------------- formatação de números
+    // ------------------------------------------------------------- textos e números
+
+    /** Fonte de um texto: a escolhida nele ou, se ficou a padrão, a fonte base do cartão Geral. */
+    private family(font: Font): string {
+        const f = font.fontFamily.value;
+        return f && f !== FONT ? f : this.formattingSettings.generalCard.fontFamily.value || FONT;
+    }
+
+    /** Aplica fonte, tamanho, negrito, itálico, sublinhado e cor num elemento. */
+    private applyFont(node: HTMLElement, font: Font, color: string, size = font.fontSize.value, boldWeight = "600"): void {
+        node.style.fontFamily = this.family(font);
+        node.style.fontSize = Math.max(6, size) + "px";
+        node.style.fontWeight = font.bold?.value ? boldWeight : "400";
+        node.style.fontStyle = font.italic?.value ? "italic" : "normal";
+        node.style.textDecoration = font.underline?.value ? "underline" : "none";
+        node.style.color = color;
+    }
+
+    /** Formatador dos valores: formato da medida, ou unidades de exibição e casas decimais escolhidas. */
+    private valueFormatter(model: Model): Formatter {
+        const v = this.formattingSettings.valuesCard;
+        const units = enumValue(v.displayUnits);
+        const decimals = Math.floor(v.valueDecimals.value);
+        if (units === "none" && decimals < 0) {
+            return model.value.format;
+        }
+        const largest = Math.max(Math.abs(model.total ?? 0), ...model.reasons.map(r => Math.abs(r.value ?? 0)));
+        const auto = units === "auto"
+            ? (largest >= 1e9 ? "billions" : largest >= 1e6 ? "millions" : largest >= 1e3 ? "thousands" : "none")
+            : units;
+        const [unit, suffix] = auto === "billions" ? [1e9, " bi"] : auto === "millions" ? [1e6, " mi"]
+            : auto === "thousands" ? [1e3, " mil"] : [1, ""];
+        if (unit === 1 && decimals < 0) {
+            return model.value.format;
+        }
+        // Com unidade e sem casas definidas, até 1 casa (ex.: 1,2 mil); com casas definidas, sempre elas.
+        const places = decimals >= 0 ? "0".repeat(Math.min(decimals, 6)) : unit > 1 ? "#" : "";
+        const f = valueFormatter.create({ format: "#,0" + (places ? "." + places : ""), cultureSelector: this.locale });
+        return x => (typeof x === "number" ? f.format(x / unit) + suffix : x === null || x === undefined ? "—" : String(x));
+    }
 
     private percentFormatter(): (share: number | null) => string {
-        const decimals = Math.max(0, Math.min(4, Math.floor(this.formattingSettings.valuesCard.decimals.value)));
+        const v = this.formattingSettings.valuesCard;
+        const decimals = Math.max(0, Math.min(4, Math.floor(v.decimals.value)));
         const format = "0" + (decimals > 0 ? "." + "0".repeat(decimals) : "") + "%";
         const f = valueFormatter.create({ format, cultureSelector: this.locale });
         return share => (share === null || !isFinite(share) ? "—" : f.format(share));
+    }
+
+    /** Percentual ao lado do valor, no estilo escolhido: 33,0% · (33,0%) · · 33,0%. */
+    private percentLabel(share: number | null): string {
+        const t = this.percentFormatter()(share);
+        const style = enumValue(this.formattingSettings.valuesCard.percentStyle);
+        return style === "paren" ? `(${t})` : style === "dot" ? `· ${t}` : t;
     }
 
     private share(part: number | null, whole: number | null): number | null {
@@ -366,13 +410,19 @@ export class Visual implements IVisual {
         return this.share(item.value, base === "total" ? model?.total ?? null : item.parent.value);
     }
 
+    private countLabel(n: number): string {
+        const r = this.formattingSettings.reasonsCard;
+        return `${n} ${n === 1 ? r.countSingular.value || "detalhamento" : r.countPlural.value || "detalhamentos"}`;
+    }
+
     // ------------------------------------------------------------- desenho
 
     private buildToolbar(): void {
         this.toolbar = el("div", "me-toolbar");
 
         this.searchBox = el("label", "me-search");
-        this.searchBox.appendChild(icon(ICONS.search));
+        this.searchIcon = icon(ICONS.search, "me-icon me-search-icon");
+        this.searchBox.appendChild(this.searchIcon);
         this.searchInput = el("input", "me-search-input");
         this.searchInput.type = "text";
         this.searchInput.setAttribute("aria-label", "Pesquisar");
@@ -422,11 +472,18 @@ export class Visual implements IVisual {
         const searchFocused = document.activeElement === this.searchInput;
         root.replaceChildren();
         const s = this.formattingSettings;
-        root.style.fontFamily = s.generalCard.fontFamily.value;
+        const g = s.generalCard;
+        root.style.fontFamily = g.fontFamily.value || FONT;
+        root.style.background = g.showBackground.value ? g.background.value.value : "transparent";
+        root.style.padding = Math.max(0, g.padding.value) + "px";
         root.classList.toggle("no-anim", !s.interactionCard.animate.value);
         root.classList.toggle("is-compact", this.isCompact());
-        // Cor de destaque (foco, pesquisa, ícone do insight) = cor da barra dos motivos.
+        root.classList.toggle("wrap-reasons", s.reasonsCard.wrap.value);
+        root.classList.toggle("wrap-details", s.detailsCard.wrap.value);
+        root.style.setProperty("--me-dur", Math.max(0, Math.min(3000, s.interactionCard.duration.value)) + "ms");
+        // Cor de destaque (foco do teclado) = cor da barra dos motivos.
         root.style.setProperty("--me-accent", s.reasonBarsCard.fill.value.value);
+        root.style.setProperty("--me-mark", s.toolbarCard.markColor.value.value);
         const model = this.model;
 
         this.renderHeader(model);
@@ -441,11 +498,21 @@ export class Visual implements IVisual {
             return;
         }
 
+        this.fmt = this.valueFormatter(model);
         this.styleToolbar(model);
+        const insight = this.renderInsight(model);
+        const top = insight && enumValue(s.insightCard.position) === "top";
+        if (insight && top) {
+            insight.style.marginBottom = "10px";
+            root.appendChild(insight);
+        }
         root.appendChild(this.list);
+        if (insight && !top) {
+            insight.style.marginTop = "10px";
+            root.appendChild(insight);
+        }
         this.renderList();
         this.list.scrollTop = scrollTop;
-        this.renderInsight(model);
         if (searchFocused) {
             this.searchInput.focus();
         }
@@ -458,17 +525,18 @@ export class Visual implements IVisual {
             return;
         }
         const head = el("div", "me-header");
-        const line = (value: string, className: string, size: number, color: string): void => {
+        head.style.textAlign = header.align.value || "left";
+        head.style.marginBottom = Math.max(0, header.spacing.value) + "px";
+        const line = (value: string, className: string, font: Font, color: string, boldWeight = "600"): void => {
             if (value) {
                 const t = el("div", className, value);
-                t.style.fontSize = size + "px";
-                t.style.color = color;
+                this.applyFont(t, font, color, font.fontSize.value, boldWeight);
                 head.appendChild(t);
             }
         };
-        line(header.title.value, "me-title", header.titleSize.value, header.titleColor.value.value);
-        line(header.subtitle.value, "me-subtitle", header.subtitleSize.value, header.subtitleColor.value.value);
-        line(summary, "me-summary", header.summarySize.value, header.summaryColor.value.value);
+        line(header.title.value, "me-title", header.titleFont, header.titleColor.value.value, "700");
+        line(header.subtitle.value, "me-subtitle", header.subtitleFont, header.subtitleColor.value.value);
+        line(summary, "me-summary", header.summaryFont, header.summaryColor.value.value);
         this.root.appendChild(head);
     }
 
@@ -476,7 +544,7 @@ export class Visual implements IVisual {
         const template = this.formattingSettings.headerCard.summary.value || "";
         const details = model.reasons.reduce((n, r) => n + this.detailsOf(r).length, 0);
         return template
-            .replace(/\{total\}/gi, model.value.format(model.total))
+            .replace(/\{total\}/gi, this.valueFormatter(model)(model.total))
             .replace(/\{motivos\}/gi, String(model.reasons.length))
             .replace(/\{detalhamentos\}/gi, String(details))
             .trim();
@@ -489,27 +557,35 @@ export class Visual implements IVisual {
         if (!showSearch && !showButtons) {
             return;
         }
-        const height = Math.max(24, t.height.value);
-        const radius = Math.max(0, t.radius.value);
-        const border = Math.max(0, t.borderWidth.value);
-        const paint = (node: HTMLElement): void => {
+        const height = Math.max(20, t.height.value);
+        const shape = (node: HTMLElement, fill: string, radius: number, border: number, borderColor: string): void => {
             node.style.height = height + "px";
-            node.style.borderRadius = Math.min(radius, height / 2) + "px";
-            node.style.background = t.fill.value.value;
-            node.style.color = t.fontColor.value.value;
-            node.style.boxShadow = border > 0 ? `inset 0 0 0 ${border}px ${t.borderColor.value.value}` : "";
+            node.style.borderRadius = Math.min(Math.max(0, radius), height / 2) + "px";
+            node.style.background = fill;
+            node.style.boxShadow = border > 0 ? `inset 0 0 0 ${border}px ${borderColor}` : "";
         };
+
         this.searchBox.style.display = showSearch ? "" : "none";
-        paint(this.searchBox);
+        shape(this.searchBox, t.fill.value.value, t.radius.value, t.borderWidth.value, t.borderColor.value.value);
+        this.searchBox.style.color = t.fontColor.value.value;
+        this.searchIcon.style.color = t.iconColor.value.value;
         this.searchInput.placeholder = t.placeholder.value || "";
-        this.searchInput.style.fontSize = t.fontSize.value + "px";
-        this.searchInput.style.color = t.fontColor.value.value;
-        this.searchCount.style.fontSize = Math.max(9, t.fontSize.value - 2) + "px";
+        this.applyFont(this.searchInput, t.searchFont, t.fontColor.value.value);
+        this.searchCount.style.fontSize = Math.max(9, t.searchFont.fontSize.value - 2) + "px";
+
         for (const b of [this.expandAllButton, this.collapseAllButton]) {
             b.style.display = showButtons ? "" : "none";
-            paint(b);
+            shape(b, t.buttonFill.value.value, t.buttonRadius.value, t.buttonBorderWidth.value, t.buttonBorderColor.value.value);
+            b.style.color = t.buttonIconColor.value.value;
             b.style.width = height + "px";
+            b.classList.toggle("has-shadow", t.buttonShadow.value);
+            if (t.buttonShadow.value && t.buttonBorderWidth.value > 0) {
+                b.style.boxShadow = `inset 0 0 0 ${t.buttonBorderWidth.value}px ${t.buttonBorderColor.value.value}, 0 1px 2px rgba(0, 0, 0, .12)`;
+            } else if (t.buttonShadow.value) {
+                b.style.boxShadow = "0 1px 2px rgba(0, 0, 0, .12)";
+            }
         }
+        this.toolbar.style.marginBottom = "10px";
         this.root.appendChild(this.toolbar);
     }
 
@@ -522,7 +598,6 @@ export class Visual implements IVisual {
             return;
         }
         const s = this.formattingSettings;
-        const font = s.generalCard.fontFamily.value;
         const query = foldQuery(this.query);
         this.views = this.computeViews();
 
@@ -531,7 +606,10 @@ export class Visual implements IVisual {
         this.searchCount.textContent = query ? plural(this.views.length, "motivo", "motivos") : "";
 
         if (this.views.length === 0) {
-            list.appendChild(el("div", "me-noresult", `Nada encontrado para “${this.query.trim()}”.`));
+            const template = s.toolbarCard.noResult.value || NO_RESULT_TEMPLATE;
+            const message = el("div", "me-noresult", template.replace(/\{pesquisa\}/gi, this.query.trim()));
+            message.style.color = s.reasonsCard.fontColor.value.value;
+            list.appendChild(message);
             return;
         }
 
@@ -541,20 +619,23 @@ export class Visual implements IVisual {
 
         // Largura da coluna de valores, igual em todos os motivos (e em todos os detalhamentos).
         const v = s.valuesCard;
-        const pct = this.percentFormatter();
-        const figuresWidth = (items: Item[], size: number): number => {
+        const figuresWidth = (items: Item[], valueSize: number, percentSize: number): number => {
             if (!v.showValue.value && !v.showPercent.value) {
                 return 0;
             }
+            const valueFamily = this.family(v.valueFont);
+            const percentFamily = this.family(v.percentFont);
             const w = Math.max(0, ...items.map(item => {
-                const a = v.showValue.value ? textWidth(model.value.format(item.value), size, font, v.bold.value) : 0;
-                const b = v.showPercent.value ? textWidth(pct(this.percentOf(item)), size * 0.92, font) : 0;
+                const a = v.showValue.value ? textWidth(this.fmt(item.value), valueSize, valueFamily, !!v.valueFont.bold?.value) : 0;
+                const b = v.showPercent.value
+                    ? textWidth(this.percentLabel(this.percentOf(item)), percentSize, percentFamily, !!v.percentFont.bold?.value) : 0;
                 return a + b + (a && b ? 8 : 0);
             }));
-            return Math.ceil(Math.min(w + 4, Math.max(60, this.width * 0.4)));
+            return Math.ceil(Math.min(w + 6, Math.max(60, this.width * 0.45)));
         };
-        const reasonFigures = figuresWidth(views.map(view => view.reason), v.fontSize.value);
-        const detailFigures = figuresWidth(views.flatMap(view => view.details), Math.max(8, v.fontSize.value - 1));
+        const reasonFigures = figuresWidth(views.map(view => view.reason), v.valueFont.fontSize.value, v.percentFont.fontSize.value);
+        const detailFigures = figuresWidth(views.flatMap(view => view.details), v.detailValueFontSize.value,
+            v.detailPercentFontSize.value);
 
         const maxReason = Math.max(0, ...model.reasons.map(r => r.value ?? 0));
         views.forEach(view => list.appendChild(this.renderReason(view, maxReason, reasonFigures, detailFigures, query)));
@@ -576,7 +657,8 @@ export class Visual implements IVisual {
     private moreButton(label: string, action: () => void, extraClass = ""): HTMLButtonElement {
         const b = el("button", "me-more " + extraClass, label);
         b.type = "button";
-        b.style.color = this.formattingSettings.reasonsCard.fontColor.value.value;
+        b.style.color = this.formattingSettings.detailsCard.moreColor.value.value;
+        b.style.fontFamily = this.family(this.formattingSettings.detailsCard.detailFont);
         b.addEventListener("click", (e: MouseEvent) => {
             e.stopPropagation();
             action();
@@ -599,27 +681,33 @@ export class Visual implements IVisual {
         return t;
     }
 
-    private figures(item: Item, size: number, width: number): HTMLElement | undefined {
+    /** Valor e percentual de um motivo ou detalhamento. */
+    private figures(item: Item, width: number): HTMLElement | undefined {
         const v = this.formattingSettings.valuesCard;
         if (width <= 0) {
             return undefined;
         }
+        const detail = !!item.parent;
         const box = el("div", "me-figures");
         box.style.width = width + "px";
         if (v.showValue.value) {
-            const t = el("span", "me-value", this.model?.value.format(item.value));
-            t.style.fontSize = size + "px";
-            t.style.color = v.valueColor.value.value;
-            t.style.fontWeight = v.bold.value ? "600" : "400";
+            const t = el("span", "me-value", this.fmt(item.value));
+            this.applyFont(t, v.valueFont, detail ? v.detailValueColor.value.value : v.valueColor.value.value,
+                detail ? v.detailValueFontSize.value : v.valueFont.fontSize.value);
             box.appendChild(t);
         }
         if (v.showPercent.value) {
-            const t = el("span", "me-pct", this.percentFormatter()(this.percentOf(item)));
-            t.style.fontSize = (size * 0.92).toFixed(1) + "px";
-            t.style.color = v.percentColor.value.value;
+            const t = el("span", "me-pct", this.percentLabel(this.percentOf(item)));
+            this.applyFont(t, v.percentFont, detail ? v.detailPercentColor.value.value : v.percentColor.value.value,
+                detail ? v.detailPercentFontSize.value : v.percentFont.fontSize.value);
             box.appendChild(t);
         }
         return box;
+    }
+
+    private cardBackground(open: boolean): string {
+        const r = this.formattingSettings.reasonsCard;
+        return open ? r.openFill.value.value : r.fill.value.value;
     }
 
     private renderReason(view: ReasonView, maxReason: number, figuresW: number, detailFiguresW: number, query: string): HTMLElement {
@@ -630,14 +718,16 @@ export class Visual implements IVisual {
         const reason = view.reason;
         const expandable = view.allDetails.length > 0;
         const open = expandable && this.isOpen(reason.key);
+        const padX = Math.max(0, r.paddingX.value);
+        const padY = Math.max(0, r.paddingY.value);
 
-        const card = el("div", "me-card" + (open ? " is-open" : ""));
+        const card = el("div", "me-card" + (open ? " is-open" : "") + (r.openShadow.value ? " has-shadow" : ""));
         card.dataset.key = reason.key;
-        card.style.background = r.fill.value.value;
+        card.style.background = this.cardBackground(open);
         card.style.borderRadius = Math.max(0, r.radius.value) + "px";
         card.style.marginBottom = Math.max(0, r.gap.value) + "px";
         if (r.borderWidth.value > 0) {
-            card.style.boxShadow = `inset 0 0 0 ${r.borderWidth.value}px ${r.borderColor.value.value}`;
+            card.style.setProperty("--me-border", `inset 0 0 0 ${r.borderWidth.value}px ${r.borderColor.value.value}`);
         }
 
         // ---- cabeçalho do motivo
@@ -649,15 +739,43 @@ export class Visual implements IVisual {
         if (expandable) {
             head.setAttribute("aria-expanded", String(open));
         }
+        head.style.padding = `${padY}px ${padX}px`;
         const columns: string[] = [];
+        const chevronLeft = enumValue(r.chevronSide) === "left";
+        const chevronSize = Math.max(8, r.chevronSize.value);
+
+        const addChevron = (): void => {
+            if (!r.showChevron.value) {
+                return;
+            }
+            const chevron = el("span", "me-chevron");
+            chevron.style.color = r.chevronColor.value.value;
+            chevron.style.width = chevron.style.height = chevronSize + "px";
+            if (expandable) {
+                const svg = icon(ICONS.chevron);
+                svg.style.width = svg.style.height = chevronSize + "px";
+                chevron.appendChild(svg);
+            }
+            head.appendChild(chevron);
+            columns.push(chevronSize + "px");
+        };
+        if (chevronLeft) {
+            addChevron();
+        }
 
         if (r.showRank.value) {
+            const shape = enumValue(r.rankShape);
             const rank = el("span", "me-rank", String(view.rank));
-            rank.style.background = r.rankFill.value.value;
-            rank.style.color = r.rankColor.value.value;
-            const size = Math.round(Math.max(18, r.fontSize.value * 1.6));
+            const size = Math.max(12, r.rankSize.value);
             rank.style.width = rank.style.height = size + "px";
-            rank.style.fontSize = Math.max(9, Math.round(r.fontSize.value * 0.8)) + "px";
+            rank.style.fontSize = Math.max(8, Math.round(size * 0.5)) + "px";
+            rank.style.fontFamily = this.family(r.labelFont);
+            rank.style.color = shape === "none" ? r.rankFill.value.value : r.rankColor.value.value;
+            rank.style.background = shape === "none" ? "transparent" : r.rankFill.value.value;
+            rank.style.borderRadius = shape === "circle" ? "50%" : shape === "rounded" ? Math.round(size * 0.28) + "px" : "0";
+            if (shape === "none") {
+                rank.style.fontSize = Math.max(9, Math.round(size * 0.7)) + "px";
+            }
             head.appendChild(rank);
             columns.push("auto");
         }
@@ -667,41 +785,35 @@ export class Visual implements IVisual {
         const label = el("span", "me-label");
         writeHighlighted(label, reason.label, query);
         label.title = reason.label;
-        label.style.fontSize = r.fontSize.value + "px";
-        label.style.color = r.fontColor.value.value;
-        label.style.fontWeight = r.bold.value ? "600" : "400";
+        this.applyFont(label, r.labelFont, r.fontColor.value.value);
         line.appendChild(label);
         if (r.showCount.value && expandable && !this.isCompact()) {
             const count = query && view.details.length !== view.allDetails.length
                 ? `${view.details.length} de ${view.allDetails.length}`
-                : plural(view.allDetails.length, "detalhamento", "detalhamentos");
+                : this.countLabel(view.allDetails.length);
             const c = el("span", "me-count", count);
-            c.style.fontSize = Math.max(9, r.fontSize.value - 3) + "px";
-            c.style.color = s.valuesCard.percentColor.value.value;
+            c.style.fontSize = Math.max(6, r.countFontSize.value) + "px";
+            c.style.color = r.countColor.value.value;
             line.appendChild(c);
         }
         main.appendChild(line);
         if (rb.show.value) {
             const base = enumValue(rb.scale) === "total" ? model.total : maxReason;
-            main.appendChild(this.bar(reason.value, base, rb.fill.value.value, rb.trackColor.value.value,
-                Math.max(2, rb.thickness.value), Math.max(0, rb.radius.value), "me-reason-track"));
+            const isTop = rb.highlightTop.value && reason.value !== null && reason.value === maxReason && maxReason > 0;
+            main.appendChild(this.bar(reason.value, base, isTop ? rb.highlightColor.value.value : rb.fill.value.value,
+                rb.trackColor.value.value, Math.max(1, rb.thickness.value), Math.max(0, rb.radius.value), "me-reason-track"));
         }
         head.appendChild(main);
         columns.push("minmax(0, 1fr)");
 
-        const figures = this.figures(reason, s.valuesCard.fontSize.value, figuresW);
+        const figures = this.figures(reason, figuresW);
         if (figures) {
             head.appendChild(figures);
             columns.push("auto");
         }
-
-        const chevron = el("span", "me-chevron");
-        chevron.style.color = r.fontColor.value.value;
-        if (expandable) {
-            chevron.appendChild(icon(ICONS.chevron));
+        if (!chevronLeft) {
+            addChevron();
         }
-        head.appendChild(chevron);
-        columns.push("20px");
         head.style.gridTemplateColumns = columns.join(" ");
         this.bindReason(head, view);
         card.appendChild(head);
@@ -710,7 +822,9 @@ export class Visual implements IVisual {
         if (expandable) {
             const body = el("div", "me-body");
             const inner = el("div", "me-body-inner");
-            inner.appendChild(this.renderDetails(view, detailFiguresW, query));
+            const details = this.renderDetails(view, detailFiguresW, query);
+            details.style.margin = `0 ${Math.max(0, padX - 2)}px ${padY}px`;
+            inner.appendChild(details);
             body.appendChild(inner);
             card.appendChild(body);
         }
@@ -721,16 +835,17 @@ export class Visual implements IVisual {
         const s = this.formattingSettings;
         const d = s.detailsCard;
         const reason = view.reason;
-        const box = el("div", "me-details");
+        const box = el("div", "me-details" + (d.showGuide.value ? "" : " no-guide"));
         box.setAttribute("role", "group");
         box.style.background = d.fill.value.value;
-        box.style.borderRadius = Math.max(0, s.reasonsCard.radius.value - 2) + "px";
+        box.style.borderRadius = Math.max(0, d.radius.value) + "px";
         box.style.setProperty("--me-guide", d.guideColor.value.value);
+        box.style.setProperty("--me-hover", d.hoverColor.value.value);
 
         // Faixa de composição: a fatia de cada detalhamento no motivo.
-        const segments: Array<[Item, HTMLElement]> = [];
         if (d.showStrip.value && view.allDetails.length > 1) {
             const strip = el("div", "me-strip");
+            strip.style.height = Math.max(2, d.stripHeight.value) + "px";
             const n = view.allDetails.length;
             view.allDetails.forEach((detail, i) => {
                 const share = this.share(detail.value, reason.value);
@@ -740,13 +855,12 @@ export class Visual implements IVisual {
                 const seg = el("div", "me-seg");
                 seg.dataset.key = detail.key;
                 seg.style.flexGrow = String(share);
-                seg.style.background = d.barFill.value.value;
+                seg.style.background = d.stripColor.value.value;
                 seg.style.opacity = (1 - (0.7 * i) / Math.max(1, n - 1)).toFixed(3);
                 this.bindTooltip(seg, () => this.detailTooltip(detail));
                 seg.addEventListener("mouseenter", () => this.hot(box, detail.key, true));
                 seg.addEventListener("mouseleave", () => this.hot(box, detail.key, false));
                 strip.appendChild(seg);
-                segments.push([detail, seg]);
             });
             box.appendChild(strip);
         }
@@ -756,9 +870,8 @@ export class Visual implements IVisual {
         const visible = showAll ? view.details : view.details.slice(0, limit);
         const scale = enumValue(s.reasonBarsCard.scale);
         const maxDetail = Math.max(0, ...view.allDetails.map(x => x.value ?? 0));
-        const thickness = Math.max(2, d.thickness.value);
-        const radius = Math.max(0, s.reasonBarsCard.radius.value);
-        const size = d.fontSize.value;
+        const thickness = Math.max(1, d.thickness.value);
+        const radius = Math.max(0, d.barRadius.value);
 
         for (const detail of visible) {
             const row = el("div", "me-detail me-focus");
@@ -766,24 +879,28 @@ export class Visual implements IVisual {
             row.tabIndex = -1;
             row.setAttribute("role", "treeitem");
             row.setAttribute("aria-level", "2");
+            row.style.minHeight = Math.max(0, d.rowHeight.value) + "px";
             const label = el("span", "me-dlabel");
             writeHighlighted(label, detail.label, query);
             label.title = detail.label;
-            label.style.fontSize = size + "px";
-            label.style.color = d.fontColor.value.value;
-            label.style.fontWeight = d.bold.value ? "600" : "400";
+            this.applyFont(label, d.detailFont, d.fontColor.value.value);
             row.appendChild(label);
-            // Escala "total": a barra mostra o percentual; "maior": o maior detalhamento enche a barra.
-            const base = scale === "total"
-                ? (enumValue(d.percentBase) === "total" ? this.model?.total ?? null : reason.value)
-                : maxDetail;
-            row.appendChild(this.bar(detail.value, base, d.barFill.value.value, d.trackColor.value.value, thickness, radius,
-                "me-detail-track"));
-            const figures = this.figures(detail, Math.max(8, s.valuesCard.fontSize.value - 1), figuresW);
+            const columns = ["minmax(0, 1.2fr)"];
+            if (d.showBars.value) {
+                // Escala "total": a barra mostra o percentual; "maior": o maior detalhamento enche a barra.
+                const base = scale === "total"
+                    ? (enumValue(d.percentBase) === "total" ? this.model?.total ?? null : reason.value)
+                    : maxDetail;
+                row.appendChild(this.bar(detail.value, base, d.barFill.value.value, d.trackColor.value.value, thickness, radius,
+                    "me-detail-track"));
+                columns.push("minmax(36px, 1fr)");
+            }
+            const figures = this.figures(detail, figuresW);
             if (figures) {
                 row.appendChild(figures);
+                columns.push("auto");
             }
-            row.style.gridTemplateColumns = `minmax(0, 1.2fr) minmax(36px, 1fr)${figures ? " auto" : ""}`;
+            row.style.gridTemplateColumns = columns.join(" ");
             row.addEventListener("mouseenter", () => this.hot(box, detail.key, true));
             row.addEventListener("mouseleave", () => this.hot(box, detail.key, false));
             this.bindDetail(row, detail);
@@ -792,7 +909,7 @@ export class Visual implements IVisual {
 
         const hidden = view.details.length - visible.length;
         if (hidden > 0) {
-            box.appendChild(this.moreButton(`+ ${plural(hidden, "detalhamento", "detalhamentos")}`, () => {
+            box.appendChild(this.moreButton(`+ ${this.countLabel(hidden)}`, () => {
                 this.showAllDetails.add(reason.key);
                 this.renderList();
             }));
@@ -815,25 +932,25 @@ export class Visual implements IVisual {
         box.classList.toggle("has-hot", on);
     }
 
-    private renderInsight(model: Model): void {
+    private renderInsight(model: Model): HTMLElement | undefined {
         const ins = this.formattingSettings.insightCard;
         if (!ins.show.value) {
-            return;
+            return undefined;
         }
         const top = model.reasons.reduce<Item | undefined>(
             (best, r) => (r.value !== null && (!best || r.value > (best.value ?? 0)) ? r : best), undefined);
         if (!top) {
-            return;
+            return undefined;
         }
         const topDetail = this.detailsOf(top).reduce<Item | undefined>(
             (best, d) => (d.value !== null && (!best || d.value > (best.value ?? 0)) ? d : best), undefined);
         const pct = this.percentFormatter();
         const marks: Record<string, string> = {
             motivo: top.label,
-            valor: model.value.format(top.value),
+            valor: this.fmt(top.value),
             percentual: pct(this.share(top.value, model.total)),
             detalhe: topDetail?.label ?? "",
-            valordetalhe: topDetail ? model.value.format(topDetail.value) : "",
+            valordetalhe: topDetail ? this.fmt(topDetail.value) : "",
             percentualdetalhe: topDetail ? pct(this.share(topDetail.value, top.value)) : ""
         };
         let template = ins.template.value || "";
@@ -845,21 +962,33 @@ export class Visual implements IVisual {
         }
         template = template.trim();
         if (!template) {
-            return;
+            return undefined;
         }
 
         const box = el("div", "me-insight");
         box.style.background = ins.fill.value.value;
-        box.style.color = ins.fontColor.value.value;
-        box.style.fontSize = ins.fontSize.value + "px";
-        box.appendChild(icon(ICONS.insight, "me-icon me-insight-icon"));
+        box.style.borderRadius = Math.max(0, ins.radius.value) + "px";
+        if (ins.borderWidth.value > 0) {
+            box.style.boxShadow = `inset 0 0 0 ${ins.borderWidth.value}px ${ins.borderColor.value.value}`;
+        }
+        if (ins.showIcon.value) {
+            const svg = icon(ICONS.insight, "me-icon me-insight-icon");
+            svg.style.color = ins.iconColor.value.value;
+            const size = Math.round(Math.max(12, ins.insightFont.fontSize.value * 1.4));
+            svg.style.width = svg.style.height = size + "px";
+            box.appendChild(svg);
+        }
         const textEl = el("div", "me-insight-text");
+        this.applyFont(textEl, ins.insightFont, ins.fontColor.value.value);
         const parts = template.split(/(\{(?:motivo|valor|percentual|detalhe|valorDetalhe|percentualDetalhe)\})/i);
         for (const part of parts) {
             const mark = /^\{(\w+)\}$/.exec(part);
             const key = mark?.[1].toLowerCase();
             if (key && key in marks) {
-                textEl.appendChild(el("strong", "", marks[key]));
+                const strong = el("strong", "", marks[key]);
+                strong.style.color = ins.markColor.value.value;
+                strong.style.fontWeight = ins.boldMarks.value ? "600" : "inherit";
+                textEl.appendChild(strong);
             } else if (part) {
                 textEl.appendChild(document.createTextNode(part));
             }
@@ -868,7 +997,7 @@ export class Visual implements IVisual {
         // Clique no insight abre o motivo principal.
         box.addEventListener("click", () => this.reveal(top.key));
         box.title = "Mostrar este motivo";
-        this.root.appendChild(box);
+        return box;
     }
 
     // ------------------------------------------------------------- abrir e fechar
@@ -904,6 +1033,7 @@ export class Visual implements IVisual {
             }
             const open = this.isOpen(card.dataset.key || "");
             card.classList.toggle("is-open", open);
+            card.style.background = this.cardBackground(open);
             head.setAttribute("aria-expanded", String(open));
         });
     }
