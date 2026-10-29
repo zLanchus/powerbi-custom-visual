@@ -56,6 +56,201 @@
                 }
             }
         },
+        "layout": {
+            "properties": {
+                "mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "horizontal",
+                                "displayName": "Horizontal: detalhamento ao lado"
+                            },
+                            {
+                                "value": "vertical",
+                                "displayName": "Vertical: detalhamento embaixo (acordeão)"
+                            }
+                        ]
+                    }
+                },
+                "breakpoint": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "leftWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "linkWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showLinks": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "linkStyle": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "ribbon",
+                                "displayName": "Faixas proporcionais ao valor"
+                            },
+                            {
+                                "value": "line",
+                                "displayName": "Linhas finas"
+                            }
+                        ]
+                    }
+                },
+                "linkColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "linkOpacity": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showColumnTitles": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "reasonsTitle": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "detailsTitle": {
+                    "type": {
+                        "text": true
+                    }
+                },
+                "columnTitleFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "columnTitleFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "columnTitleBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnTitleItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnTitleUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnTitleColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "uppercase": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "activeFill": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "activeBorderWidth": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "activeBorderColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showActiveHeader": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "activeFontFamily": {
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "activeFontSize": {
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "activeBold": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "activeItalic": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "activeUnderline": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "activeColor": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "hint": {
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
+        },
         "header": {
             "properties": {
                 "title": {

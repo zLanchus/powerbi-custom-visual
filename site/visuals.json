@@ -120,20 +120,21 @@
   {
     "id": "motivos-expansiveis",
     "name": "Motivos Expansíveis",
-    "summary": "Ranking dos motivos principais que abre, ao clicar, os motivos de detalhamento.",
+    "summary": "Motivos principais à esquerda e, ao clicar, o detalhamento ao lado, ligado por faixas proporcionais ao valor.",
     "features": [
-      "Motivo principal › detalhamento com abertura animada (um por vez ou vários)",
+      "Layout horizontal: motivo › detalhamento ligados por faixas (estilo Sankey), ou vertical em acordeão",
       "Faixa de composição e % do total e do motivo",
-      "Pesquisa sem acentos que abre os motivos achados pelo detalhamento",
+      "Pesquisa sem acentos que mostra os detalhamentos achados",
       "Filtro cruzado por motivo ou detalhamento e navegação por teclado",
       "Insight automático com texto editável",
-      "Mais de 160 opções: fonte, tamanho, negrito/itálico e cor de cada texto, cores de tudo, layout e textos"
+      "Mais de 190 opções: fonte, tamanho, negrito/itálico e cor de cada texto, cores de tudo, layout e textos"
     ],
-    "cover": "1-padrao.png",
+    "cover": "1-horizontal.png",
     "images": [
       "2-pesquisa.png",
       "3-filtro.png",
-      "4-personalizado.png"
+      "4-vertical.png",
+      "5-personalizado.png"
     ]
   }
 ]

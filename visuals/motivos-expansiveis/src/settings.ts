@@ -70,6 +70,11 @@ export const UNITS_ITEMS = enumItems(
 );
 export const PERCENT_STYLE_ITEMS = enumItems(["plain", "33,0%"], ["paren", "(33,0%)"], ["dot", "· 33,0%"]);
 export const POSITION_ITEMS = enumItems(["bottom", "Embaixo da lista"], ["top", "Em cima da lista"]);
+export const LAYOUT_ITEMS = enumItems(
+    ["horizontal", "Horizontal: detalhamento ao lado"], ["vertical", "Vertical: detalhamento embaixo (acordeão)"]
+);
+export const LINK_STYLE_ITEMS = enumItems(["ribbon", "Faixas proporcionais ao valor"], ["line", "Linhas finas"]);
+export const HINT_TEXT = "Clique num motivo para ver o detalhamento.";
 
 // ---------------------------------------------------------------- Geral
 
@@ -85,6 +90,51 @@ class GeneralCard extends FormattingSettingsCard {
     name = "general";
     displayName = "Geral";
     slices: FormattingSettingsSlice[] = [this.fontFamily, this.showBackground, this.background, this.padding];
+}
+
+// ---------------------------------------------------------------- Layout
+
+class LayoutCard extends FormattingSettingsCompositeCard {
+    mode = dropdown("mode", "Layout", LAYOUT_ITEMS, 0);
+    breakpoint = num("breakpoint", "Virar vertical abaixo de (px)", 520,
+        "Em visuais mais estreitos que isso, o horizontal vira acordeão. 0 = nunca.");
+    leftWidth = num("leftWidth", "Largura da coluna de motivos (%)", 46);
+    linkWidth = num("linkWidth", "Espaço entre as colunas (px)", 72);
+
+    showLinks = toggle("showLinks", "Ligações", true);
+    linkStyle = dropdown("linkStyle", "Estilo", LINK_STYLE_ITEMS, 0);
+    linkColor = color("linkColor", "Cor", PRIMARY);
+    linkOpacity = num("linkOpacity", "Opacidade (%)", 35);
+
+    showColumnTitles = toggle("showColumnTitles", "Títulos das colunas", true);
+    reasonsTitle = text("reasonsTitle", "Título dos motivos", "", "Nome do campo", "Em branco, usa o nome do campo.");
+    detailsTitle = text("detailsTitle", "Título do detalhamento", "", "Nome do campo", "Em branco, usa o nome do campo.");
+    columnTitleFont = new Font("columnTitle", 11, true);
+    columnTitleColor = color("columnTitleColor", "Cor", MUTED);
+    uppercase = toggle("uppercase", "Letras maiúsculas", true);
+
+    activeFill = color("activeFill", "Cor de fundo", WHITE);
+    activeBorderWidth = num("activeBorderWidth", "Espessura da borda (px)", 2);
+    activeBorderColor = color("activeBorderColor", "Cor da borda", PRIMARY);
+
+    showActiveHeader = toggle("showActiveHeader", "Motivo em destaque no painel", true);
+    activeFont = new Font("active", 18, true);
+    activeColor = color("activeColor", "Cor", DARK);
+    hint = text("hint", "Texto antes de escolher um motivo", HINT_TEXT, HINT_TEXT);
+
+    name = "layout";
+    displayName = "Layout";
+    description = "Horizontal: motivos à esquerda e detalhamento à direita, ligados por faixas. Vertical: acordeão.";
+    groups: FormattingSettingsGroup[] = [
+        group("layoutArrange", "Disposição", [this.mode, this.breakpoint, this.leftWidth, this.linkWidth]),
+        group("layoutLinks", "Ligações (horizontal)", [this.linkStyle, this.linkColor, this.linkOpacity], this.showLinks),
+        group("layoutTitles", "Títulos das colunas (horizontal)", [
+            this.reasonsTitle, this.detailsTitle, this.columnTitleFont, this.columnTitleColor, this.uppercase
+        ], this.showColumnTitles),
+        group("layoutActive", "Motivo escolhido (horizontal)", [this.activeFill, this.activeBorderWidth, this.activeBorderColor]),
+        group("layoutPanel", "Painel do detalhamento (horizontal)", [this.activeFont, this.activeColor, this.hint],
+            this.showActiveHeader)
+    ];
 }
 
 // ---------------------------------------------------------------- Cabeçalho
@@ -356,6 +406,7 @@ class InsightCard extends FormattingSettingsCompositeCard {
 
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     generalCard = new GeneralCard();
+    layoutCard = new LayoutCard();
     headerCard = new HeaderCard();
     toolbarCard = new ToolbarCard();
     interactionCard = new InteractionCard();
@@ -367,7 +418,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     insightCard = new InsightCard();
 
     cards: Array<formattingSettings.Cards> = [
-        this.generalCard, this.headerCard, this.toolbarCard, this.interactionCard, this.sortCard,
+        this.generalCard, this.layoutCard, this.headerCard, this.toolbarCard, this.interactionCard, this.sortCard,
         this.reasonsCard, this.reasonBarsCard, this.detailsCard, this.valuesCard, this.insightCard
     ];
 
@@ -375,7 +426,8 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     public applyHighContrast(foreground: string, background: string): void {
         const backgrounds = new Set([
             "general.background", "toolbar.fill", "toolbar.buttonFill", "reasons.fill", "reasons.openFill", "reasons.rankColor",
-            "reasonBars.trackColor", "details.fill", "details.trackColor", "details.hoverColor", "insight.fill"
+            "reasonBars.trackColor", "details.fill", "details.trackColor", "details.hoverColor", "insight.fill",
+            "layout.activeFill"
         ]);
         for (const card of this.cards) {
             const slices = "groups" in card ? card.groups.flatMap(g => g.slices || []) : card.slices || [];

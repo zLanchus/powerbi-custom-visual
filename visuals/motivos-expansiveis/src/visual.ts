@@ -16,7 +16,7 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import DataView = powerbi.DataView;
 
 import { Formatter, Item, Model, buildModel, rawValue } from "./model";
-import { FONT, Font, NO_RESULT_TEMPLATE, VisualFormattingSettingsModel, enumValue } from "./settings";
+import { FONT, Font, HINT_TEXT, NO_RESULT_TEMPLATE, VisualFormattingSettingsModel, enumValue } from "./settings";
 
 /** Um motivo como aparece na lista (depois de ordenar e pesquisar). */
 interface ReasonView {
@@ -35,6 +35,7 @@ const ICONS = {
     clear: ["M18 6L6 18", "M6 6l12 12"],
     expandAll: ["M7 6l5 5 5-5", "M7 13l5 5 5-5"],
     collapseAll: ["M7 11l5-5 5 5", "M7 18l5-5 5 5"],
+    arrowLeft: ["M19 12H5", "M11 18l-6-6 6-6"],
     insight: ["M9 18h6", "M10 21h4", "M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"]
 };
 
@@ -135,6 +136,12 @@ export class Visual implements IVisual {
     private expandAllButton: HTMLButtonElement;
     private collapseAllButton: HTMLButtonElement;
     private list: HTMLElement;
+    /** Layout horizontal: coluna de motivos, ligações e painel do detalhamento. */
+    private leftScroll: HTMLElement | undefined;
+    private links: SVGSVGElement | undefined;
+    private panel: HTMLElement | undefined;
+    private panelFiguresW = 0;
+    private linkFrame = 0;
 
     private model: Model | undefined;
     /** Formatador dos valores da renderização atual. */
@@ -259,7 +266,7 @@ export class Visual implements IVisual {
             return;
         }
         const initial = enumValue(this.formattingSettings.interactionCard.initial);
-        const key = model.signature + "\u001e" + initial;
+        const key = model.signature + "\u001e" + initial + "\u001e" + this.horizontal();
         if (key === this.initialKey) {
             return;
         }
@@ -325,6 +332,24 @@ export class Visual implements IVisual {
             views.push({ reason, rank: i + 1, allDetails, details: reasonMatch ? allDetails : detailMatches });
         });
         return views;
+    }
+
+    /** Layout horizontal (detalhamento ao lado), a não ser que o visual esteja estreito demais. */
+    private horizontal(): boolean {
+        const lay = this.formattingSettings.layoutCard;
+        const breakpoint = Math.max(0, lay.breakpoint.value);
+        // Sem o campo Detalhamento não há painel ao lado: vira um ranking simples.
+        return enumValue(lay.mode) === "horizontal" && (breakpoint === 0 || this.width >= breakpoint) && !!this.model?.hasDetail;
+    }
+
+    /** Motivo cujo detalhamento aparece no painel (layout horizontal). */
+    private activeView(): ReasonView | undefined {
+        const open = this.views.find(v => this.isOpen(v.reason.key));
+        if (open || !this.query.trim()) {
+            return open;
+        }
+        // Na pesquisa, sem motivo escolhido, mostra o primeiro que tem detalhamento.
+        return this.views.find(v => v.allDetails.length > 0);
     }
 
     /** Visual estreito: sem contador e com a barra do detalhamento embaixo do nome. */
@@ -553,7 +578,7 @@ export class Visual implements IVisual {
     private styleToolbar(model: Model): void {
         const t = this.formattingSettings.toolbarCard;
         const showSearch = t.showSearch.value;
-        const showButtons = t.showExpandAll.value && model.hasDetail;
+        const showButtons = t.showExpandAll.value && model.hasDetail && !this.horizontal();
         if (!showSearch && !showButtons) {
             return;
         }
@@ -593,12 +618,16 @@ export class Visual implements IVisual {
     private renderList(): void {
         const model = this.model;
         const list = this.list;
+        const leftTop = this.leftScroll?.scrollTop ?? 0;
         list.replaceChildren();
+        list.classList.remove("is-split");
+        this.leftScroll = this.links = this.panel = undefined;
         if (!model) {
             return;
         }
         const s = this.formattingSettings;
         const query = foldQuery(this.query);
+        const horizontal = this.horizontal();
         this.views = this.computeViews();
 
         // Pesquisa: contador e botão de limpar.
@@ -619,7 +648,14 @@ export class Visual implements IVisual {
 
         // Largura da coluna de valores, igual em todos os motivos (e em todos os detalhamentos).
         const v = s.valuesCard;
-        const figuresWidth = (items: Item[], valueSize: number, percentSize: number): number => {
+        // No horizontal, cada coluna tem a sua largura; no vertical, a lista ocupa tudo.
+        const lay = s.layoutCard;
+        const linkW = Math.max(0, lay.linkWidth.value);
+        const leftShare = Math.min(80, Math.max(20, lay.leftWidth.value)) / 100;
+        const available = Math.max(0, this.width - 2 * Math.max(0, s.generalCard.padding.value) - linkW);
+        const reasonsW = horizontal ? available * leftShare : this.width;
+        const detailsW = horizontal ? available - available * leftShare : this.width;
+        const figuresWidth = (items: Item[], valueSize: number, percentSize: number, columnW: number): number => {
             if (!v.showValue.value && !v.showPercent.value) {
                 return 0;
             }
@@ -631,26 +667,246 @@ export class Visual implements IVisual {
                     ? textWidth(this.percentLabel(this.percentOf(item)), percentSize, percentFamily, !!v.percentFont.bold?.value) : 0;
                 return a + b + (a && b ? 8 : 0);
             }));
-            return Math.ceil(Math.min(w + 6, Math.max(60, this.width * 0.45)));
+            return Math.ceil(Math.min(w + 6, Math.max(60, columnW * 0.45)));
         };
-        const reasonFigures = figuresWidth(views.map(view => view.reason), v.valueFont.fontSize.value, v.percentFont.fontSize.value);
+        const reasonFigures = figuresWidth(views.map(view => view.reason), v.valueFont.fontSize.value, v.percentFont.fontSize.value,
+            reasonsW);
         const detailFigures = figuresWidth(views.flatMap(view => view.details), v.detailValueFontSize.value,
-            v.detailPercentFontSize.value);
+            v.detailPercentFontSize.value, detailsW);
 
         const maxReason = Math.max(0, ...model.reasons.map(r => r.value ?? 0));
-        views.forEach(view => list.appendChild(this.renderReason(view, maxReason, reasonFigures, detailFigures, query)));
-
+        const cards = views.map(view => this.renderReason(view, maxReason, reasonFigures, detailFigures, query, !horizontal));
         if (limited) {
-            list.appendChild(this.moreButton(`Ver mais ${plural(this.views.length - limit, "motivo", "motivos")}`, () => {
+            cards.push(this.moreButton(`Ver mais ${plural(this.views.length - limit, "motivo", "motivos")}`, () => {
                 this.showAllReasons = true;
                 this.renderList();
             }, "me-more-reasons"));
         } else if (!query && this.showAllReasons && limit > 0 && this.views.length > limit) {
-            list.appendChild(this.moreButton("Ver menos motivos", () => {
+            cards.push(this.moreButton("Ver menos motivos", () => {
                 this.showAllReasons = false;
                 this.renderList();
             }, "me-more-reasons"));
         }
+
+        if (horizontal) {
+            this.panelFiguresW = detailFigures;
+            this.renderSplit(model, cards, linkW, leftShare);
+            if (this.leftScroll) {
+                this.leftScroll.scrollTop = leftTop;
+            }
+        } else {
+            cards.forEach(card => list.appendChild(card));
+        }
+        this.paintSelection();
+    }
+
+    private columnTitle(label: string): HTMLElement {
+        const lay = this.formattingSettings.layoutCard;
+        const t = el("div", "me-coltitle", label);
+        this.applyFont(t, lay.columnTitleFont, lay.columnTitleColor.value.value, lay.columnTitleFont.fontSize.value, "700");
+        t.style.textTransform = lay.uppercase.value ? "uppercase" : "none";
+        return t;
+    }
+
+    /** Layout horizontal: motivos à esquerda, ligações no meio e o detalhamento do motivo escolhido à direita. */
+    private renderSplit(model: Model, cards: HTMLElement[], linkW: number, leftShare: number): void {
+        const lay = this.formattingSettings.layoutCard;
+        const list = this.list;
+        list.classList.add("is-split");
+        const ring = Math.max(0, lay.activeBorderWidth.value);
+        list.style.setProperty("--me-active-ring", ring > 0 ? `inset 0 0 0 ${ring}px ${lay.activeBorderColor.value.value}` : "0 0 0 0 transparent");
+
+        const left = el("div", "me-col me-col-left");
+        left.style.flex = `0 0 calc((100% - ${linkW}px) * ${leftShare})`;
+        const right = el("div", "me-col me-col-right");
+        if (lay.showColumnTitles.value) {
+            left.appendChild(this.columnTitle(lay.reasonsTitle.value || model.reasonName));
+            right.appendChild(this.columnTitle(lay.detailsTitle.value || model.detailName || "Detalhamento"));
+        }
+        const leftScroll = el("div", "me-col-scroll");
+        cards.forEach(card => leftScroll.appendChild(card));
+        left.appendChild(leftScroll);
+        const links = document.createElementNS(SVG_NS, "svg");
+        links.setAttribute("class", "me-links");
+        links.setAttribute("aria-hidden", "true");
+        links.style.width = linkW + "px";
+        const panel = el("div", "me-col-scroll me-panel");
+        right.appendChild(panel);
+        list.append(left, links, right);
+        this.leftScroll = leftScroll;
+        this.links = links;
+        this.panel = panel;
+
+        // As ligações acompanham a rolagem das duas colunas.
+        const redraw = (): void => {
+            cancelAnimationFrame(this.linkFrame);
+            this.linkFrame = requestAnimationFrame(() => this.drawLinks(false));
+        };
+        leftScroll.addEventListener("scroll", redraw);
+        panel.addEventListener("scroll", redraw);
+        this.renderPanel(false);
+    }
+
+    /** Monta o painel do detalhamento do motivo escolhido. */
+    private renderPanel(animate: boolean): void {
+        const panel = this.panel;
+        if (!panel) {
+            return;
+        }
+        const s = this.formattingSettings;
+        const lay = s.layoutCard;
+        const view = this.activeView();
+        this.leftScroll?.querySelectorAll<HTMLElement>(".me-card").forEach(card => {
+            const on = card.dataset.key === view?.reason.key;
+            card.classList.toggle("is-active", on);
+            card.style.background = this.cardBackground(on);
+            const head = card.querySelector<HTMLElement>(".me-head.is-expandable");
+            head?.setAttribute("aria-expanded", String(on));
+        });
+        panel.replaceChildren();
+        panel.classList.remove("is-open");
+        panel.scrollTop = 0;
+
+        const hint = (text: string, arrow: boolean): void => {
+            const h = el("div", "me-hint");
+            if (arrow) {
+                h.appendChild(icon(ICONS.arrowLeft));
+            }
+            h.appendChild(el("span", "", text));
+            h.style.color = lay.columnTitleColor.value.value;
+            h.style.fontFamily = this.family(s.detailsCard.detailFont);
+            panel.appendChild(h);
+        };
+        if (!view) {
+            hint(lay.hint.value || HINT_TEXT, true);
+            this.drawLinks(false);
+            return;
+        }
+        if (lay.showActiveHeader.value) {
+            const head = el("div", "me-active");
+            const title = el("div", "me-active-title", view.reason.label);
+            this.applyFont(title, lay.activeFont, lay.activeColor.value.value, lay.activeFont.fontSize.value, "700");
+            head.appendChild(title);
+            const parts = [this.fmt(view.reason.value), `${this.percentFormatter()(this.percentOf(view.reason))} do total`];
+            if (view.allDetails.length > 0) {
+                parts.push(this.countLabel(view.allDetails.length));
+            }
+            const sub = el("div", "me-active-sub", parts.join(" · "));
+            sub.style.color = s.valuesCard.percentColor.value.value;
+            sub.style.fontFamily = this.family(s.valuesCard.percentFont);
+            sub.style.fontSize = Math.max(10, Math.round(lay.activeFont.fontSize.value * 0.65)) + "px";
+            head.appendChild(sub);
+            panel.appendChild(head);
+        }
+        if (view.allDetails.length === 0) {
+            hint("Este motivo não tem detalhamento.", false);
+        } else {
+            panel.appendChild(this.renderDetails(view, this.panelFiguresW, foldQuery(this.query)));
+        }
+        this.paintSelection();
+        const show = (): void => {
+            panel.classList.add("is-open");
+            this.drawLinks(animate);
+        };
+        if (animate && s.interactionCard.animate.value) {
+            // Um quadro depois, para as barras crescerem a partir do zero.
+            requestAnimationFrame(show);
+        } else {
+            show();
+        }
+    }
+
+    /** Desenha as ligações do motivo escolhido para cada detalhamento (faixas com grossura proporcional ao valor). */
+    private drawLinks(animate: boolean): void {
+        const svg = this.links;
+        const panel = this.panel;
+        const leftScroll = this.leftScroll;
+        if (!svg || !panel || !leftScroll || !svg.isConnected) {
+            return;
+        }
+        svg.replaceChildren();
+        const s = this.formattingSettings;
+        const lay = s.layoutCard;
+        const view = this.activeView();
+        const head = leftScroll.querySelector<HTMLElement>(".me-card.is-active .me-head");
+        const box = svg.getBoundingClientRect();
+        const W = box.width;
+        if (!lay.showLinks.value || !view || !head || W <= 0) {
+            return;
+        }
+        const leftRect = leftScroll.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
+        const clamp = (y: number, r: DOMRect): number => Math.min(r.bottom - box.top, Math.max(r.top - box.top, y));
+        const center = (node: Element): number => {
+            const r = node.getBoundingClientRect();
+            return r.top + r.height / 2 - box.top;
+        };
+
+        // Destinos: cada linha de detalhamento e, se houver, o "+ N" com o que ficou escondido.
+        const targets: Array<{ key: string; value: number; y: number; x: number }> = [];
+        const shown = new Set<string>();
+        const guide = s.detailsCard.showGuide.value ? 5 : 0;
+        panel.querySelectorAll<HTMLElement>(".me-detail").forEach(row => {
+            const key = row.dataset.key || "";
+            shown.add(key);
+            const item = view.details.find(d => d.key === key);
+            // A faixa termina na linha guia do detalhamento.
+            targets.push({ key, value: Math.max(0, item?.value ?? 0), y: center(row), x: row.getBoundingClientRect().left - box.left + guide });
+        });
+        const more = panel.querySelector<HTMLElement>(".me-details > .me-more");
+        const rest = view.details.filter(d => !shown.has(d.key)).reduce((sum, d) => sum + Math.max(0, d.value ?? 0), 0);
+        if (more && rest > 0) {
+            targets.push({ key: "#more", value: rest, y: center(more), x: more.getBoundingClientRect().left - box.left });
+        }
+        if (targets.length === 0) {
+            return;
+        }
+
+        // A banda inteira é o motivo: se a pesquisa esconde detalhamentos, as faixas que sobram ficam proporcionais.
+        const total = Math.max(targets.reduce((sum, t) => sum + t.value, 0), view.reason.value ?? 0);
+        const ribbon = enumValue(lay.linkStyle) === "ribbon";
+        const color = lay.linkColor.value.value;
+        const opacity = Math.min(100, Math.max(0, lay.linkOpacity.value)) / 100;
+        const headRect = head.getBoundingClientRect();
+        const band = Math.max(4, headRect.height * 0.66);
+        let y = headRect.top + (headRect.height - band) / 2 - box.top;
+        const source = clamp(headRect.top + headRect.height / 2 - box.top, leftRect);
+        const g = document.createElementNS(SVG_NS, "g");
+        if (animate && s.interactionCard.animate.value) {
+            g.setAttribute("class", "me-links-anim");
+        }
+        // A faixa sai da borda do cartão do motivo.
+        const x0 = Math.min(0, headRect.right - box.left);
+        for (const t of targets) {
+            const x1 = Math.max(W, t.x);
+            const mid = (x0 + x1) / 2;
+            const share = total > 0 ? t.value / total : 1 / targets.length;
+            const path = document.createElementNS(SVG_NS, "path");
+            path.setAttribute("class", "me-link");
+            path.setAttribute("data-key", t.key);
+            const ty = clamp(t.y, panelRect);
+            if (ribbon) {
+                // Na origem as faixas se empilham (somam a altura da banda); no destino, centradas na linha.
+                const th = Math.max(1.5, band * share);
+                const s0 = clamp(y, leftRect);
+                const s1 = clamp(y + th, leftRect);
+                y += th;
+                const a = ty - th / 2;
+                const b = ty + th / 2;
+                path.setAttribute("d",
+                    `M${x0} ${s0} C${mid} ${s0} ${mid} ${a} ${x1} ${a} L${x1} ${b} C${mid} ${b} ${mid} ${s1} ${x0} ${s1} Z`);
+                path.setAttribute("fill", color);
+                path.setAttribute("fill-opacity", String(opacity));
+            } else {
+                path.setAttribute("d", `M${x0} ${source} C${mid} ${source} ${mid} ${ty} ${x1} ${ty}`);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", color);
+                path.setAttribute("stroke-width", "1.6");
+                path.setAttribute("stroke-opacity", String(Math.min(1, opacity * 2)));
+            }
+            g.appendChild(path);
+        }
+        svg.appendChild(g);
         this.paintSelection();
     }
 
@@ -707,17 +963,21 @@ export class Visual implements IVisual {
 
     private cardBackground(open: boolean): string {
         const r = this.formattingSettings.reasonsCard;
+        if (this.horizontal()) {
+            return open ? this.formattingSettings.layoutCard.activeFill.value.value : r.fill.value.value;
+        }
         return open ? r.openFill.value.value : r.fill.value.value;
     }
 
-    private renderReason(view: ReasonView, maxReason: number, figuresW: number, detailFiguresW: number, query: string): HTMLElement {
+    private renderReason(view: ReasonView, maxReason: number, figuresW: number, detailFiguresW: number, query: string,
+        withBody = true): HTMLElement {
         const s = this.formattingSettings;
         const r = s.reasonsCard;
         const rb = s.reasonBarsCard;
         const model = this.model as Model;
         const reason = view.reason;
         const expandable = view.allDetails.length > 0;
-        const open = expandable && this.isOpen(reason.key);
+        const open = expandable && withBody && this.isOpen(reason.key);
         const padX = Math.max(0, r.paddingX.value);
         const padY = Math.max(0, r.paddingY.value);
 
@@ -787,7 +1047,8 @@ export class Visual implements IVisual {
         label.title = reason.label;
         this.applyFont(label, r.labelFont, r.fontColor.value.value);
         line.appendChild(label);
-        if (r.showCount.value && expandable && !this.isCompact()) {
+        // No horizontal, a contagem aparece no painel do detalhamento.
+        if (r.showCount.value && expandable && !this.isCompact() && withBody) {
             const count = query && view.details.length !== view.allDetails.length
                 ? `${view.details.length} de ${view.allDetails.length}`
                 : this.countLabel(view.allDetails.length);
@@ -819,7 +1080,7 @@ export class Visual implements IVisual {
         card.appendChild(head);
 
         // ---- detalhamentos (sempre montados, para a animação de abrir/fechar)
-        if (expandable) {
+        if (expandable && withBody) {
             const body = el("div", "me-body");
             const inner = el("div", "me-body-inner");
             const details = this.renderDetails(view, detailFiguresW, query);
@@ -911,21 +1172,30 @@ export class Visual implements IVisual {
         if (hidden > 0) {
             box.appendChild(this.moreButton(`+ ${this.countLabel(hidden)}`, () => {
                 this.showAllDetails.add(reason.key);
-                this.renderList();
+                this.refreshDetails();
             }));
         } else if (!query && limit > 0 && view.details.length > limit) {
             box.appendChild(this.moreButton("Ver menos", () => {
                 this.showAllDetails.delete(reason.key);
-                this.renderList();
+                this.refreshDetails();
             }));
         }
         return box;
     }
 
-    /** Destaca juntos a linha do detalhamento e a fatia dele na faixa de composição. */
+    /** "Ver mais" de detalhamentos: no horizontal, só o painel é remontado. */
+    private refreshDetails(): void {
+        if (this.panel) {
+            this.renderPanel(false);
+        } else {
+            this.renderList();
+        }
+    }
+
+    /** Destaca juntos a linha do detalhamento, a fatia dele na faixa de composição e a ligação. */
     private hot(box: HTMLElement, key: string, on: boolean): void {
-        box.querySelectorAll<HTMLElement>(".me-seg, .me-detail").forEach(node => {
-            if (node.dataset.key === key) {
+        this.list.querySelectorAll<Element>(".me-seg, .me-detail, .me-link").forEach(node => {
+            if (node.getAttribute("data-key") === key) {
                 node.classList.toggle("is-hot", on);
             }
         });
@@ -1004,7 +1274,7 @@ export class Visual implements IVisual {
 
     private setOpen(key: string, open: boolean): void {
         const set = this.openSet();
-        if (open && this.formattingSettings.interactionCard.accordion.value) {
+        if (open && (this.formattingSettings.interactionCard.accordion.value || this.horizontal())) {
             set.clear();
         }
         if (open) {
@@ -1026,6 +1296,10 @@ export class Visual implements IVisual {
 
     /** Atualiza só as classes (sem remontar), para a animação de abrir/fechar funcionar. */
     private paintOpen(): void {
+        if (this.panel) {
+            this.renderPanel(true);
+            return;
+        }
         this.list.querySelectorAll<HTMLElement>(".me-card").forEach(card => {
             const head = card.querySelector<HTMLElement>(".me-head");
             if (!head?.classList.contains("is-expandable")) {
@@ -1051,7 +1325,7 @@ export class Visual implements IVisual {
         if (limit > 0 && index >= limit) {
             this.showAllReasons = true;
         }
-        if (this.formattingSettings.interactionCard.accordion.value) {
+        if (this.formattingSettings.interactionCard.accordion.value || this.horizontal()) {
             this.expanded.clear();
         }
         this.expanded.add(key);
@@ -1131,6 +1405,11 @@ export class Visual implements IVisual {
             const key = node.dataset.key || "";
             const on = !any || this.selected.has(key) || this.selected.has(reasonOf(key));
             node.classList.toggle("is-selected", any && this.selected.has(key));
+            node.style.opacity = on ? "1" : dim;
+        });
+        this.links?.querySelectorAll<SVGElement>(".me-link").forEach(node => {
+            const key = node.getAttribute("data-key") || "";
+            const on = !any || this.selected.has(key) || this.selected.has(reasonOf(key));
             node.style.opacity = on ? "1" : dim;
         });
     }
@@ -1245,7 +1524,9 @@ export class Visual implements IVisual {
         if (!target.classList.contains("me-focus")) {
             return;
         }
-        const focusables = Array.from(this.list.querySelectorAll<HTMLElement>(".me-focus"))
+        // No horizontal, as setas andam dentro da coluna (motivos ou detalhamento).
+        const scope = this.panel ? target.closest<HTMLElement>(".me-col-scroll") || this.list : this.list;
+        const focusables = Array.from(scope.querySelectorAll<HTMLElement>(".me-focus"))
             .filter(n => !n.closest(".me-body") || !!n.closest(".me-card.is-open"));
         const index = focusables.indexOf(target);
         const card = target.closest<HTMLElement>(".me-card");
@@ -1277,15 +1558,21 @@ export class Visual implements IVisual {
                 break;
             case "ArrowRight":
                 if (isHead && view && view.allDetails.length > 0) {
-                    if (this.isOpen(key)) {
-                        move(index + 1);
-                    } else {
+                    if (!this.isOpen(key)) {
                         this.setOpen(key, true);
+                    } else if (this.panel) {
+                        this.panel.querySelector<HTMLElement>(".me-detail")?.focus();
+                    } else {
+                        move(index + 1);
                     }
                 }
                 break;
             case "ArrowLeft":
-                if (isHead) {
+                if (this.panel) {
+                    if (!isHead) {
+                        this.leftScroll?.querySelector<HTMLElement>(".me-card.is-active .me-head")?.focus();
+                    }
+                } else if (isHead) {
                     this.setOpen(key, false);
                 } else {
                     card?.querySelector<HTMLElement>(".me-head")?.focus();

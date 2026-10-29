@@ -476,6 +476,139 @@
     color: @muted;
 }
 
+// ---------------------------------------------------------------- layout horizontal
+
+.me-list.is-split {
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    padding: 0;
+}
+
+.me-col {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.me-col-right {
+    flex: 1 1 auto;
+}
+
+.me-coltitle {
+    flex: 0 0 auto;
+    padding: 0 4px 8px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.me-col-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px;
+    scrollbar-width: thin;
+}
+
+// Por cima das colunas, para as faixas encostarem no motivo e no detalhamento.
+.me-links {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.me-link {
+    transition: fill-opacity 0.15s ease, stroke-opacity 0.15s ease, opacity 0.15s ease;
+
+    &.is-hot {
+        fill-opacity: 0.7;
+        stroke-opacity: 1;
+    }
+}
+
+// As ligações "saem" do motivo e chegam ao detalhamento.
+.me-links-anim {
+    animation: me-reveal var(--me-dur, 0.3s) @ease both;
+}
+
+@keyframes me-reveal {
+    from {
+        clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+.is-split {
+    // Seta apontando para o painel ao lado.
+    .me-chevron .me-icon {
+        transform: rotate(-90deg);
+    }
+
+    .me-card.is-active {
+        box-shadow: var(--me-active-ring), 0 1px 3px rgba(0, 0, 0, 0.14);
+
+        .me-chevron .me-icon {
+            transform: rotate(-90deg) scale(1.15);
+        }
+    }
+
+    .me-card.has-shadow.is-open {
+        box-shadow: var(--me-border, 0 0 0 0 transparent);
+    }
+}
+
+.me-panel {
+    .me-details {
+        transform: none;
+        transition: opacity var(--me-dur, 0.3s) ease;
+    }
+
+    &.is-open .me-details {
+        opacity: 1;
+    }
+}
+
+.me-active {
+    padding: 2px 4px 10px;
+    animation: me-fade var(--me-dur, 0.3s) ease both;
+}
+
+.me-active-title {
+    line-height: 1.2;
+}
+
+.me-active-sub {
+    margin-top: 3px;
+}
+
+@keyframes me-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.me-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 8px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
 // ---------------------------------------------------------------- insight
 
 .me-insight {

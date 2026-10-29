@@ -1,16 +1,22 @@
 # Motivos Expansíveis
 
-Ranking dos **motivos principais** de uma pesquisa (ou de qualquer par categoria › subcategoria) em que cada motivo **abre ao clicar** e mostra os **motivos de detalhamento** dele. Cada linha tem a posição, uma barra, o valor e o percentual do total; ao abrir, aparece uma **faixa de composição** (a fatia de cada detalhamento no motivo) e as barras dos detalhamentos crescem com animação. Tem **pesquisa** (sem diferenciar acentos), **filtro cruzado** e uma **frase de insight** automática. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
+Mostra os **motivos principais** de uma pesquisa (ou de qualquer par categoria › subcategoria) e, ao clicar num motivo, os **motivos de detalhamento** dele. No layout **horizontal** (padrão), os motivos ficam numa coluna à esquerda e o detalhamento do motivo escolhido aparece ao lado, **ligado por faixas** cuja grossura é proporcional ao valor de cada detalhamento (como num Sankey). No layout **vertical**, o motivo abre para baixo, como um acordeão. Cada motivo tem a posição, uma barra, o valor e o % do total. Tem **pesquisa** (sem diferenciar acentos), **filtro cruzado**, **insight** automático e mais de 190 opções de formatação. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
 
-| Padrão (primeiro motivo aberto) | Pesquisa | Filtro cruzado por detalhamento | Personalizado |
-|---|---|---|---|
-| ![Padrão](docs/1-padrao.png) | ![Pesquisa](docs/2-pesquisa.png) | ![Filtro](docs/3-filtro.png) | ![Personalizado](docs/4-personalizado.png) |
+![Layout horizontal](docs/1-horizontal.png)
 
-A última imagem é o mesmo visual só com opções do painel: fundo escuro, fonte Georgia, título centralizado em itálico, insight em cima, seta à esquerda, posição em quadrado, maior motivo em destaque, "submotivos" no lugar de "detalhamentos" e percentual entre parênteses.
+| Pesquisa | Filtro cruzado por detalhamento |
+|---|---|
+| ![Pesquisa](docs/2-pesquisa.png) | ![Filtro](docs/3-filtro.png) |
+
+| Layout vertical (acordeão) | Personalizado pelo painel |
+|---|---|
+| ![Vertical](docs/4-vertical.png) | ![Personalizado](docs/5-personalizado.png) |
+
+A última imagem é o mesmo visual só com opções do painel: fundo escuro, fonte Georgia, título centralizado em itálico, insight em cima, seta à esquerda, posição em quadrado, maior motivo e motivo escolhido em destaque, "submotivos" no lugar de "detalhamentos" e percentual entre parênteses.
 
 ## Como usar
 
-1. Baixe [`dist/motivosExpansiveis5E8B4DD7DA854EB5ABE37E7ADD5E5227.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/motivosExpansiveis5E8B4DD7DA854EB5ABE37E7ADD5E5227.1.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
    - **Motivo principal**: a coluna do motivo (ex.: *Motivo do cancelamento*). Cada valor vira uma linha.
    - **Detalhamento**: a coluna do detalhamento do motivo (ex.: *Submotivo*). Aparece ao abrir o motivo. Opcional: sem ela, o visual vira um ranking simples.
@@ -19,7 +25,15 @@ A última imagem é o mesmo visual só com opções do painel: fundo escuro, fon
 
 ## Recursos
 
-- **Abrir e fechar:** clique no motivo (ou na seta) para abrir o detalhamento, com animação. Botões **Abrir todos** e **Fechar todos** ao lado da pesquisa. Opção **Abrir um motivo por vez** (acordeão).
+- **Layout horizontal** (padrão):
+  - motivos à esquerda e o detalhamento do motivo escolhido à direita, com o nome dele em destaque, o valor, o % do total e o nº de detalhamentos;
+  - **faixas** ligam o motivo a cada detalhamento, com grossura proporcional ao valor (ou **linhas finas**, se preferir); a ligação de quem está escondido atrás do "+ N" vai para o botão;
+  - as faixas "saem" do motivo com animação ao trocar de motivo e acompanham a rolagem das duas colunas;
+  - passar o mouse num detalhamento destaca a linha, a fatia na faixa de composição e a ligação;
+  - clicar de novo no motivo escolhido fecha o painel (e tira o filtro);
+  - em visuais estreitos (padrão: menos de 520 px) ele vira o layout vertical sozinho; sem o campo Detalhamento, vira um ranking simples.
+- **Layout vertical:** o motivo abre para baixo, como acordeão.
+- **Abrir e fechar (vertical):** clique no motivo (ou na seta) para abrir o detalhamento, com animação. Botões **Abrir todos** e **Fechar todos** ao lado da pesquisa. Opção **Abrir um motivo por vez**.
 - **Ao carregar:** primeiro motivo aberto (padrão), todos fechados ou todos abertos.
 - **Pesquisa:** procura nos motivos e nos detalhamentos, sem diferenciar maiúsculas e acentos (`servico` acha *Serviço*). O trecho encontrado fica marcado, os motivos achados pelo detalhamento abrem sozinhos e mostram só os detalhamentos que batem (`1 de 3`). `Esc` limpa a pesquisa.
 - **Percentuais:** o motivo mostra o % do total; o detalhamento, o % **do motivo** (padrão) ou **do total**.
@@ -32,16 +46,22 @@ A última imagem é o mesmo visual só com opções do painel: fundo escuro, fon
   - clicar num detalhamento filtra por motivo + detalhamento;
   - Ctrl + clique soma itens à seleção; o que não está selecionado fica esmaecido; clique no vazio limpa.
   - Menu do botão direito e Ctrl+C / Ctrl+V do Power BI.
-- **Teclado:** `↑`/`↓` navegam, `→` abre (ou entra no detalhamento), `←` fecha (ou volta ao motivo), `Enter`/`Espaço` clicam, `Home`/`End`. Da pesquisa, `↓` vai para a lista.
+- **Teclado:** `↑`/`↓` navegam (no horizontal, dentro da coluna), `→` abre o motivo (ou entra no detalhamento), `←` fecha (ou volta ao motivo), `Enter`/`Espaço` clicam, `Home`/`End`. Da pesquisa, `↓` vai para a lista.
 - **Visual estreito** (menos de 380 px): o contador some e a barra do detalhamento vai para baixo do nome, para o texto não ser cortado.
 - **Alto contraste** do Windows e lugares sem interação (como painéis/dashboards) são respeitados.
 - **Números** no formato da medida e no idioma do relatório.
 
 ## Formatação
 
-São mais de 160 opções, organizadas em grupos como nos visuais nativos. Todo texto tem o controle de fonte completo do Power BI (**fonte, tamanho, negrito, itálico e sublinhado**) e cor própria. Os textos que ficam com a fonte padrão usam a **fonte base** do cartão Geral, então dá para trocar a fonte de tudo num lugar só e ainda mudar um texto específico.
+São mais de 190 opções, organizadas em grupos como nos visuais nativos. Todo texto tem o controle de fonte completo do Power BI (**fonte, tamanho, negrito, itálico e sublinhado**) e cor própria. Os textos que ficam com a fonte padrão usam a **fonte base** do cartão Geral, então dá para trocar a fonte de tudo num lugar só e ainda mudar um texto específico.
 
 - **Geral:** fonte base, cor de fundo do visual e margem interna.
+- **Layout:**
+  - *Disposição*: horizontal ou vertical, largura mínima para o horizontal (abaixo dela vira vertical), largura da coluna de motivos (%) e espaço entre as colunas;
+  - *Ligações* (liga e desliga): faixas proporcionais ou linhas finas, cor e opacidade;
+  - *Títulos das colunas* (liga e desliga): textos (em branco = nome do campo), fonte, cor e letras maiúsculas;
+  - *Motivo escolhido*: fundo, espessura e cor da borda;
+  - *Painel do detalhamento*: motivo em destaque (fonte e cor) e texto antes de escolher um motivo.
 - **Cabeçalho:**
   - *Título*, *Subtítulo* e *Resumo*: texto, fonte e cor (o resumo liga e desliga e aceita `{total}`, `{motivos}` e `{detalhamentos}`);
   - *Layout*: alinhamento (esquerda, centro, direita) e espaço abaixo.
