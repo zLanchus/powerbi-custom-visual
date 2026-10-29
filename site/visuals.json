@@ -116,5 +116,22 @@
       "2-escolher-aba.png",
       "4-pdf.png"
     ]
+  },
+  {
+    "id": "motivos-expansiveis",
+    "name": "Motivos Expansíveis",
+    "summary": "Ranking dos motivos principais que abre, ao clicar, os motivos de detalhamento.",
+    "features": [
+      "Motivo principal › detalhamento com abertura animada (um por vez ou vários)",
+      "Faixa de composição e % do total e do motivo",
+      "Pesquisa sem acentos que abre os motivos achados pelo detalhamento",
+      "Filtro cruzado por motivo ou detalhamento e navegação por teclado",
+      "Insight automático com texto editável"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-pesquisa.png",
+      "3-filtro.png"
+    ]
   }
 ]
