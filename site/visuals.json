@@ -116,5 +116,25 @@
       "2-escolher-aba.png",
       "4-pdf.png"
     ]
+  },
+  {
+    "id": "motivos-expansiveis",
+    "name": "Motivos Expansíveis",
+    "summary": "Motivos principais à esquerda e, ao clicar, o detalhamento ao lado, ligado por faixas proporcionais ao valor.",
+    "features": [
+      "Layout horizontal: motivo › detalhamento ligados por faixas (estilo Sankey), ou vertical em acordeão",
+      "Faixa de composição e % do total e do motivo",
+      "Pesquisa sem acentos que mostra os detalhamentos achados",
+      "Filtro cruzado por motivo ou detalhamento e navegação por teclado",
+      "Insight automático com texto editável",
+      "Mais de 190 opções: fonte, tamanho, negrito/itálico e cor de cada texto, cores de tudo, layout e textos"
+    ],
+    "cover": "1-horizontal.png",
+    "images": [
+      "2-pesquisa.png",
+      "3-filtro.png",
+      "4-vertical.png",
+      "5-personalizado.png"
+    ]
   }
 ]

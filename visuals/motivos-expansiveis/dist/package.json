@@ -1,0 +1,17 @@
+{
+		"version": "1.2.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/motivosExpansiveis5E8B4DD7DA854EB5ABE37E7ADD5E5227.pbiviz.json"
+			}
+		],
+		"visual": {"name":"motivosExpansiveis","displayName":"Motivos Expansíveis","guid":"motivosExpansiveis5E8B4DD7DA854EB5ABE37E7ADD5E5227","visualClassName":"Visual","version":"1.2.0.0","description":"Ranking de motivos principais que abre, ao clicar, os motivos de detalhamento, com pesquisa, percentuais e insight automático.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}
