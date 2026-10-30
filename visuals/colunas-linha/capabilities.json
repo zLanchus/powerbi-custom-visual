@@ -604,6 +604,292 @@
                 }
             }
         },
+        "palette": {
+            "properties": {
+                "columnPalette": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Padrão do visual (tons de azul)"
+                            },
+                            {
+                                "value": "theme",
+                                "displayName": "Tema do relatório"
+                            },
+                            {
+                                "value": "vivid",
+                                "displayName": "Vibrante"
+                            },
+                            {
+                                "value": "contrast",
+                                "displayName": "Alto contraste"
+                            },
+                            {
+                                "value": "pastel",
+                                "displayName": "Pastel"
+                            },
+                            {
+                                "value": "warm",
+                                "displayName": "Quentes"
+                            },
+                            {
+                                "value": "cool",
+                                "displayName": "Frias"
+                            },
+                            {
+                                "value": "green",
+                                "displayName": "Verdes"
+                            },
+                            {
+                                "value": "gray",
+                                "displayName": "Cinzas"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Personalizada (escolha cada cor)"
+                            }
+                        ]
+                    }
+                },
+                "columnOnlyPalette": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "columnColor1": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor2": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor3": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor4": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor5": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor6": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor7": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor8": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor9": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "columnColor10": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "linePalette": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Padrão do visual (tons de azul)"
+                            },
+                            {
+                                "value": "theme",
+                                "displayName": "Tema do relatório"
+                            },
+                            {
+                                "value": "vivid",
+                                "displayName": "Vibrante"
+                            },
+                            {
+                                "value": "contrast",
+                                "displayName": "Alto contraste"
+                            },
+                            {
+                                "value": "pastel",
+                                "displayName": "Pastel"
+                            },
+                            {
+                                "value": "warm",
+                                "displayName": "Quentes"
+                            },
+                            {
+                                "value": "cool",
+                                "displayName": "Frias"
+                            },
+                            {
+                                "value": "green",
+                                "displayName": "Verdes"
+                            },
+                            {
+                                "value": "gray",
+                                "displayName": "Cinzas"
+                            },
+                            {
+                                "value": "custom",
+                                "displayName": "Personalizada (escolha cada cor)"
+                            }
+                        ]
+                    }
+                },
+                "lineOnlyPalette": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "lineColor1": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor2": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor3": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor4": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor5": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor6": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor7": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor8": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor9": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "lineColor10": {
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "columns": {
             "properties": {
                 "alwaysBelow": {

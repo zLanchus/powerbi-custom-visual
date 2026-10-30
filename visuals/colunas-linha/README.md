@@ -14,7 +14,7 @@ Réplica do gráfico nativo **"Gráfico de colunas empilhadas e de linhas"** do 
 
 ## Como usar
 
-1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.6.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/colunasLinha621BDED5AAC041AC84F6559C9571914C.1.7.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos (os mesmos nomes do visual nativo):
    - **Eixo X**: cada valor vira uma coluna (ex.: Mês, Região). Aceita **vários campos aninhados**, até 6 (ex.: *Ano* e *Mês* da tabela Calendário): cada mês aparece dentro do seu ano.
    - **Eixo Y da coluna**: uma ou várias medidas empilhadas. Sem legenda, cada medida vira um segmento da pilha.
@@ -55,6 +55,7 @@ Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com
 
 - **Geral:** fonte de todo o visual, animação (ligar e duração), margens laterais e de cima/baixo, fundo do visual (cor e arredondamento).
 - **Cabeçalho:** título e subtítulo (texto, fonte e cor), alinhamento e espaço abaixo.
+- **Paleta de cores:** paletas separadas para as colunas e para as linhas (inclui a Legenda da linha): padrão do visual (tons de azul), **tema do relatório**, vibrante, alto contraste, pastel, quentes, frias, verdes, cinzas ou **personalizada** (Cor 1 a Cor 10, na ordem dos itens da legenda). Cores escolhidas série a série têm prioridade, a não ser que você ligue "Usar só a paleta".
 - **Legenda interativa**
   - *Posição e comportamento:* em cima ou embaixo, alinhamento, espaço entre os botões, distância até o gráfico, divisória entre os grupos (e a cor), o que começa visível, duplo clique para mostrar só a série e o texto do aviso quando tudo está escondido.
   - *Texto e forma dos botões:* fonte, altura, espaço interno lateral, arredondamento, espessura da borda, sombra, tamanho dos ícones e como mostrar o que está escondido (esmaecer, riscar ou os dois) com a opacidade.
@@ -79,4 +80,4 @@ Praticamente tudo pode ser trocado no painel **Formatar visual**. Cada parte com
 - Até 1000 categorias no eixo X e 60 itens na legenda.
 - O que foi escondido na legenda vale enquanto o relatório está aberto. Para definir o estado inicial, use as opções "visíveis ao abrir".
 - Os dados chegam no formato matriz (linhas = Eixo X e, embaixo, a Legenda da linha; colunas = Legenda da coluna; com subtotais), para que cada linha e cada coluna sejam calculadas só com os filtros delas.
-- A cor e os ajustes de um item da Legenda da linha ficam guardados junto da primeira categoria em que ele aparece; se essa categoria sair do filtro, o item volta à cor automática.
+- A cor escolhida para um item da Legenda da linha em **Linhas — por série** fica guardada junto da primeira categoria em que ele aparece; se essa categoria sair do filtro, o item volta à cor da paleta. Para cores que não mudam com o filtro, use **Paleta de cores → Personalizada** (Cor 1 = primeiro item, Cor 2 = segundo…).

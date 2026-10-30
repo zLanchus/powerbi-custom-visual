@@ -25,6 +25,21 @@ export const SERIES_PALETTE = [
 /** As linhas começam pelo azul-marinho, para contrastar com as colunas azul-claro. */
 export const LINE_PALETTE = ["#0F2B45", "#3E9BD1", "#5C7E99", "#1B4A73", "#86CCF0", "#24384D"];
 
+/** Linhas: começam pelo azul-marinho e seguem com os outros tons do repositório. */
+export const LINE_DEFAULT_PALETTE = [...LINE_PALETTE, ...SERIES_PALETTE.filter(c => !LINE_PALETTE.includes(c))];
+
+/** Paletas prontas para as séries (escolhidas em "Paleta de cores"; o padrão continua sendo a do repositório). */
+export const PALETTES: Record<string, string[]> = {
+    vivid: ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B", "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF"],
+    contrast: ["#0F2B45", "#E07B39", "#3E9BD1", "#C0392B", "#27AE60", "#8E44AD", "#F1C40F", "#16A085", "#7F8C8D", "#D35400"],
+    pastel: ["#A6CEE3", "#B2DF8A", "#FB9A99", "#FDBF6F", "#CAB2D6", "#FFED6F", "#8DD3C7", "#BEBADA", "#FDB462", "#B3DE69"],
+    warm: ["#B71C1C", "#E53935", "#F4511E", "#FB8C00", "#FFB300", "#FDD835", "#8D6E63", "#AD1457", "#6D4C41", "#FF7043"],
+    cool: ["#0D47A1", "#1976D2", "#039BE5", "#00ACC1", "#00897B", "#43A047", "#5E35B1", "#3949AB", "#26A69A", "#7986CB"],
+    green: ["#1B5E20", "#2E7D32", "#43A047", "#66BB6A", "#81C784", "#A5D6A7", "#00695C", "#26A69A", "#558B2F", "#9CCC65"],
+    gray: ["#212121", "#424242", "#616161", "#757575", "#9E9E9E", "#BDBDBD", "#546E7A", "#78909C", "#90A4AE", "#B0BEC5"]
+};
+export const CUSTOM_COLOR_COUNT = 10;
+
 const enumItems = (...pairs: Array<[string, string]>): powerbi.IEnumMember[] =>
     pairs.map(([value, displayName]) => ({ value, displayName }));
 
@@ -101,6 +116,11 @@ export const LINE_SEPARATE_ITEMS = enumItems(
 );
 export const LINE_OVERLAP_ITEMS = enumItems(
     ["nudge", "Sempre visível (afasta o rótulo até achar espaço)"], ["hide", "Mudar de lado ou esconder"]
+);
+export const PALETTE_ITEMS = enumItems(
+    ["default", "Padrão do visual (tons de azul)"], ["theme", "Tema do relatório"], ["vivid", "Vibrante"],
+    ["contrast", "Alto contraste"], ["pastel", "Pastel"], ["warm", "Quentes"], ["cool", "Frias"], ["green", "Verdes"],
+    ["gray", "Cinzas"], ["custom", "Personalizada (escolha cada cor)"]
 );
 export const TOOLTIP_MODE_ITEMS = enumItems(["category", "Todos os valores da categoria"], ["item", "Só o item sob o mouse"]);
 export const CHIP_ON_STYLE_ITEMS = enumItems(
@@ -232,6 +252,25 @@ class TogglesCard extends FormattingSettingsCompositeCard {
     ]);
     groupReset = group("togglesReset", "Botão \"Mostrar tudo\"", [this.showReset, this.resetLabel, this.resetColor, this.resetBackground]);
     groups: FormattingSettingsGroup[] = [this.groupLayout, this.groupShape, this.groupGroups, this.groupChips, this.groupReset];
+}
+
+// ------------------------------------------------------------------ Paleta de cores
+
+class PaletteCard extends FormattingSettingsCompositeCard {
+    columnPalette = dropdown("columnPalette", "Paleta das colunas", PALETTE_ITEMS, 0);
+    columnOnlyPalette = toggle("columnOnlyPalette", "Usar só a paleta (ignora cores escolhidas série a série)", false);
+    columnColors = SERIES_PALETTE.slice(0, CUSTOM_COLOR_COUNT).map((c, i) => color("columnColor" + (i + 1), "Cor " + (i + 1), c));
+    linePalette = dropdown("linePalette", "Paleta das linhas", PALETTE_ITEMS, 0);
+    lineOnlyPalette = toggle("lineOnlyPalette", "Usar só a paleta (ignora cores escolhidas série a série)", false);
+    lineColors = LINE_DEFAULT_PALETTE.slice(0, CUSTOM_COLOR_COUNT).map((c, i) => color("lineColor" + (i + 1), "Cor " + (i + 1), c));
+
+    name = "palette";
+    displayName = "Paleta de cores";
+    description = "Cores automáticas das séries, na ordem em que aparecem (Cor 1 = primeiro item da legenda). Cores escolhidas série a série em \"Cores das colunas\" e \"Linhas — por série\" têm prioridade.";
+    groups: FormattingSettingsGroup[] = [
+        group("paletteColumns", "Colunas", [this.columnPalette, this.columnOnlyPalette, ...this.columnColors]),
+        group("paletteLines", "Linhas (inclui a Legenda da linha)", [this.linePalette, this.lineOnlyPalette, ...this.lineColors])
+    ];
 }
 
 // ------------------------------------------------------------------ Colunas e linhas
@@ -486,6 +525,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     generalCard = new GeneralCard();
     headerCard = new HeaderCard();
     togglesCard = new TogglesCard();
+    paletteCard = new PaletteCard();
     columnsCard = new ColumnsCard();
     linesCard = new LinesCard();
     xAxisCard = new XAxisCard();
@@ -497,7 +537,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     interactionCard = new InteractionCard();
 
     cards: Array<formattingSettings.Cards> = [
-        this.generalCard, this.headerCard, this.togglesCard, this.columnsCard, this.linesCard, this.xAxisCard,
+        this.generalCard, this.headerCard, this.togglesCard, this.paletteCard, this.columnsCard, this.linesCard, this.xAxisCard,
         this.yAxisCard, this.y2AxisCard, this.columnLabelsCard, this.totalLabelsCard, this.lineLabelsCard,
         this.interactionCard
     ];

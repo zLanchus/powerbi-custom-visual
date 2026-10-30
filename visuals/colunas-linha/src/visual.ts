@@ -19,7 +19,7 @@ import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import PrimitiveValue = powerbi.PrimitiveValue;
 
 import {
-    DARK, FONT, Font, LINE_PALETTE, SERIES_LINE_STYLE_ITEMS, SERIES_PALETTE, SERIES_TRISTATE_ITEMS, WHITE,
+    DARK, FONT, Font, LINE_DEFAULT_PALETTE, PALETTES, SERIES_LINE_STYLE_ITEMS, SERIES_PALETTE, SERIES_TRISTATE_ITEMS, WHITE,
     VisualFormattingSettingsModel, enumValue
 } from "./settings";
 
@@ -499,6 +499,9 @@ export class Visual implements IVisual {
         t.background.visible = t.seriesChips.value && enumValue(t.chipStyle) !== "filled";
         t.resetLabel.visible = t.resetColor.visible = t.resetBackground.visible = t.showReset.value;
 
+        const pal = s.paletteCard;
+        pal.columnColors.forEach(slice => { slice.visible = enumValue(pal.columnPalette) === "custom"; });
+        pal.lineColors.forEach(slice => { slice.visible = enumValue(pal.linePalette) === "custom"; });
         const c = s.columnsCard;
         c.borderColor.visible = c.borderWidth.value > 0;
         const l = s.linesCard;
@@ -559,7 +562,7 @@ export class Visual implements IVisual {
             const list: formattingSettings.Cards[] = [];
             for (const card of cards) {
                 list.push(card);
-                if (card === s.columnsCard && model.columns.length) {
+                if (card === s.columnsCard && model.columns.length && !pal.columnOnlyPalette.value) {
                     list.push(this.columnColorsCard(model.columns));
                 }
                 if (card === s.linesCard && model.lines.length) {
@@ -597,7 +600,10 @@ export class Visual implements IVisual {
                 name: "lineSeries" + k,
                 displayName: series.name,
                 slices: [
-                    new formattingSettings.ColorPicker({ name: "fill", displayName: "Cor", value: { value: series.color }, selector }),
+                    new formattingSettings.ColorPicker({
+                        name: "fill", displayName: "Cor", value: { value: series.color }, selector,
+                        visible: !this.formattingSettings.paletteCard.lineOnlyPalette.value
+                    }),
                     new formattingSettings.NumUpDown({
                         name: "width", displayName: "Espessura (px, 0 = igual às outras)", value: o.width, selector
                     }),
@@ -798,7 +804,7 @@ export class Visual implements IVisual {
                     key: "s:" + String(member.levelValues?.[0]?.value ?? member.value ?? k),
                     kind: "column" as Kind,
                     name: memberLabel(member.levelValues?.[0]?.value ?? member.value, memberSource, locale),
-                    color: colorOf(member.objects, "columnColors") || SERIES_PALETTE[k % SERIES_PALETTE.length],
+                    color: this.seriesColor("column", k, "s:" + String(member.levelValues?.[0]?.value ?? member.value ?? k), colorOf(member.objects, "columnColors")),
                     selector: memberId.getSelector(),
                     source: sources[measure],
                     format: formatOf(sources[measure]),
@@ -828,7 +834,6 @@ export class Visual implements IVisual {
                 }
                 item.nodes[i] = node;
             }));
-            const palette = [...LINE_PALETTE, ...SERIES_PALETTE.filter(c => !LINE_PALETTE.includes(c))];
             lines = [];
             for (const measure of lineMeasures) {
                 for (const item of items) {
@@ -839,7 +844,7 @@ export class Visual implements IVisual {
                         key: "lg:" + measure + ":" + item.key,
                         kind: "line",
                         name: lineMeasures.length > 1 ? `${sources[measure].displayName} · ${item.label}` : item.label,
-                        color: colorOf(objects, "lineColors") || palette[lines.length % palette.length],
+                        color: this.seriesColor("line", lines.length, "lg:" + item.key, colorOf(objects, "lineColors")),
                         selector: builder().withMatrixNode(first, rowLevels).createSelectionId().getSelector(),
                         source: sources[measure],
                         format: formatOf(sources[measure]),
@@ -866,6 +871,26 @@ export class Visual implements IVisual {
         return { categoryName, categories, columns, lines, extras, hasLegend, levels: catLevelCount, groupedAxis: mode === "grouped", bounds };
     }
 
+    /**
+     * Cor de uma série: a escolhida série a série (se houver e a opção "usar só a paleta" estiver desligada)
+     * ou a da paleta escolhida, pela ordem da série. "Tema do relatório" usa as cores do tema do Power BI.
+     */
+    private seriesColor(kind: Kind, index: number, key: string, saved: string | undefined): string {
+        const p = this.formattingSettings.paletteCard;
+        const onlyPalette = kind === "line" ? p.lineOnlyPalette.value : p.columnOnlyPalette.value;
+        if (saved && !onlyPalette) {
+            return saved;
+        }
+        const choice = enumValue(kind === "line" ? p.linePalette : p.columnPalette);
+        if (choice === "theme") {
+            return this.host.colorPalette.getColor(kind + ":" + key).value;
+        }
+        const list = choice === "custom"
+            ? (kind === "line" ? p.lineColors : p.columnColors).map(c => c.value.value)
+            : PALETTES[choice] || (kind === "line" ? LINE_DEFAULT_PALETTE : SERIES_PALETTE);
+        return list[index % list.length];
+    }
+
     private lineOptions(objects: powerbi.DataViewObjects | undefined): LineOptions {
         const o = objects?.["lineColors"] || {};
         const str = (v: powerbi.DataViewPropertyValue | undefined): string => (typeof v === "string" ? v : "default");
@@ -885,12 +910,11 @@ export class Visual implements IVisual {
         formatOf: (source: DataViewMetadataColumn) => (v: PrimitiveValue) => string
     ): Series {
         const queryName = source.queryName || source.displayName;
-        const palette = kind === "line" ? LINE_PALETTE : SERIES_PALETTE;
         return {
             key: (kind === "line" ? "l:" : "c:") + queryName,
             kind,
             name: source.displayName,
-            color: colorOf(source.objects, kind === "line" ? "lineColors" : "columnColors") || palette[k % palette.length],
+            color: this.seriesColor(kind, k, queryName, colorOf(source.objects, kind === "line" ? "lineColors" : "columnColors")),
             selector: { metadata: queryName },
             source,
             format: formatOf(source),

@@ -111,7 +111,7 @@
       "Mínimo e máximo dos eixos por medida, colunas sempre abaixo das linhas e linhas em faixas",
       "Rótulos de segmento, total da pilha e das linhas, sem sobreposição",
       "Linhas retas, suaves ou em degraus, com marcadores e área",
-      "Praticamente tudo personalizável: fontes, tamanho e cores dos botões, eixos, grade, rótulos e cada linha"
+      "Praticamente tudo personalizável: fontes, tamanho e cores dos botões, eixos, grade, rótulos e cada linha; paletas de cores prontas, do tema ou personalizadas"
     ],
     "cover": "1-padrao.png",
     "images": [
@@ -133,7 +133,7 @@
       "Linhas no mesmo eixo secundário, com rótulos afastados para não se sobrepor",
       "Legenda da linha: uma linha por item (ex.: Margem % por Região)",
       "Colunas sempre abaixo das linhas, mínimo e máximo dos eixos por medida e Ano/Mês aninhados",
-      "Praticamente tudo personalizável: fontes, botões, cores, eixos, grade, rótulos e cada linha"
+      "Praticamente tudo personalizável: fontes, botões, cores, eixos, grade, rótulos e cada linha; paletas de cores prontas, do tema ou personalizadas"
     ],
     "cover": "1-padrao.png",
     "images": [
