@@ -8,7 +8,7 @@ Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)
 
 ## Como usar
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.0.1.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.0.2.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
 4. Clique no botão (clique normal, também no Power BI Desktop).
