@@ -17,6 +17,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Exportar Página**](visuals/exportar-pagina/) | Botão que exporta a página do relatório para PDF, PNG ou JPG sem configuração do administrador nem certificação: abre a [página de exportação](https://zlanchus.github.io/powerbi-custom-visual/exportar/), que captura a aba do relatório, recorta sozinha só a página do relatório (sem menus e painéis) e gera o arquivo no próprio navegador. PDF com várias páginas, nome e rodapé por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/exportar-pagina.pbiviz) |
 | [**Motivos Expansíveis**](visuals/motivos-expansiveis/) | Motivos principais de uma pesquisa à esquerda e, ao clicar, o detalhamento ao lado, ligado por faixas proporcionais ao valor (ou em acordeão vertical): faixa de composição, % do total e do motivo, pesquisa sem acentos, filtro cruzado por motivo ou detalhamento, insight automático e mais de 190 opções de formatação. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/motivos-expansiveis.pbiviz) |
 | [**Big Number**](visuals/big-number/) | Card com o número em destaque, título editável e até 3 comparações (mês anterior, ano anterior, meta), cada uma com sua unidade de diferença (variação %, absoluta ou pontos percentuais), sentido de "melhor" (para cima ou para baixo), cores e valor anterior opcional. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/big-number.pbiviz) |
+| [**Tabela de Avaliação**](visuals/tabela-avaliacao/) | Tabela com notas de pesquisa (1 a 5) em estrelas com preenchimento exato: várias medidas (uma coluna por pergunta), nº de respostas, coluna e linha de média, ordenação ao clicar no cabeçalho e cores por faixa de nota. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/tabela-avaliacao.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -46,7 +47,8 @@ powerbi-custom-visual/
 │   ├── barras-ranking/
 │   ├── exportar-pagina/
 │   ├── motivos-expansiveis/
-│   └── big-number/
+│   ├── big-number/
+│   └── tabela-avaliacao/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
