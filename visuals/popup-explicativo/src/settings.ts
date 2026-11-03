@@ -58,8 +58,8 @@ export const ARROW_ITEMS = enumItems(
     ["none", "Nenhuma"]
 );
 export const MODE_ITEMS = enumItems(
-    ["focus", "Área inteira do relatório (modo foco)"],
-    ["dialog", "Caixa de diálogo do Power BI"]
+    ["dialog", "Caixa de diálogo do Power BI"],
+    ["focus", "Área inteira do relatório (modo foco)"]
 );
 export const SIZE_ITEMS = enumItems(
     ["full", "Tela inteira"],
@@ -177,7 +177,7 @@ class PopupCard extends FormattingSettingsCard {
     mode = new formattingSettings.ItemDropdown({
         name: "mode",
         displayName: "Abrir em",
-        description: "Modo foco: o visual se expande para a área inteira do relatório (como o botão Modo de foco) e mostra o texto; fecha no X ou em Voltar ao relatório.",
+        description: "Caixa de diálogo: no Power BI Service pode levar alguns segundos para mostrar o texto na primeira vez. Modo foco: o visual se expande para a área inteira do relatório e mostra o texto na hora.",
         items: MODE_ITEMS,
         value: MODE_ITEMS[0]
     });

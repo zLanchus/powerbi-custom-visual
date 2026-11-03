@@ -170,7 +170,7 @@ export class Visual implements IVisual {
         const fx = s.effectsCard;
         fx.hoverBackground.visible = fx.hoverColor.visible = enumValue(fx.hover) === "custom";
         const popup = s.popupCard;
-        const dialog = enumValue(popup.mode) === "dialog";
+        const dialog = enumValue(popup.mode) !== "focus";
         popup.size.visible = dialog;
         popup.width.visible = popup.height.visible = dialog && enumValue(popup.size) === "custom";
         return this.formattingSettingsService.buildFormattingModel(s);
@@ -181,16 +181,17 @@ export class Visual implements IVisual {
     /**
      * Abre o texto com um clique normal, também no Desktop (lá o relatório está sempre em modo de edição
      * e o Ctrl + clique seleciona visuais).
-     * - Modo foco (padrão): o Power BI expande o visual para a área inteira do relatório e o próprio visual
+     * - Diálogo (padrão): janela do Power BI; se recusar o tamanho pedido, tenta com o tamanho padrão dele.
+     *   No Service a janela carrega o visual do zero e pode levar alguns segundos para mostrar o texto.
+     * - Modo foco: o Power BI expande o visual para a área inteira do relatório e o próprio visual
      *   desenha o texto. Se o Power BI não entrar no modo foco, o texto abre por cima do visual.
-     * - Diálogo: janela do Power BI; se recusar o tamanho pedido, tenta com o tamanho padrão dele.
      */
     private activate(): void {
         const state = this.popup;
         if (!state || this.inline) {
             return;
         }
-        if (enumValue(this.formattingSettings.popupCard.mode) !== "dialog") {
+        if (enumValue(this.formattingSettings.popupCard.mode) === "focus") {
             this.openFocus(state);
             return;
         }

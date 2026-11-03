@@ -8,14 +8,16 @@ Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)
 
 ## Como usar
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
 4. Clique no botão (clique normal, também no Power BI Desktop).
 
-Por padrão o texto abre no **modo foco** do Power BI: o visual se expande para a área inteira do relatório (como o botão *Modo de foco* do cabeçalho dos visuais) e mostra o texto. Fecha no **X** ou em **Voltar ao relatório**. Não depende do tamanho do visual: o visual pode ser só o botão.
+Por padrão o texto abre numa **caixa de diálogo do Power BI**, por cima do relatório (título e botão **Fechar**). Ela não depende do tamanho do visual: o visual pode ser só o botão.
 
-Em **Formatar visual → Pop-up → Abrir em** dá para trocar para **Caixa de diálogo do Power BI** (janela com título e botão **Fechar**). Atenção: no Power BI Service essa janela pode abrir em branco. Se acontecer, volte para o modo foco.
+> **No Power BI Service a caixa pode ficar em branco por alguns segundos** na primeira vez. O Power BI carrega o visual do zero dentro da janela, e essa espera é dele (o visual tem ~27 KB e monta o texto em milissegundos). Nas próximas aberturas costuma ser mais rápido.
+
+Em **Formatar visual → Pop-up → Abrir em** dá para trocar para **Área inteira do relatório (modo foco)**: o visual se expande para a área do relatório, como o botão *Modo de foco* do cabeçalho dos visuais, e o texto aparece na hora. Fecha no **X** ou em **Voltar ao relatório**.
 
 ## Como escrever o texto
 
@@ -55,7 +57,7 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 - **Botão, Texto do botão, Ícone à esquerda, Ícone à direita, Efeitos:** os mesmos do Botão de Navegação (cores, degradê, sombra, arredondamento, borda, ícones, hover, brilho, clique com onda). Ícones novos: informação, ajuda, livro e lâmpada. Ícone à direita padrão: expandir ⤢.
 - **Pop-up:**
   - título (em branco = texto do botão) e texto;
-  - abrir em: modo foco (padrão) ou caixa de diálogo;
+  - abrir em: caixa de diálogo (padrão) ou modo foco;
   - tamanho do diálogo: tela inteira, grande, médio ou personalizado (largura e altura);
   - cor de fundo, do texto, de destaque (títulos, marcadores, barras) e do fundo dos destaques;
   - tamanho da fonte, alinhamento (à esquerda ou justificado);
