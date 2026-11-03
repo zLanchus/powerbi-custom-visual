@@ -62,8 +62,15 @@ export const ROLE_ITEMS = enumItems(
     ["panel", "Painel do pop-up (mostrado por indicador)"]
 );
 export const MODE_ITEMS = enumItems(
+    ["inside", "Dentro do visual (o botão se expande)"],
     ["dialog", "Caixa de diálogo do Power BI"],
     ["focus", "Área inteira do relatório (modo foco)"]
+);
+export const ANCHOR_ITEMS = enumItems(
+    ["top-left", "Canto superior esquerdo"],
+    ["top-right", "Canto superior direito"],
+    ["bottom-left", "Canto inferior esquerdo"],
+    ["bottom-right", "Canto inferior direito"]
 );
 export const SIZE_ITEMS = enumItems(
     ["full", "Tela inteira"],
@@ -109,7 +116,9 @@ class ButtonCard extends FormattingSettingsCard {
     gradient = toggle("gradient", "Degradê sutil", true);
     layout = dropdown("layout", "Disposição", LAYOUT_ITEMS, 0);
     radius = num("radius", "Arredondamento (px)", 14, "Valores altos deixam o botão em formato de pílula.");
-    height = num("height", "Altura (px, 0 = ocupa o visual)", 0);
+    height = num("height", "Altura (px, 0 = ocupa o visual)", 0, "Com Abrir em = Dentro do visual, 0 vira 56 px.");
+    width = num("width", "Largura do botão (px)", 300, "Só com Abrir em = Dentro do visual: o resto do visual fica transparente até abrir.");
+    anchor = dropdown("anchor", "Posição do botão", ANCHOR_ITEMS, 0);
     padding = num("padding", "Espaço interno lateral (px)", 20);
     gap = num("gap", "Espaço entre ícone, texto e seta (px)", 14);
     shadow = dropdown("shadow", "Sombra", SHADOW_ITEMS, 1);
@@ -119,7 +128,7 @@ class ButtonCard extends FormattingSettingsCard {
     name = "button";
     displayName = "Botão";
     slices: FormattingSettingsSlice[] = [
-        this.fontFamily, this.background, this.gradient, this.layout, this.radius, this.height,
+        this.fontFamily, this.background, this.gradient, this.layout, this.radius, this.height, this.width, this.anchor,
         this.padding, this.gap, this.shadow, this.borderWidth, this.borderColor
     ];
 }
@@ -195,7 +204,7 @@ class PopupCard extends FormattingSettingsCard {
     mode = new formattingSettings.ItemDropdown({
         name: "mode",
         displayName: "Abrir em",
-        description: "Caixa de diálogo: no Power BI Service pode levar alguns segundos para mostrar o texto na primeira vez. Modo foco: o visual se expande para a área inteira do relatório e mostra o texto na hora.",
+        description: "Dentro do visual: deixe o visual do tamanho do pop-up; o botão fica num canto e, ao clicar, a explicação ocupa o visual inteiro (na hora). Caixa de diálogo: no Service leva alguns segundos. Modo foco: área inteira do relatório.",
         items: MODE_ITEMS,
         value: MODE_ITEMS[0]
     });
@@ -211,13 +220,14 @@ class PopupCard extends FormattingSettingsCard {
     radius = num("radius", "Arredondamento do painel (px)", 16);
     shadow = toggle("shadow", "Sombra do painel", true);
     showClose = toggle("showClose", "Mostrar X de fechar", true);
+    closeOnBlur = toggle("closeOnBlur", "Fechar ao clicar fora do visual", true);
     maxWidth = num("maxWidth", "Largura máxima do texto (px, 0 = toda)", 820, "Linhas muito longas cansam a leitura; o texto fica centralizado nessa largura.");
 
     name = "popup";
     displayName = "Pop-up";
     slices: FormattingSettingsSlice[] = [
         this.title, this.content, this.mode, this.size, this.width, this.height, this.background, this.fontColor,
-        this.accent, this.panel, this.fontSize, this.align, this.radius, this.shadow, this.showClose, this.maxWidth
+        this.accent, this.panel, this.fontSize, this.align, this.radius, this.shadow, this.showClose, this.closeOnBlur, this.maxWidth
     ];
 }
 

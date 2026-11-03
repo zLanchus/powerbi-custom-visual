@@ -172,6 +172,27 @@
     position: relative;
 }
 
+// ----------------------------------------------------------------- "Dentro do visual"
+
+.bn-inside {
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    .bn-btn {
+        flex: 0 0 auto;
+    }
+}
+
+.bn-anchor-top-right,
+.bn-anchor-bottom-right {
+    justify-content: flex-end;
+}
+
+.bn-anchor-bottom-left,
+.bn-anchor-bottom-right {
+    align-items: flex-end;
+}
+
 // ----------------------------------------------------------------- disposição
 
 .bn-layout-spread {
@@ -460,6 +481,16 @@ ul.pe-list li::marker {
     outline: none;
     box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
     animation: pe-enter .22s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+// Dentro do visual: o cartão ocupa o visual; com sombra, deixa folga para ela não ser cortada.
+.pe-inside {
+    box-shadow: none;
+}
+
+.pe-inside-shadow {
+    inset: 4px 10px 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .10), 0 10px 26px rgba(0, 0, 0, .20);
 }
 
 // Modo foco: ocupa a área inteira, sem cantos nem sombra.

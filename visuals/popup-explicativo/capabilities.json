@@ -140,6 +140,33 @@
                             }
                         }
                     }
+                },
+                "width": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "anchor": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "top-left",
+                                "displayName": "Canto superior esquerdo"
+                            },
+                            {
+                                "value": "top-right",
+                                "displayName": "Canto superior direito"
+                            },
+                            {
+                                "value": "bottom-left",
+                                "displayName": "Canto inferior esquerdo"
+                            },
+                            {
+                                "value": "bottom-right",
+                                "displayName": "Canto inferior direito"
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -423,6 +450,10 @@
                     "type": {
                         "enumeration": [
                             {
+                                "value": "inside",
+                                "displayName": "Dentro do visual (o botão se expande)"
+                            },
+                            {
                                 "value": "dialog",
                                 "displayName": "Caixa de diálogo do Power BI"
                             },
@@ -536,6 +567,11 @@
                     }
                 },
                 "showClose": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "closeOnBlur": {
                     "type": {
                         "bool": true
                     }

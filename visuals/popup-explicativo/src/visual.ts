@@ -89,6 +89,9 @@ function textOf(value: PrimitiveValue | undefined): string | undefined {
     return s === "" ? undefined : s;
 }
 
+/** Onde o texto desenhado pelo próprio visual foi aberto. */
+type InlineKind = "inside" | "focus" | "fallback";
+
 export class Visual implements IVisual {
     private host: IVisualHost;
     private events: IVisualEventService;
@@ -101,7 +104,7 @@ export class Visual implements IVisual {
     private popup: PopupState | undefined;
     private inline: HTMLElement | undefined;
     /** "focus": texto aberto no modo foco do Power BI; "fallback": por cima do visual, sem modo foco nem diálogo. */
-    private inlineKind: "focus" | "fallback" = "fallback";
+    private inlineKind: InlineKind = "fallback";
     private inFocus = false;
     private panel: HTMLElement | undefined;
     private focusTimer: number | undefined;
@@ -139,6 +142,13 @@ export class Visual implements IVisual {
         });
         this.button.addEventListener("keyup", () => this.button.classList.remove("bn-pressed"));
         this.button.addEventListener("blur", () => this.button.classList.remove("bn-pressed"));
+        // "Dentro do visual": clicar em qualquer lugar fora do visual tira o foco do iframe e fecha o pop-up,
+        // para ele não ficar aberto atrás dos outros visuais.
+        window.addEventListener("blur", () => {
+            if (this.inline && this.inlineKind === "inside" && this.formattingSettings.popupCard.closeOnBlur.value) {
+                this.closeInline();
+            }
+        });
         this.root.addEventListener("keydown", (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 this.closeLayer();
@@ -176,8 +186,13 @@ export class Visual implements IVisual {
             card.visible = !isPanel;
         }
         popup.mode.visible = !isPanel;
-        popup.radius.visible = popup.shadow.visible = popup.showClose.visible = isPanel;
-        const dialog = !isPanel && enumValue(popup.mode) !== "focus";
+        const mode = enumValue(popup.mode);
+        const inside = !isPanel && mode === "inside";
+        s.buttonCard.width.visible = s.buttonCard.anchor.visible = inside;
+        popup.radius.visible = popup.shadow.visible = isPanel || inside;
+        popup.showClose.visible = isPanel;
+        popup.closeOnBlur.visible = inside;
+        const dialog = !isPanel && mode === "dialog";
         popup.size.visible = dialog;
         popup.width.visible = popup.height.visible = dialog && enumValue(popup.size) === "custom";
         return this.formattingSettingsService.buildFormattingModel(s);
@@ -198,7 +213,12 @@ export class Visual implements IVisual {
         if (!state || this.inline) {
             return;
         }
-        if (enumValue(this.formattingSettings.popupCard.mode) === "focus") {
+        const mode = enumValue(this.formattingSettings.popupCard.mode);
+        if (mode === "inside") {
+            this.openInline(state, "inside");
+            return;
+        }
+        if (mode === "focus") {
             this.openFocus(state);
             return;
         }
@@ -272,9 +292,14 @@ export class Visual implements IVisual {
     }
 
     /** Texto desenhado pelo próprio visual: no modo foco (área inteira do relatório) ou por cima do visual. */
-    private openInline(state: PopupState, kind: "focus" | "fallback"): void {
+    private openInline(state: PopupState, kind: InlineKind): void {
         this.closeInline();
-        const layer = el("div", kind === "focus" ? "pe-inline pe-focus" : "pe-inline");
+        const layer = el("div", `pe-inline pe-${kind}`);
+        if (kind === "inside") {
+            const p = this.formattingSettings.popupCard;
+            layer.style.borderRadius = `${Math.max(0, p.radius.value)}px`;
+            layer.classList.toggle("pe-inside-shadow", p.shadow.value);
+        }
         layer.setAttribute("role", "dialog");
         layer.tabIndex = -1;
         const close = el("button", "pe-close");
@@ -288,12 +313,15 @@ export class Visual implements IVisual {
         this.root.appendChild(layer);
         this.inline = layer;
         this.inlineKind = kind;
+        // Com o cartão aberto, o botão some (senão as pontas dele aparecem atrás dos cantos arredondados).
+        this.button.style.visibility = "hidden";
         layer.focus();
     }
 
     private closeInline(): void {
         this.inline?.remove();
         this.inline = undefined;
+        this.button.style.visibility = "";
     }
 
     private ripple(e: PointerEvent): void {
@@ -389,7 +417,7 @@ export class Visual implements IVisual {
             // Saiu do modo foco pelo "Voltar ao relatório" do Power BI.
             this.closeInline();
         } else if (this.inline) {
-            this.openInline(this.popup, "fallback");
+            this.openInline(this.popup, this.inlineKind);
         }
         this.rippleOn = fx.ripple.value;
 
@@ -438,7 +466,17 @@ export class Visual implements IVisual {
 
         const button = this.button;
         const maxHeight = Math.max(0, viewport.height - 2 * inset);
-        button.style.height = b.height.value > 0 ? `${Math.min(b.height.value, maxHeight)}px` : "";
+        const inside = enumValue(p.mode) === "inside";
+        if (inside) {
+            // Botão num canto; o resto do visual fica transparente até o pop-up abrir.
+            root.classList.add("bn-inside", `bn-anchor-${enumValue(b.anchor)}`);
+            const height = b.height.value > 0 ? b.height.value : 56;
+            button.style.height = `${Math.min(height, maxHeight)}px`;
+            button.style.width = `${Math.min(Math.max(60, b.width.value), Math.max(0, viewport.width - 2 * inset))}px`;
+        } else {
+            button.style.height = b.height.value > 0 ? `${Math.min(b.height.value, maxHeight)}px` : "";
+            button.style.width = "";
+        }
         button.replaceChildren();
 
         if (ic.show.value) {

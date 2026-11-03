@@ -118,18 +118,18 @@
   {
     "id": "popup-explicativo",
     "name": "Pop-up Explicativo",
-    "summary": "Botão que abre um pop-up por cima do relatório com um texto explicativo.",
+    "summary": "Botão que se expande, na hora, num cartão com um texto explicativo.",
     "features": [
-      "Painel de explicação que abre na hora por indicadores, ou caixa de diálogo do Power BI",
+      "Abre na hora: o botão se expande dentro do visual e fecha ao clicar fora",
       "Títulos, listas, destaques, negrito e itálico no texto",
       "Texto fixo no painel ou dinâmico por medida",
       "Mesmo botão caprichado do Botão de Navegação (ícones, hover, clique)"
     ],
-    "cover": "2-popup.png",
+    "cover": "6-dentro-aberto.png",
     "images": [
+      "5-dentro-fechado.png",
       "4-painel.png",
-      "1-botao.png",
-      "3-dentro-do-visual.png"
+      "1-botao.png"
     ]
   }
 ]
