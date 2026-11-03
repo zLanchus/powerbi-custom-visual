@@ -19,6 +19,7 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Big Number**](visuals/big-number/) | Card com o número em destaque, título editável e até 3 comparações (mês anterior, ano anterior, meta), cada uma com sua unidade de diferença (variação %, absoluta ou pontos percentuais), sentido de "melhor" (para cima ou para baixo), cores e valor anterior opcional. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/big-number.pbiviz) |
 | [**Tabela de Avaliação**](visuals/tabela-avaliacao/) | Tabela com notas de pesquisa (1 a 5) em estrelas com preenchimento exato: várias medidas (uma coluna por pergunta), nº de respostas, coluna e linha de média, ordenação ao clicar no cabeçalho e cores por faixa de nota. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/tabela-avaliacao.pbiviz) |
 | [**Padrões de Saída**](visuals/padroes-saida/) | Destaques e insights de turnover (de pessoas, clientes ou qualquer outro): encontra a regra que descreve as saídas, como *Sem liderança · Até 1 ano de casa · Comercial — 3,5× a taxa média*, e lista os perfis com taxa acima da média (com a Base) ou que concentram as saídas, sempre nos filtros da página. Tem botão de ajuda com a conta passo a passo, guia de medidas para quem desenvolve e formatação completa (fonte, cor, fundo e borda de cada parte). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/padroes-saida.pbiviz) |
+| [**Barras com Base Nominal**](visuals/barras-base/) | Barras empilhadas com legenda e, ao lado, a **base nominal** (tabela com os registros). Clique numa barra, num segmento ou na legenda e a base mostra só aqueles registros; pesquisa, ordenação por coluna e filtro dos outros visuais da página. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-base.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -50,7 +51,9 @@ powerbi-custom-visual/
 │   ├── motivos-expansiveis/
 │   ├── big-number/
 │   ├── tabela-avaliacao/
-│   └── padroes-saida/
+│   ├── padroes-saida/
+│   ├── barras-base/
+│   └── exportar-pagina/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
