@@ -217,5 +217,38 @@
       "3-legenda.png",
       "4-horizontal.png"
     ]
+  },
+  {
+    "id": "botao-navegacao",
+    "name": "Botão de Navegação",
+    "summary": "Botão caprichado para ir a outra página do relatório ou abrir um link.",
+    "features": [
+      "Ícone, texto, subtítulo, divisória e seta (seta, chevron, em círculo)",
+      "Hover com elevação, brilho e seta que desliza; clique que afunda com onda",
+      "Degradê sutil, sombras em camadas, borda e formato pílula",
+      "Texto e link dinâmicos por medida; teclado e foco acessíveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-estilos.png",
+      "3-hover.png"
+    ]
+  },
+  {
+    "id": "popup-explicativo",
+    "name": "Pop-up Explicativo",
+    "summary": "Botão que se expande, na hora, num cartão com um texto explicativo.",
+    "features": [
+      "Abre na hora: o botão se expande dentro do visual e fecha ao clicar fora",
+      "Títulos, listas, destaques, negrito e itálico no texto",
+      "Texto fixo no painel ou dinâmico por medida",
+      "Mesmo botão caprichado do Botão de Navegação (ícones, hover, clique)"
+    ],
+    "cover": "6-dentro-aberto.png",
+    "images": [
+      "5-dentro-fechado.png",
+      "4-painel.png",
+      "1-botao.png"
+    ]
   }
 ]

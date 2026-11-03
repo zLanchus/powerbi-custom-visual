@@ -20,6 +20,8 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Tabela de Avaliação**](visuals/tabela-avaliacao/) | Tabela com notas de pesquisa (1 a 5) em estrelas com preenchimento exato: várias medidas (uma coluna por pergunta), nº de respostas, coluna e linha de média, ordenação ao clicar no cabeçalho e cores por faixa de nota. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/tabela-avaliacao.pbiviz) |
 | [**Padrões de Saída**](visuals/padroes-saida/) | Destaques e insights de turnover (de pessoas, clientes ou qualquer outro): encontra a regra que descreve as saídas, como *Sem liderança · Até 1 ano de casa · Comercial — 3,5× a taxa média*, e lista os perfis com taxa acima da média (com a Base) ou que concentram as saídas, sempre nos filtros da página. Tem botão de ajuda com a conta passo a passo, guia de medidas para quem desenvolve e formatação completa (fonte, cor, fundo e borda de cada parte). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/padroes-saida.pbiviz) |
 | [**Barras com Base Nominal**](visuals/barras-base/) | Barras empilhadas com legenda e, ao lado, a **base nominal** (tabela com os registros). Clique numa barra, num segmento ou na legenda e a base mostra só aqueles registros; pesquisa, ordenação por coluna e filtro dos outros visuais da página. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-base.pbiviz) |
+| [**Botão de Navegação**](visuals/botao-navegacao/) | Botão bonito para ir a outra página ou abrir um link: ícone, texto e subtítulo, seta animada, degradê, sombras, efeitos de hover e clique, texto e link dinâmicos por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/botao-navegacao.pbiviz) |
+| [**Pop-up Explicativo**](visuals/popup-explicativo/) | Botão que abre um pop-up por cima do relatório com texto explicativo: títulos, listas, destaques, negrito e itálico; texto fixo ou por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/popup-explicativo.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -53,7 +55,9 @@ powerbi-custom-visual/
 │   ├── tabela-avaliacao/
 │   ├── padroes-saida/
 │   ├── barras-base/
-│   └── exportar-pagina/
+│   ├── exportar-pagina/
+│   ├── botao-navegacao/
+│   └── popup-explicativo/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
