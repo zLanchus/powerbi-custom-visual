@@ -401,6 +401,20 @@
                         "text": true
                     }
                 },
+                "mode": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "focus",
+                                "displayName": "Área inteira do relatório (modo foco)"
+                            },
+                            {
+                                "value": "dialog",
+                                "displayName": "Caixa de diálogo do Power BI"
+                            }
+                        ]
+                    }
+                },
                 "size": {
                     "type": {
                         "enumeration": [

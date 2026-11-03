@@ -118,9 +118,9 @@
   {
     "id": "popup-explicativo",
     "name": "Pop-up Explicativo",
-    "summary": "Botão que abre um pop-up grande (até a tela inteira) com um texto explicativo.",
+    "summary": "Botão que abre um texto explicativo na área inteira do relatório.",
     "features": [
-      "Pop-up por cima do relatório inteiro, independente do tamanho do visual",
+      "Abre na área inteira do relatório (modo foco), independente do tamanho do visual",
       "Títulos, listas, destaques, negrito e itálico no texto",
       "Texto fixo no painel ou dinâmico por medida",
       "Mesmo botão caprichado do Botão de Navegação (ícones, hover, clique)"

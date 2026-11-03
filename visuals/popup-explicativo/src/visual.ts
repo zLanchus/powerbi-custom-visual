@@ -100,6 +100,10 @@ export class Visual implements IVisual {
     private button: HTMLElement;
     private popup: PopupState | undefined;
     private inline: HTMLElement | undefined;
+    /** "focus": texto aberto no modo foco do Power BI; "fallback": por cima do visual, sem modo foco nem diálogo. */
+    private inlineKind: "focus" | "fallback" = "fallback";
+    private inFocus = false;
+    private focusTimer: number | undefined;
     private rippleOn = true;
 
     constructor(options: VisualConstructorOptions) {
@@ -136,7 +140,7 @@ export class Visual implements IVisual {
         this.button.addEventListener("blur", () => this.button.classList.remove("bn-pressed"));
         this.root.addEventListener("keydown", (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                this.closeInline();
+                this.closeLayer();
             }
         });
     }
@@ -147,6 +151,7 @@ export class Visual implements IVisual {
             const dataView: DataView | undefined = options.dataViews?.[0];
             this.formattingSettings = this.formattingSettingsService
                 .populateFormattingSettingsModel(VisualFormattingSettingsModel, dataView);
+            this.inFocus = options.isInFocus === true;
             this.render(dataView, options.viewport);
             this.events?.renderingFinished(options);
         } catch (e) {
@@ -165,20 +170,28 @@ export class Visual implements IVisual {
         const fx = s.effectsCard;
         fx.hoverBackground.visible = fx.hoverColor.visible = enumValue(fx.hover) === "custom";
         const popup = s.popupCard;
-        popup.width.visible = popup.height.visible = enumValue(popup.size) === "custom";
+        const dialog = enumValue(popup.mode) === "dialog";
+        popup.size.visible = dialog;
+        popup.width.visible = popup.height.visible = dialog && enumValue(popup.size) === "custom";
         return this.formattingSettingsService.buildFormattingModel(s);
     }
 
     // ------------------------------------------------------------- clique
 
     /**
-     * Abre o pop-up com um clique normal, também no Desktop (lá o relatório está sempre em modo de edição
-     * e o Ctrl + clique seleciona visuais). Se o Power BI recusar o tamanho pedido, tenta de novo com o
-     * tamanho padrão dele; sem diálogo disponível, mostra o texto dentro do próprio visual.
+     * Abre o texto com um clique normal, também no Desktop (lá o relatório está sempre em modo de edição
+     * e o Ctrl + clique seleciona visuais).
+     * - Modo foco (padrão): o Power BI expande o visual para a área inteira do relatório e o próprio visual
+     *   desenha o texto. Se o Power BI não entrar no modo foco, o texto abre por cima do visual.
+     * - Diálogo: janela do Power BI; se recusar o tamanho pedido, tenta com o tamanho padrão dele.
      */
     private activate(): void {
         const state = this.popup;
         if (!state || this.inline) {
+            return;
+        }
+        if (enumValue(this.formattingSettings.popupCard.mode) !== "dialog") {
+            this.openFocus(state);
             return;
         }
         if (this.host.hostCapabilities?.allowModalDialog === false || typeof this.host.openModalDialog !== "function") {
@@ -199,9 +212,38 @@ export class Visual implements IVisual {
             .catch((e: unknown) => this.fallback(state, `O Power BI recusou abrir o pop-up: ${String(e)}`));
     }
 
+    private openFocus(state: PopupState): void {
+        if (typeof this.host.switchFocusModeState !== "function") {
+            this.fallback(state, "O Power BI não oferece o modo foco neste ambiente.");
+            return;
+        }
+        try {
+            this.host.switchFocusModeState(true);
+        } catch (e) {
+            this.fallback(state, `O Power BI recusou o modo foco: ${String(e)}`);
+            return;
+        }
+        // O texto aparece no update com isInFocus; se ele não vier, abre por cima do visual.
+        window.clearTimeout(this.focusTimer);
+        this.focusTimer = window.setTimeout(() => {
+            if (!this.inFocus && !this.inline && this.popup) {
+                this.fallback(this.popup, "O Power BI não entrou no modo foco.");
+            }
+        }, 1500);
+    }
+
+    private closeLayer(): void {
+        if (this.inline && this.inlineKind === "focus") {
+            this.closeInline();
+            this.host.switchFocusModeState?.(false);
+        } else {
+            this.closeInline();
+        }
+    }
+
     private fallback(state: PopupState, reason: string): void {
         this.host.displayWarningIcon?.("Pop-up indisponível", `${reason} O texto foi aberto dentro do próprio visual.`);
-        this.openInline(state);
+        this.openInline(state, "fallback");
     }
 
     /** Tamanho pedido ao Power BI; ele mesmo limita ao espaço da janela. */
@@ -221,22 +263,23 @@ export class Visual implements IVisual {
         }
     }
 
-    /** Sem diálogo disponível (ex.: Publicar na Web), o texto abre por cima do próprio visual. */
-    private openInline(state: PopupState): void {
+    /** Texto desenhado pelo próprio visual: no modo foco (área inteira do relatório) ou por cima do visual. */
+    private openInline(state: PopupState, kind: "focus" | "fallback"): void {
         this.closeInline();
-        const layer = el("div", "pe-inline");
+        const layer = el("div", kind === "focus" ? "pe-inline pe-focus" : "pe-inline");
         layer.setAttribute("role", "dialog");
         layer.tabIndex = -1;
         const close = el("button", "pe-close");
         close.type = "button";
         close.setAttribute("aria-label", "Fechar");
         close.appendChild(icon("M6 6l12 12M18 6L6 18", "pe-close-svg"));
-        close.addEventListener("click", () => this.closeInline());
+        close.addEventListener("click", () => this.closeLayer());
         const scroller = el("div", "pe-inline-scroll");
         renderPopup(scroller, state, true);
         layer.append(scroller, close);
         this.root.appendChild(layer);
         this.inline = layer;
+        this.inlineKind = kind;
         layer.focus();
     }
 
@@ -293,8 +336,14 @@ export class Visual implements IVisual {
             align: enumValue(p.align),
             maxWidth: Math.max(0, p.maxWidth.value)
         };
-        if (this.inline) {
-            this.openInline(this.popup);
+        if (this.inFocus) {
+            window.clearTimeout(this.focusTimer);
+            this.openInline(this.popup, "focus");
+        } else if (this.inline && this.inlineKind === "focus") {
+            // Saiu do modo foco pelo "Voltar ao relatório" do Power BI.
+            this.closeInline();
+        } else if (this.inline) {
+            this.openInline(this.popup, "fallback");
         }
         this.rippleOn = fx.ripple.value;
 

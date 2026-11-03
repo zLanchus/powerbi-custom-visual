@@ -57,6 +57,10 @@ export const ARROW_ITEMS = enumItems(
     ["badge", "Seta em círculo"],
     ["none", "Nenhuma"]
 );
+export const MODE_ITEMS = enumItems(
+    ["focus", "Área inteira do relatório (modo foco)"],
+    ["dialog", "Caixa de diálogo do Power BI"]
+);
 export const SIZE_ITEMS = enumItems(
     ["full", "Tela inteira"],
     ["large", "Grande"],
@@ -170,7 +174,14 @@ class PopupCard extends FormattingSettingsCard {
         value: DEFAULT_CONTENT,
         placeholder: "Escreva aqui a explicação…"
     });
-    size = dropdown("size", "Tamanho", SIZE_ITEMS, 0);
+    mode = new formattingSettings.ItemDropdown({
+        name: "mode",
+        displayName: "Abrir em",
+        description: "Modo foco: o visual se expande para a área inteira do relatório (como o botão Modo de foco) e mostra o texto; fecha no X ou em Voltar ao relatório.",
+        items: MODE_ITEMS,
+        value: MODE_ITEMS[0]
+    });
+    size = dropdown("size", "Tamanho do diálogo", SIZE_ITEMS, 0);
     width = num("width", "Largura (px)", 900);
     height = num("height", "Altura (px)", 640);
     background = color("background", "Cor de fundo", WHITE);
@@ -184,7 +195,7 @@ class PopupCard extends FormattingSettingsCard {
     name = "popup";
     displayName = "Pop-up";
     slices: FormattingSettingsSlice[] = [
-        this.title, this.content, this.size, this.width, this.height, this.background, this.fontColor,
+        this.title, this.content, this.mode, this.size, this.width, this.height, this.background, this.fontColor,
         this.accent, this.panel, this.fontSize, this.align, this.maxWidth
     ];
 }

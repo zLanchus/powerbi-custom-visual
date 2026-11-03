@@ -223,18 +223,7 @@ export class PopupDialog {
                     : "> O texto do pop-up está vazio. Preencha **Formatar visual → Pop-up → Texto** ou o campo **Texto do pop-up**.";
             }
             const page = renderPopup(element, state, false);
-            // Ocupa a janela do diálogo inteira, com rolagem própria, qualquer que seja o tamanho do elemento recebido.
-            Object.assign(page.style, {
-                position: "fixed",
-                top: "0",
-                right: "0",
-                bottom: "0",
-                left: "0",
-                overflow: "auto",
-                boxSizing: "border-box",
-                padding: "28px 32px 36px",
-                lineHeight: "1.6"
-            });
+            Object.assign(page.style, { boxSizing: "border-box", padding: "28px 32px 36px", lineHeight: "1.6" });
         } catch (e) {
             const message = document.createElement("pre");
             message.style.cssText = "margin:16px;white-space:pre-wrap;font:14px/1.5 Segoe UI,arial,sans-serif;color:#0F2B45";

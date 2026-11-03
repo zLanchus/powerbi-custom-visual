@@ -1,6 +1,6 @@
 # Pop-up Explicativo
 
-Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)) que abre um **pop-up grande, até a tela inteira**, com um **texto explicativo**: como ler a página, regras de cálculo, glossário, avisos. O texto aceita títulos, listas, destaques, **negrito** e *itálico*. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
+Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)) que abre um **texto explicativo na área inteira do relatório**, com um **texto explicativo**: como ler a página, regras de cálculo, glossário, avisos. O texto aceita títulos, listas, destaques, **negrito** e *itálico*. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
 
 | Botões | Pop-up aberto | Dentro do visual (sem diálogo) |
 |---|---|---|
@@ -8,12 +8,14 @@ Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)
 
 ## Como usar
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.0.2.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
 4. Clique no botão (clique normal, também no Power BI Desktop).
 
-O pop-up abre por cima do relatório inteiro (diálogo do próprio Power BI, com título e botão **Fechar**). Ele não depende do tamanho do visual: o visual pode ser só o botão.
+Por padrão o texto abre no **modo foco** do Power BI: o visual se expande para a área inteira do relatório (como o botão *Modo de foco* do cabeçalho dos visuais) e mostra o texto. Fecha no **X** ou em **Voltar ao relatório**. Não depende do tamanho do visual: o visual pode ser só o botão.
+
+Em **Formatar visual → Pop-up → Abrir em** dá para trocar para **Caixa de diálogo do Power BI** (janela com título e botão **Fechar**). Atenção: no Power BI Service essa janela pode abrir em branco. Se acontecer, volte para o modo foco.
 
 ## Como escrever o texto
 
@@ -53,14 +55,14 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 - **Botão, Texto do botão, Ícone à esquerda, Ícone à direita, Efeitos:** os mesmos do Botão de Navegação (cores, degradê, sombra, arredondamento, borda, ícones, hover, brilho, clique com onda). Ícones novos: informação, ajuda, livro e lâmpada. Ícone à direita padrão: expandir ⤢.
 - **Pop-up:**
   - título (em branco = texto do botão) e texto;
-  - tamanho: tela inteira, grande, médio ou personalizado (largura e altura);
+  - abrir em: modo foco (padrão) ou caixa de diálogo;
+  - tamanho do diálogo: tela inteira, grande, médio ou personalizado (largura e altura);
   - cor de fundo, do texto, de destaque (títulos, marcadores, barras) e do fundo dos destaques;
   - tamanho da fonte, alinhamento (à esquerda ou justificado);
   - largura máxima do texto (padrão 820 px, centralizado: linhas longas demais cansam a leitura).
 
 ## Observações
 
-- O tamanho pedido é limitado pelo Power BI ao espaço da janela. "Tela inteira" pede ~92% da tela.
-- Se o Power BI recusar o tamanho pedido, o pop-up abre no tamanho padrão dele.
-- Onde o Power BI não oferece diálogos (ex.: **Publicar na Web** e alguns ambientes inseridos), o texto abre por cima do próprio visual, com um **X** para fechar (e `Esc`). Nesse caso aparece um ícone de aviso (⚠) no cabeçalho do visual com o motivo; deixe o visual do tamanho que o texto deve ocupar.
+- Caixa de diálogo: o tamanho pedido é limitado pelo Power BI ao espaço da janela ("Tela inteira" pede ~92% da tela); se ele recusar o tamanho, o diálogo abre no tamanho padrão dele.
+- Onde o Power BI não oferece o modo foco nem diálogos (ex.: **Publicar na Web** e alguns ambientes inseridos), o texto abre por cima do próprio visual, com um **X** para fechar (e `Esc`). Nesse caso aparece um ícone de aviso (⚠) no cabeçalho do visual com o motivo; deixe o visual do tamanho que o texto deve ocupar.
 - O texto nunca é interpretado como HTML: só a marcação da tabela acima.
