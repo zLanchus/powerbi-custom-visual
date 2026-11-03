@@ -1,0 +1,20 @@
+// Visual "Barras com Comparação". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (aplicados em src/render.ts).
+
+@import "../../common/style/common.less";
+
+.bc-cat-label,
+.bc-cat-extra {
+    pointer-events: auto;
+}
+
+.bc-bar:hover,
+.bc-ghost:hover {
+    filter: brightness(1.06);
+}
+
+.bc-label,
+.bc-marker-label,
+.bc-ref-label {
+    pointer-events: none;
+}

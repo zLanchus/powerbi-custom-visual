@@ -16,6 +16,17 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Barras com Insight**](visuals/barras-ranking/) | Barras horizontais com trilho no estilo de ranking: valor e detalhe ao lado (ex.: 24,2% (18)), top N, ordenação por outro campo (ex.: ordem do nível), cor com fx e frase de insight automática (maior ou menor valor). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-ranking.pbiviz) |
 | [**Exportar Página**](visuals/exportar-pagina/) | Botão que exporta a página do relatório para PDF, PNG ou JPG sem configuração do administrador nem certificação: abre a [página de exportação](https://zlanchus.github.io/powerbi-custom-visual/exportar/), que captura a aba do relatório, recorta sozinha só a página do relatório (sem menus e painéis) e gera o arquivo no próprio navegador. PDF com várias páginas, nome e rodapé por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/exportar-pagina.pbiviz) |
 | [**Motivos Expansíveis**](visuals/motivos-expansiveis/) | Motivos principais de uma pesquisa à esquerda e, ao clicar, o detalhamento ao lado, ligado por faixas proporcionais ao valor (ou em acordeão vertical): faixa de composição, % do total e do motivo, pesquisa sem acentos, filtro cruzado por motivo ou detalhamento, insight automático e mais de 190 opções de formatação. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/motivos-expansiveis.pbiviz) |
+| [**Big Number**](visuals/big-number/) | Card com o número em destaque, título editável e até 3 comparações (mês anterior, ano anterior, meta), cada uma com sua unidade de diferença (variação %, absoluta ou pontos percentuais), sentido de "melhor" (para cima ou para baixo), cores e valor anterior opcional. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/big-number.pbiviz) |
+| [**Tabela de Avaliação**](visuals/tabela-avaliacao/) | Tabela com notas de pesquisa (1 a 5) em estrelas com preenchimento exato: várias medidas (uma coluna por pergunta), nº de respostas, coluna e linha de média, ordenação ao clicar no cabeçalho e cores por faixa de nota. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/tabela-avaliacao.pbiviz) |
+| [**Padrões de Saída**](visuals/padroes-saida/) | Destaques e insights de turnover (de pessoas, clientes ou qualquer outro): encontra a regra que descreve as saídas, como *Sem liderança · Até 1 ano de casa · Comercial — 3,5× a taxa média*, e lista os perfis com taxa acima da média (com a Base) ou que concentram as saídas, sempre nos filtros da página. Tem botão de ajuda com a conta passo a passo, guia de medidas para quem desenvolve e formatação completa (fonte, cor, fundo e borda de cada parte). | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/padroes-saida.pbiviz) |
+| [**Barras com Base Nominal**](visuals/barras-base/) | Barras empilhadas com legenda e, ao lado, a **base nominal** (tabela com os registros). Clique numa barra, num segmento ou na legenda e a base mostra só aqueles registros; pesquisa, ordenação por coluna e filtro dos outros visuais da página. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-base.pbiviz) |
+| [**Botão de Navegação**](visuals/botao-navegacao/) | Botão bonito para ir a outra página ou abrir um link: ícone, texto e subtítulo, seta animada, degradê, sombras, efeitos de hover e clique, texto e link dinâmicos por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/botao-navegacao.pbiviz) |
+| [**Pop-up Explicativo**](visuals/popup-explicativo/) | Botão que abre um pop-up por cima do relatório com texto explicativo: títulos, listas, destaques, negrito e itálico; texto fixo ou por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/popup-explicativo.pbiviz) |
+| [**Colunas Empilhadas e Linha**](visuals/colunas-linha/) | Réplica do gráfico nativo de colunas empilhadas e linhas com legenda interativa: botões para mostrar ou esconder cada série ou todas as colunas / linhas, eixo secundário, rótulos de total e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-linha.pbiviz) |
+| [**Colunas Agrupadas e Linha**](visuals/colunas-agrupadas-linha/) | A versão agrupada (clusterizada) do Colunas Empilhadas e Linha: colunas lado a lado, com a mesma legenda interativa, rótulos acima das colunas, eixos por medida, colunas sempre abaixo das linhas, Ano e Mês aninhados e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-agrupadas-linha.pbiviz) |
+| [**Matriz Diagnóstica**](visuals/matriz-diagnostica/) | Matriz como a nativa, feita para explorar padrões (ex.: turnover) com linhas e colunas escolhidas por parâmetro de campo: mapa de calor contra uma referência (total geral, mediana, faixa típica, média da própria linha ou metas, mesmo que só algumas diretorias tenham meta) e botão ⓘ que explica o cálculo, nº de saídas entre parênteses (24,2% (18)), base mínima (amostra pequena), pontos de atenção clicáveis, filtro "acima da referência", tendência, pesquisa e ordenação por clique. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/matriz-diagnostica.pbiviz) |
+| [**Barras com Comparação**](visuals/barras-comparacao/) | Barras por categoria com marcadores de comparação (ano anterior, meta), linha de referência, cor por regra (acima/abaixo, sinalizador, gradiente) e barras de baixa confiança hachuradas. Vertical, horizontal ou modo cartão. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-comparacao.pbiviz) |
+| [**Curvas com Incerteza**](visuals/curvas-incerteza/) | Curvas por coorte (ou qualquer eixo ordenado) em degrau, reta ou suave, com faixa de intervalo, trechos de baixa confiança tracejados, janelas destacadas, marcos com tabela e referência. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/curvas-incerteza.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -44,7 +55,20 @@ powerbi-custom-visual/
 │   ├── card-comparativo/
 │   ├── barras-ranking/
 │   ├── exportar-pagina/
-│   └── motivos-expansiveis/
+│   ├── motivos-expansiveis/
+│   ├── big-number/
+│   ├── tabela-avaliacao/
+│   ├── padroes-saida/
+│   ├── barras-base/
+│   ├── botao-navegacao/
+│   ├── popup-explicativo/
+│   ├── colunas-linha/
+│   ├── colunas-agrupadas-linha/
+│   ├── matriz-diagnostica/
+│   ├── barras-comparacao/
+│   ├── curvas-incerteza/
+│   ├── common/              # código compartilhado pelos visuais de gráfico (não é um visual)
+│   └── <visual>/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
@@ -66,6 +90,7 @@ Requisitos: Node.js 18 ou superior.
 cd visuals/<nome-do-visual>
 npm install
 npm run lint        # ESLint
+npm test            # testes do modelo de dados (visuais que têm)
 npm run package     # gera dist/*.pbiviz
 npm start           # servidor de desenvolvimento (Developer Visual no Power BI Service)
 ```

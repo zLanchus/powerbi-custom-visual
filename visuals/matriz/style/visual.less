@@ -64,6 +64,13 @@
     font-variant-numeric: tabular-nums;
 }
 
+// Fundo das células fixas (canto e rótulos de linha): a cor configurada fica por cima
+// de uma base opaca, para que as colunas roladas por baixo não apareçam através dela
+// mesmo quando a cor escolhida é transparente ou semitransparente.
+.mx-sticky-bg(@top) {
+    background: linear-gradient(@top, @top), linear-gradient(var(--mx-bg), var(--mx-bg)), #FFFFFF;
+}
+
 // --------------------------------------------------------------- cabeçalho
 
 .mx-table thead {
@@ -87,7 +94,7 @@
     padding: 10px 14px;
     vertical-align: bottom;
     text-align: left;
-    background: var(--mx-head-bg);
+    .mx-sticky-bg(var(--mx-head-bg));
     color: var(--mx-head-fg);
     font-size: var(--mx-head-size);
     text-transform: var(--mx-head-case);
@@ -209,7 +216,7 @@
     cursor: pointer;
 }
 
-.mx-table tbody tr:nth-child(even) > * {
+.mx-table tbody tr:nth-child(even) > *:not(.mx-rowhead) {
     background-color: var(--mx-zebra);
 }
 
@@ -222,7 +229,7 @@
     max-width: var(--mx-row-w);
     padding: 0 10px 0 calc(8px + var(--mx-level, 0) * var(--mx-indent));
     text-align: left;
-    background: var(--mx-row-bg);
+    .mx-sticky-bg(var(--mx-row-bg));
     color: var(--mx-row-fg);
     font-size: var(--mx-row-size);
     font-weight: 400;
@@ -232,6 +239,11 @@
     .mx-parent & {
         font-weight: var(--mx-parent-weight);
     }
+}
+
+.mx-table tbody tr:nth-child(even) > .mx-rowhead {
+    background: linear-gradient(var(--mx-zebra), var(--mx-zebra)), linear-gradient(var(--mx-row-bg), var(--mx-row-bg)),
+        linear-gradient(var(--mx-bg), var(--mx-bg)), #FFFFFF;
 }
 
 .mx-rowhead-inner {
@@ -318,13 +330,22 @@
 }
 
 .mx-table tbody tr:hover > .mx-rowhead {
-    background: var(--mx-hover);
+    .mx-sticky-bg(var(--mx-hover));
     box-shadow: none;
 }
 
 // Seleção: linhas não selecionadas ficam esmaecidas, como na matriz nativa.
 .mx-has-selection tr:not(.mx-selected) > * {
     opacity: 0.4;
+}
+
+// No rótulo fixo só o conteúdo esmaece; o fundo continua opaco para cobrir as colunas roladas.
+.mx-has-selection tr:not(.mx-selected) > .mx-rowhead {
+    opacity: 1;
+
+    > .mx-rowhead-inner {
+        opacity: 0.4;
+    }
 }
 
 .mx-selected > .mx-rowhead {
@@ -348,7 +369,7 @@
 }
 
 .mx-total > .mx-rowhead {
-    background: var(--mx-total-bg);
+    .mx-sticky-bg(var(--mx-total-bg));
     color: var(--mx-total-fg);
 }
 

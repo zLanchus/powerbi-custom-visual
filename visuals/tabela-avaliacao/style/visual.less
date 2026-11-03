@@ -1,0 +1,221 @@
+// Visual "Tabela de Avaliação". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (aplicados em visual.ts).
+
+@primary: #6CBEEB;
+@dark: #0F2B45;
+@panel: #F1F8FD;
+@white: #FFFFFF;
+@muted: #4E6175;
+@line: #E4EDF5;
+
+.ta-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    color: @dark;
+    user-select: none;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.ta-header {
+    flex: 0 0 auto;
+    padding: 0 4px 12px;
+}
+
+.ta-title {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.ta-subtitle {
+    margin-top: 4px;
+    line-height: 1.3;
+}
+
+.ta-frame {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+    background: @white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+}
+
+.ta-scroll {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.ta-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    th, td {
+        padding: 0 12px;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: @dark;
+        color: @white;
+        letter-spacing: .04em;
+        line-height: 1.2;
+    }
+
+    // Primeira coluna fixa ao rolar para os lados.
+    .ta-first {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        text-align: left;
+    }
+
+    th.ta-first {
+        z-index: 3;
+    }
+
+    .ta-left {
+        text-align: left;
+    }
+}
+
+.ta-th {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.ta-th-text {
+    // Nomes longos quebram em até duas linhas.
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ta-sortable {
+    cursor: pointer;
+
+    .ta-arrow {
+        flex: 0 0 auto;
+        opacity: 0;
+        transition: opacity .15s ease;
+    }
+
+    &:hover .ta-arrow {
+        opacity: .55;
+    }
+
+    .ta-arrow.ta-on {
+        opacity: 1;
+    }
+}
+
+.ta-row {
+    [data-cat] {
+        cursor: pointer;
+        outline: none;
+
+        &:focus-visible {
+            box-shadow: inset 0 0 0 2px @primary;
+        }
+    }
+
+    &:hover td {
+        filter: brightness(.97);
+    }
+}
+
+.ta-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    transition: opacity .15s ease;
+}
+
+.ta-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    vertical-align: middle;
+    transition: opacity .15s ease;
+
+    &.ta-below {
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+
+.ta-stars {
+    display: block;
+    flex: 0 0 auto;
+    overflow: visible;
+}
+
+.ta-number {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.ta-max {
+    font-weight: 400;
+    opacity: .6;
+}
+
+.ta-dash {
+    opacity: .5;
+}
+
+.ta-count {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+
+    span {
+        transition: opacity .15s ease;
+    }
+}
+
+.ta-footer {
+    flex: 0 0 auto;
+    padding: 8px 6px 0;
+    color: @muted;
+}
+
+.ta-empty {
+    margin: auto;
+    max-width: 340px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: @panel;
+    text-align: center;
+}
+
+.ta-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.ta-empty-text {
+    font-size: 12px;
+    color: @muted;
+    line-height: 1.4;
+}

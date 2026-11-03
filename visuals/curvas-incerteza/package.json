@@ -1,0 +1,33 @@
+{
+  "name": "curvas-incerteza-visual",
+  "description": "Curvas por coorte (ou qualquer série ordenada) com faixa de intervalo, trechos de baixa confiança, janelas e marcos.",
+  "version": "1.0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zLanchus/powerbi-custom-visual"
+  },
+  "license": "MIT",
+  "scripts": {
+    "pbiviz": "pbiviz",
+    "start": "pbiviz start",
+    "package": "pbiviz package",
+    "lint": "eslint . && cd ../common && node ../curvas-incerteza/node_modules/eslint/bin/eslint.js -c ../curvas-incerteza/eslint.config.mjs src",
+    "test": "jest",
+    "postinstall": "npm ci --prefix ../common --no-audit --no-fund"
+  },
+  "author": "Artur Marcolino",
+  "dependencies": {
+    "powerbi-visuals-api": "~5.11.1",
+    "powerbi-visuals-utils-formattingmodel": "6.0.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-powerbi-visuals": "^1.1.1",
+    "jest": "^30.5.2",
+    "powerbi-visuals-tools": "7.2.1",
+    "ts-jest": "^29.4.15",
+    "typescript": "5.5.4"
+  }
+}

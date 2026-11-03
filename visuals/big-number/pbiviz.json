@@ -1,0 +1,26 @@
+{
+    "visual": {
+        "name": "bigNumber",
+        "displayName": "Big Number",
+        "guid": "bigNumber84F7DBE5AD19445FA94E34EF0E0FCA42",
+        "visualClassName": "Visual",
+        "version": "1.0.0.0",
+        "description": "Card de Big Number com título e até 3 comparações (diferença absoluta, variação % ou pontos percentuais).",
+        "supportUrl": "https://github.com/zLanchus/powerbi-custom-visual/issues",
+        "gitHubUrl": "https://github.com/zLanchus/powerbi-custom-visual"
+    },
+    "apiVersion": "5.3.0",
+    "author": {
+        "name": "Artur Marcolino",
+        "email": "73591601+zLanchus@users.noreply.github.com"
+    },
+    "assets": {
+        "icon": "assets/icon.png"
+    },
+    "externalJS": null,
+    "style": "style/visual.less",
+    "capabilities": "capabilities.json",
+    "dependencies": null,
+    "stringResources": [],
+    "version": "1.0.0.0"
+}

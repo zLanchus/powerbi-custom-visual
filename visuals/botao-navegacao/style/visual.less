@@ -1,0 +1,323 @@
+// Visual "Botão de Navegação". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (variáveis --bn-* aplicadas em visual.ts).
+
+@primary: #6CBEEB;
+@dark: #0F2B45;
+@panel: #F1F8FD;
+@white: #FFFFFF;
+
+@ease: cubic-bezier(.2, .8, .2, 1);
+
+.bn-root {
+    --bn-bg: @primary;
+    --bn-fg: @dark;
+    --bn-sub: @dark;
+    --bn-icon: @dark;
+    --bn-arrow: @dark;
+    --bn-divider: @dark;
+    --bn-border: @dark;
+    --bn-border-width: 0px;
+    --bn-hover-bg: @dark;
+    --bn-hover-fg: @white;
+    --bn-radius: 14px;
+    --bn-pad: 20px;
+    --bn-gap: 14px;
+    --bn-inset: 4px;
+    --bn-shadow: none;
+    --bn-shadow-hover: none;
+    --bn-shadow-press: none;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: var(--bn-inset);
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+// Sombras em camadas (uma curta e nítida + uma longa e difusa) parecem mais naturais.
+.bn-shadow-soft {
+    --bn-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+    --bn-shadow-hover: 0 2px 4px rgba(0, 0, 0, .10), 0 4px 10px rgba(0, 0, 0, .12);
+    --bn-shadow-press: 0 1px 1px rgba(0, 0, 0, .14);
+}
+
+.bn-shadow-medium {
+    --bn-shadow: 0 1px 2px rgba(0, 0, 0, .10), 0 3px 8px rgba(0, 0, 0, .12);
+    --bn-shadow-hover: 0 2px 4px rgba(0, 0, 0, .10), 0 8px 18px rgba(0, 0, 0, .16);
+    --bn-shadow-press: 0 1px 2px rgba(0, 0, 0, .16);
+}
+
+.bn-shadow-strong {
+    --bn-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 8px 20px rgba(0, 0, 0, .18);
+    --bn-shadow-hover: 0 4px 8px rgba(0, 0, 0, .12), 0 14px 30px rgba(0, 0, 0, .22);
+    --bn-shadow-press: 0 1px 3px rgba(0, 0, 0, .20);
+}
+
+.bn-btn {
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--bn-gap);
+    padding: 0 var(--bn-pad);
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: var(--bn-radius);
+    border: var(--bn-border-width) solid var(--bn-border);
+    background-color: var(--bn-bg);
+    color: var(--bn-fg);
+    box-shadow: var(--bn-shadow);
+    cursor: pointer;
+    outline: none;
+    transition:
+        transform .18s @ease,
+        box-shadow .18s @ease,
+        background-color .18s @ease,
+        color .18s @ease,
+        filter .18s @ease;
+}
+
+// Degradê sutil: luz de cima e um leve reflexo na borda superior (efeito "relevo").
+.bn-gradient .bn-btn {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, .06) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), var(--bn-shadow);
+}
+
+.bn-icon,
+.bn-arrow-svg {
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.bn-icon {
+    color: var(--bn-icon);
+    transition: color .18s @ease, transform .18s @ease;
+}
+
+.bn-texts {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.bn-title,
+.bn-subtitle {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bn-title {
+    letter-spacing: .005em;
+}
+
+.bn-subtitle {
+    margin-top: 2px;
+    color: var(--bn-sub);
+    opacity: .75;
+    transition: color .18s @ease;
+}
+
+.bn-divider {
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: 1px;
+    margin: 12px 0;
+    background: var(--bn-divider);
+    opacity: .28;
+    transition: background-color .18s @ease;
+}
+
+.bn-arrow {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bn-arrow);
+    transition: color .18s @ease, transform .22s @ease;
+}
+
+// "Seta em círculo": fundo redondo com a própria cor da seta, bem transparente.
+.bn-arrow-badge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .14;
+    transition: opacity .18s @ease;
+}
+
+.bn-arrow-badge .bn-arrow-svg {
+    position: relative;
+}
+
+// ----------------------------------------------------------------- disposição
+
+.bn-layout-spread {
+    .bn-texts {
+        flex: 1 1 auto;
+    }
+}
+
+.bn-layout-left {
+    .bn-btn {
+        justify-content: flex-start;
+    }
+}
+
+.bn-layout-center {
+    .bn-btn {
+        justify-content: center;
+    }
+
+    .bn-texts {
+        align-items: center;
+        text-align: center;
+    }
+}
+
+// ----------------------------------------------------------------- estados
+
+.bn-hover-auto.bn-light .bn-btn:hover {
+    filter: brightness(.95) saturate(1.05);
+}
+
+.bn-hover-auto.bn-dark .bn-btn:hover {
+    filter: brightness(1.15);
+}
+
+.bn-hover-custom .bn-btn:hover {
+    background-color: var(--bn-hover-bg);
+    color: var(--bn-hover-fg);
+
+    .bn-icon,
+    .bn-arrow,
+    .bn-subtitle {
+        color: var(--bn-hover-fg);
+    }
+
+    .bn-divider {
+        background: var(--bn-hover-fg);
+    }
+}
+
+.bn-btn:hover {
+    box-shadow: var(--bn-shadow-hover);
+}
+
+.bn-gradient .bn-btn:hover {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), var(--bn-shadow-hover);
+}
+
+.bn-lift .bn-btn:hover {
+    transform: translateY(-2px);
+}
+
+.bn-btn:hover .bn-icon {
+    transform: scale(1.06);
+}
+
+.bn-btn:hover .bn-arrow-badge::before {
+    opacity: .22;
+}
+
+.bn-animate .bn-btn:hover .bn-arrow {
+    transform: translateX(4px);
+}
+
+.bn-animate .bn-btn:hover .bn-arrow-external {
+    transform: translate(2px, -2px);
+}
+
+// Clique: o botão "afunda" e a sombra encolhe.
+.bn-press .bn-btn:active,
+.bn-press .bn-btn.bn-pressed {
+    transform: translateY(1px) scale(.985);
+    box-shadow: var(--bn-shadow-press);
+    transition-duration: .06s;
+}
+
+.bn-press.bn-gradient .bn-btn:active,
+.bn-press.bn-gradient .bn-btn.bn-pressed {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), var(--bn-shadow-press);
+}
+
+// Foco pelo teclado: anel por dentro, para não ser cortado pela borda do visual.
+.bn-btn:focus-visible {
+    outline: 2px solid var(--bn-fg);
+    outline-offset: -5px;
+}
+
+// ----------------------------------------------------------------- brilho e onda
+
+.bn-shine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 45%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .28) 50%, rgba(255, 255, 255, 0) 100%);
+    transform: translateX(-130%) skewX(-18deg);
+    opacity: 0;
+}
+
+.bn-shine-on .bn-btn:hover .bn-shine {
+    opacity: 1;
+    transform: translateX(260%) skewX(-18deg);
+    transition: transform .75s @ease, opacity .2s linear;
+}
+
+.bn-ripple {
+    position: absolute;
+    z-index: 1;
+    border-radius: 50%;
+    pointer-events: none;
+    background: currentColor;
+    opacity: .22;
+    transform: scale(0);
+    animation: bn-ripple .6s ease-out forwards;
+}
+
+@keyframes bn-ripple {
+    to {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bn-btn,
+    .bn-btn *,
+    .bn-shine {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .bn-lift .bn-btn:hover,
+    .bn-animate .bn-btn:hover .bn-arrow {
+        transform: none;
+    }
+}

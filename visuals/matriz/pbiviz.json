@@ -4,7 +4,7 @@
         "displayName": "Matriz Estilizada",
         "guid": "matrizEstilizada14C18DB8D00543ABACD40F08AD778ABB",
         "visualClassName": "Visual",
-        "version": "1.2.0.0",
+        "version": "1.2.1.0",
         "description": "Matriz com seções de colunas, hierarquia expansível e formatação condicional.",
         "supportUrl": "https://github.com/zLanchus/powerbi-custom-visual/issues",
         "gitHubUrl": "https://github.com/zLanchus/powerbi-custom-visual"
@@ -22,5 +22,5 @@
     "capabilities": "capabilities.json",
     "dependencies": null,
     "stringResources": [],
-    "version": "1.2.0.0"
+    "version": "1.2.1.0"
 }

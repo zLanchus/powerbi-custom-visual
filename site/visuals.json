@@ -136,5 +136,219 @@
       "4-vertical.png",
       "5-personalizado.png"
     ]
+  },
+  {
+    "id": "big-number",
+    "name": "Big Number",
+    "summary": "Card com um número em destaque, título e até 3 comparações (mês anterior, ano anterior, meta).",
+    "features": [
+      "Até 3 comparações, cada uma com seu título",
+      "Diferença em variação %, absoluta ou pontos percentuais (p.p.)",
+      "Melhor para cima ou para baixo, com verde/vermelho e setas",
+      "Valor anterior opcional, selo ou texto, empilhadas ou lado a lado",
+      "Título, fontes, cores e faixa de destaque configuráveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-pontos-percentuais.png",
+      "3-personalizado.png"
+    ]
+  },
+  {
+    "id": "tabela-avaliacao",
+    "name": "Tabela de Avaliação",
+    "summary": "Tabela com notas de pesquisa (1 a 5) em estrelas, com várias medidas, respostas e média.",
+    "features": [
+      "Estrelas com preenchimento exato (4,3 = 4 estrelas e 30%), meia ou inteira",
+      "Várias medidas: uma coluna por pergunta, ou uma linha por medida",
+      "Nº de respostas, coluna e linha de média",
+      "Ordenação ao clicar no cabeçalho e cores por faixa de nota",
+      "Filtro cruzado, dicas de ferramenta e formatação completa"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-faixas.png",
+      "3-medidas.png",
+      "4-selecao.png"
+    ]
+  },
+  {
+    "id": "padroes-saida",
+    "name": "Padrões de Saída",
+    "summary": "Destaques de turnover: encontra os perfis que concentram as saídas ou saem acima da média, nos filtros da página.",
+    "features": [
+      "Regra em destaque combinando atributos (ex.: Sem liderança · Até 1 ano · Comercial)",
+      "Com Base (headcount, clientes): taxa de cada perfil contra a média, com teste estatístico",
+      "Botão de ajuda com pop-up (tamanho editável) que mostra a conta passo a passo com os números atuais",
+      "Guia de medidas para quem desenvolve, com conferência automática dos dados",
+      "Fonte, cor, fundo e borda de cada parte configuráveis; serve para desligamentos, cancelamentos e qualquer saída"
+    ],
+    "cover": "1-taxa.png",
+    "images": [
+      "4-ajuda.png",
+      "5-guia.png",
+      "6-personalizado.png",
+      "2-concentracao.png",
+      "3-churn.png"
+    ]
+  },
+  {
+    "id": "barras-base",
+    "name": "Barras com Base Nominal",
+    "summary": "Barras empilhadas com legenda e, ao lado, a base nominal (tabela de registros) filtrada pelo clique nas barras.",
+    "features": [
+      "Clique num segmento, numa barra ou na legenda e a base mostra só aqueles registros",
+      "Detalhe ao lado do valor: percentual com o número absoluto, como 22,2% (4)",
+      "Empilha por legenda ou por várias medidas (ex.: Ativos + Afastados + Desligados)",
+      "Modo acumulado: clicar numa barra mostra a base até ela",
+      "Filtro em cada coluna da base, que também refaz as barras (e vice-versa)",
+      "Pesquisa, ordenação por coluna e contagem de registros",
+      "Colunas ou barras horizontais, base à direita, à esquerda ou embaixo",
+      "Também filtra os outros visuais da página (opcional)",
+      "Cores, rótulos, eixos, cabeçalho e linhas da tabela configuráveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "5-percentual.png",
+      "6-acumulado.png",
+      "7-filtro-colunas.png",
+      "8-medidas.png",
+      "2-filtrado.png",
+      "3-legenda.png",
+      "4-horizontal.png"
+    ]
+  },
+  {
+    "id": "botao-navegacao",
+    "name": "Botão de Navegação",
+    "summary": "Botão caprichado para ir a outra página do relatório ou abrir um link.",
+    "features": [
+      "Ícone, texto, subtítulo, divisória e seta (seta, chevron, em círculo)",
+      "Hover com elevação, brilho e seta que desliza; clique que afunda com onda",
+      "Degradê sutil, sombras em camadas, borda e formato pílula",
+      "Texto e link dinâmicos por medida; teclado e foco acessíveis"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-estilos.png",
+      "3-hover.png"
+    ]
+  },
+  {
+    "id": "popup-explicativo",
+    "name": "Pop-up Explicativo",
+    "summary": "Botão que se expande, na hora, num cartão com um texto explicativo.",
+    "features": [
+      "Abre na hora: o botão se expande dentro do visual e fecha ao clicar fora",
+      "Títulos, listas, destaques, negrito e itálico no texto",
+      "Texto fixo no painel ou dinâmico por medida",
+      "Mesmo botão caprichado do Botão de Navegação (ícones, hover, clique)"
+    ],
+    "cover": "6-dentro-aberto.png",
+    "images": [
+      "5-dentro-fechado.png",
+      "4-painel.png",
+      "1-botao.png"
+    ]
+  },
+  {
+    "id": "colunas-linha",
+    "name": "Colunas Empilhadas e Linha",
+    "summary": "Colunas empilhadas e linha como o nativo, com legenda interativa para mostrar e esconder séries.",
+    "features": [
+      "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
+      "Linha calculada na categoria inteira, com eixo Y secundário",
+      "Vários campos aninhados no Eixo X (ex.: Ano e Mês), agrupados ou concatenados",
+      "Legenda da linha: uma linha por item (ex.: Margem % por Região)",
+      "Mínimo e máximo dos eixos por medida, colunas sempre abaixo das linhas e linhas em faixas",
+      "Rótulos de segmento, total da pilha e das linhas, sem sobreposição",
+      "Linhas retas, suaves ou em degraus, com marcadores e área",
+      "Praticamente tudo personalizável: fontes, tamanho e cores dos botões, eixos, grade, rótulos e cada linha; paletas de cores prontas, do tema ou personalizadas"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-legenda-interativa.png",
+      "5-ano-mes.png",
+      "3-medidas-rotulos.png",
+      "4-personalizado.png",
+      "6-colunas-abaixo-linhas-afastadas.png",
+      "7-legenda-da-linha.png"
+    ]
+  },
+  {
+    "id": "colunas-agrupadas-linha",
+    "name": "Colunas Agrupadas e Linha",
+    "summary": "Colunas agrupadas (lado a lado) e linha como o nativo, com legenda interativa para mostrar e esconder séries.",
+    "features": [
+      "Colunas lado a lado por item da legenda ou por medida, com rótulo acima de cada coluna",
+      "Botões arredondados para mostrar ou esconder cada série, ou todas as colunas / linhas",
+      "Linhas no mesmo eixo secundário, com rótulos afastados para não se sobrepor",
+      "Legenda da linha: uma linha por item (ex.: Margem % por Região)",
+      "Colunas sempre abaixo das linhas, mínimo e máximo dos eixos por medida e Ano/Mês aninhados",
+      "Praticamente tudo personalizável: fontes, botões, cores, eixos, grade, rótulos e cada linha; paletas de cores prontas, do tema ou personalizadas"
+    ],
+    "cover": "1-padrao.png",
+    "images": [
+      "2-legenda-interativa.png",
+      "3-colunas-abaixo.png",
+      "4-ano-mes.png",
+      "5-medidas-negativos.png",
+      "6-legenda-da-linha.png"
+    ]
+  },
+  {
+    "id": "matriz-diagnostica",
+    "name": "Matriz Diagnóstica",
+    "summary": "Matriz como a nativa, feita para explorar e diagnosticar padrões (ex.: turnover) com linhas e colunas por parâmetro de campo.",
+    "features": [
+      "Referência para dizer o que é alto ou baixo (total geral, mediana, faixa típica, média da própria linha ou metas), com botão ⓘ que explica o cálculo",
+      "Metas só para algumas diretorias: herda da linha de cima ou usa uma alternativa",
+      "Nº de saídas entre parênteses ao lado da taxa, como 24,2% (18)",
+      "Pontos de atenção clicáveis, filtro \"acima da referência\" e base mínima para grupos pequenos",
+      "Tendência quando as colunas são meses, pesquisa, ordenação por clique e barras de dados",
+      "Hierarquia, totais, parâmetros de campo, filtro cruzado, fx e exportar para Excel"
+    ],
+    "cover": "1-mapa-de-calor.png",
+    "images": [
+      "2-desvio-foco.png",
+      "3-parametro.png",
+      "5-metas.png",
+      "6-explicacao.png",
+      "4-barras-desvio.png"
+    ]
+  },
+  {
+    "id": "barras-comparacao",
+    "name": "Barras com Comparação",
+    "summary": "Barras por categoria com marcadores de comparação, linha de referência e cor por regra.",
+    "features": [
+      "Marcadores de comparação (ano anterior, meta) e linha de referência",
+      "Cor acima/abaixo da referência, por sinalizador ou gradiente",
+      "Baixa confiança em cinza hachurado, ordenação e Top N",
+      "Vertical, horizontal ou modo cartão; rolagem com muitas categorias"
+    ],
+    "cover": "1-risco-mensal.png",
+    "images": [
+      "2-cartao.png",
+      "3-horizontal-series.png",
+      "4-top-n.png"
+    ]
+  },
+  {
+    "id": "curvas-incerteza",
+    "name": "Curvas com Incerteza",
+    "summary": "Curvas por coorte (ou qualquer eixo ordenado) com faixa de intervalo e trechos de baixa confiança.",
+    "features": [
+      "Degrau (Kaplan-Meier), reta ou suave; vazio interrompe a curva",
+      "Faixa de intervalo e trechos de baixa confiança tracejados",
+      "Janelas destacadas, marcos com tabela e linha de referência",
+      "Linha-guia com todas as séries no mesmo X, teclado e alto contraste"
+    ],
+    "cover": "1-coortes.png",
+    "images": [
+      "2-baixa-confianca.png",
+      "3-previsao.png",
+      "4-serie-destaque.png"
+    ]
   }
 ]
