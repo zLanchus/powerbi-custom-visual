@@ -468,6 +468,43 @@ ul.pe-list li::marker {
     box-shadow: none;
 }
 
+// Função "Painel": cartão com a explicação ocupando o visual (com folga para a sombra).
+.pe-panel-root {
+    --pe-radius: 16px;
+
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 2px;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+.pe-panel-shadow {
+    padding: 6px 12px 18px;
+
+    .pe-panel {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .10), 0 12px 32px rgba(0, 0, 0, .22);
+    }
+}
+
+.pe-panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--pe-radius);
+    background: @white;
+}
+
+.pe-panel .pe-close {
+    cursor: default;
+    pointer-events: none;
+}
+
 .pe-inline-scroll {
     position: absolute;
     inset: 0;

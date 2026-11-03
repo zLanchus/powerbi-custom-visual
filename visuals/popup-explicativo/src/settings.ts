@@ -57,6 +57,10 @@ export const ARROW_ITEMS = enumItems(
     ["badge", "Seta em círculo"],
     ["none", "Nenhuma"]
 );
+export const ROLE_ITEMS = enumItems(
+    ["button", "Botão"],
+    ["panel", "Painel do pop-up (mostrado por indicador)"]
+);
 export const MODE_ITEMS = enumItems(
     ["dialog", "Caixa de diálogo do Power BI"],
     ["focus", "Área inteira do relatório (modo foco)"]
@@ -84,6 +88,20 @@ export const HOVER_ITEMS = enumItems(
     ["custom", "Cores próprias"],
     ["none", "Sem mudança de cor"]
 );
+
+class VisualCard extends FormattingSettingsCard {
+    role = new formattingSettings.ItemDropdown({
+        name: "role",
+        displayName: "Função",
+        description: "Painel: desenha o cartão com a explicação, para ser mostrado e escondido por indicadores (abre na hora). Veja o passo a passo no README.",
+        items: ROLE_ITEMS,
+        value: ROLE_ITEMS[0]
+    });
+
+    name = "visual";
+    displayName = "Visual";
+    slices: FormattingSettingsSlice[] = [this.role];
+}
 
 class ButtonCard extends FormattingSettingsCard {
     fontFamily = new formattingSettings.FontPicker({ name: "fontFamily", displayName: "Fonte", value: FONT });
@@ -190,17 +208,21 @@ class PopupCard extends FormattingSettingsCard {
     panel = color("panel", "Fundo dos destaques", PANEL);
     fontSize = num("fontSize", "Tamanho da fonte", 15);
     align = dropdown("align", "Alinhamento do texto", ALIGN_ITEMS, 0);
+    radius = num("radius", "Arredondamento do painel (px)", 16);
+    shadow = toggle("shadow", "Sombra do painel", true);
+    showClose = toggle("showClose", "Mostrar X de fechar", true);
     maxWidth = num("maxWidth", "Largura máxima do texto (px, 0 = toda)", 820, "Linhas muito longas cansam a leitura; o texto fica centralizado nessa largura.");
 
     name = "popup";
     displayName = "Pop-up";
     slices: FormattingSettingsSlice[] = [
         this.title, this.content, this.mode, this.size, this.width, this.height, this.background, this.fontColor,
-        this.accent, this.panel, this.fontSize, this.align, this.maxWidth
+        this.accent, this.panel, this.fontSize, this.align, this.radius, this.shadow, this.showClose, this.maxWidth
     ];
 }
 
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
+    visualCard = new VisualCard();
     buttonCard = new ButtonCard();
     labelCard = new LabelCard();
     iconCard = new IconCard();
@@ -209,7 +231,7 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     popupCard = new PopupCard();
 
     cards: Array<formattingSettings.Cards> = [
-        this.buttonCard, this.labelCard, this.iconCard, this.arrowCard, this.effectsCard, this.popupCard
+        this.visualCard, this.buttonCard, this.labelCard, this.iconCard, this.arrowCard, this.effectsCard, this.popupCard
     ];
 }
 

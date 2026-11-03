@@ -26,6 +26,24 @@
         }
     ],
     "objects": {
+        "visual": {
+            "properties": {
+                "role": {
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "button",
+                                "displayName": "Botão"
+                            },
+                            {
+                                "value": "panel",
+                                "displayName": "Painel do pop-up (mostrado por indicador)"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "button": {
             "properties": {
                 "fontFamily": {
@@ -505,6 +523,21 @@
                 "maxWidth": {
                     "type": {
                         "numeric": true
+                    }
+                },
+                "radius": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "shadow": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showClose": {
+                    "type": {
+                        "bool": true
                     }
                 }
             }

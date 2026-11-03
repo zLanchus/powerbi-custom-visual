@@ -103,6 +103,7 @@ export class Visual implements IVisual {
     /** "focus": texto aberto no modo foco do Power BI; "fallback": por cima do visual, sem modo foco nem diálogo. */
     private inlineKind: "focus" | "fallback" = "fallback";
     private inFocus = false;
+    private panel: HTMLElement | undefined;
     private focusTimer: number | undefined;
     private rippleOn = true;
 
@@ -170,7 +171,13 @@ export class Visual implements IVisual {
         const fx = s.effectsCard;
         fx.hoverBackground.visible = fx.hoverColor.visible = enumValue(fx.hover) === "custom";
         const popup = s.popupCard;
-        const dialog = enumValue(popup.mode) !== "focus";
+        const isPanel = enumValue(s.visualCard.role) === "panel";
+        for (const card of [s.buttonCard, s.labelCard, s.iconCard, s.arrowCard, s.effectsCard]) {
+            card.visible = !isPanel;
+        }
+        popup.mode.visible = !isPanel;
+        popup.radius.visible = popup.shadow.visible = popup.showClose.visible = isPanel;
+        const dialog = !isPanel && enumValue(popup.mode) !== "focus";
         popup.size.visible = dialog;
         popup.width.visible = popup.height.visible = dialog && enumValue(popup.size) === "custom";
         return this.formattingSettingsService.buildFormattingModel(s);
@@ -305,6 +312,36 @@ export class Visual implements IVisual {
 
     // ------------------------------------------------------------- desenho
 
+    /**
+     * Função "Painel": o cartão com a explicação ocupa o visual inteiro. Ele fica oculto na página e é
+     * mostrado/escondido por indicadores (botões nativos com Ação → Indicador), o que é instantâneo.
+     * O X é só o desenho: o clique de fechar vem de um botão nativo transparente posto por cima dele.
+     */
+    private renderPanel(state: PopupState): void {
+        const p = this.formattingSettings.popupCard;
+        this.button.style.display = "none";
+        this.root.className = `pe-panel-root${p.shadow.value ? " pe-panel-shadow" : ""}`;
+        this.root.style.setProperty("--pe-radius", `${Math.max(0, p.radius.value)}px`);
+        this.root.style.fontFamily = state.fontFamily;
+
+        const panel = el("div", "pe-panel");
+        panel.setAttribute("role", "dialog");
+        panel.setAttribute("aria-label", state.title);
+        panel.style.background = state.background;
+        const scroller = el("div", "pe-inline-scroll");
+        renderPopup(scroller, state, true);
+        panel.appendChild(scroller);
+        if (p.showClose.value) {
+            const close = el("span", "pe-close");
+            close.setAttribute("aria-hidden", "true");
+            close.appendChild(icon("M6 6l12 12M18 6L6 18", "pe-close-svg"));
+            panel.appendChild(close);
+        }
+        this.panel?.remove();
+        this.panel = panel;
+        this.root.appendChild(panel);
+    }
+
     private render(dataView: DataView | undefined, viewport: powerbi.IViewport): void {
         const s = this.formattingSettings;
         const b = s.buttonCard;
@@ -337,6 +374,14 @@ export class Visual implements IVisual {
             align: enumValue(p.align),
             maxWidth: Math.max(0, p.maxWidth.value)
         };
+        if (enumValue(s.visualCard.role) === "panel") {
+            this.closeInline();
+            this.renderPanel(this.popup);
+            return;
+        }
+        this.panel?.remove();
+        this.panel = undefined;
+        this.button.style.display = "";
         if (this.inFocus) {
             window.clearTimeout(this.focusTimer);
             this.openInline(this.popup, "focus");

@@ -120,13 +120,14 @@
     "name": "Pop-up Explicativo",
     "summary": "Botão que abre um pop-up por cima do relatório com um texto explicativo.",
     "features": [
-      "Pop-up por cima do relatório (diálogo do Power BI) ou área inteira do relatório (modo foco)",
+      "Painel de explicação que abre na hora por indicadores, ou caixa de diálogo do Power BI",
       "Títulos, listas, destaques, negrito e itálico no texto",
       "Texto fixo no painel ou dinâmico por medida",
       "Mesmo botão caprichado do Botão de Navegação (ícones, hover, clique)"
     ],
     "cover": "2-popup.png",
     "images": [
+      "4-painel.png",
       "1-botao.png",
       "3-dentro-do-visual.png"
     ]

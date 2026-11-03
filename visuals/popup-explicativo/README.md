@@ -6,18 +6,53 @@ Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)
 |---|---|---|
 | ![Botões](docs/1-botao.png) | ![Pop-up](docs/2-popup.png) | ![Dentro do visual](docs/3-dentro-do-visual.png) |
 
-## Como usar
+## Pop-up instantâneo com indicadores (recomendado)
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.1.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+Um visual personalizado só desenha dentro do próprio retângulo. A caixa de diálogo do Power BI, que abre por cima da tela, no Service leva vários segundos para mostrar o texto. Por isso o jeito recomendado usa **indicadores** (bookmarks): o pop-up fica oculto na página e um botão nativo o mostra **na hora**.
+
+![Painel aberto](docs/4-painel.png)
+
+O pop-up tem três peças:
+
+| Peça | O que é | Para quê |
+|---|---|---|
+| **Fundo** | Retângulo nativo cobrindo a página, escuro e semitransparente | escurece o relatório; clicar nele fecha o pop-up |
+| **Painel** | Este visual com **Função = Painel do pop-up** | o cartão com título, texto e X |
+| **Fechar** | Botão nativo em branco, transparente, em cima do X | fecha o pop-up |
+
+### Passo a passo (uma vez por página)
+
+0. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. **Painel:** insira o Pop-up Explicativo e, em **Formatar visual → Visual → Função**, escolha **Painel do pop-up**. Escreva título e texto em **Pop-up**. Posicione no centro da página, no tamanho desejado.
+2. **Fundo:** **Inserir → Formas → Retângulo** cobrindo a página inteira. Preenchimento preto (ou `#0F2B45`) com transparência ~45%, sem borda. Em **Ação**, ligue e escolha **Tipo: Indicador** (o indicador é criado no passo 5; volte aqui depois). Em **Exibir → Painel de seleção**, deixe o retângulo **abaixo** do painel.
+3. **Fechar:** **Inserir → Botões → Em branco**, do tamanho do X (~40 × 40), em cima do X do painel. Preenchimento com transparência 100%, sem borda. **Ação → Indicador** (também configurada no passo 5).
+4. **Agrupe** fundo, painel e botão Fechar (selecione os três → Ctrl+G) e renomeie o grupo para **Ajuda** no painel de seleção.
+5. **Indicadores** (**Exibir → Indicadores**):
+   - No painel de seleção, **oculte** o grupo Ajuda (ícone de olho). Selecione o grupo e crie o indicador **Fechar ajuda**.
+   - **Mostre** o grupo Ajuda, selecione-o e crie o indicador **Abrir ajuda**.
+   - Nos dois indicadores, clique em `…` e deixe **marcado** *Exibir* e *Visuais selecionados*, e **desmarcado** *Dados* e *Página atual*. Assim o indicador só mostra/esconde o pop-up e **não mexe nos filtros** que o usuário escolheu.
+   - Volte aos passos 2 e 3 e aponte a ação do **Fundo** e do **Fechar** para o indicador **Fechar ajuda**.
+   - Deixe a página salva com o grupo **oculto** (clique em *Fechar ajuda*).
+6. **Botão que abre:** use um botão nativo com **Ação → Indicador → Abrir ajuda**. Se quiser o desenho caprichado, coloque um Pop-up Explicativo com **Função = Botão** e um botão nativo em branco transparente por cima dele, com essa ação.
+
+No Desktop, os botões nativos respondem com **Ctrl + clique**. No Service, basta clicar.
+
+> Dica: para levar o pop-up a outra página, copie o grupo e o botão e crie os dois indicadores daquela página.
+
+## Como usar como botão com caixa de diálogo
+
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
 4. Clique no botão (clique normal, também no Power BI Desktop).
 
-Por padrão o texto abre numa **caixa de diálogo do Power BI**, por cima do relatório (título e botão **Fechar**). Ela não depende do tamanho do visual: o visual pode ser só o botão.
+O texto abre numa **caixa de diálogo do Power BI**, por cima do relatório (título e botão **Fechar**). Ela não depende do tamanho do visual: o visual pode ser só o botão.
 
-> **No Power BI Service a caixa pode ficar em branco por alguns segundos** na primeira vez. O Power BI carrega o visual do zero dentro da janela, e essa espera é dele (o visual tem ~27 KB e monta o texto em milissegundos). Nas próximas aberturas costuma ser mais rápido.
+> **No Power BI Service a caixa fica em branco por alguns segundos** antes de mostrar o texto. O Power BI carrega o visual do zero dentro da janela, e essa espera é dele: o tamanho do texto não influencia. Se a espera incomodar, use o pop-up com indicadores, acima.
 
 Em **Formatar visual → Pop-up → Abrir em** dá para trocar para **Área inteira do relatório (modo foco)**: o visual se expande para a área do relatório, como o botão *Modo de foco* do cabeçalho dos visuais, e o texto aparece na hora. Fecha no **X** ou em **Voltar ao relatório**.
+
+Campos opcionais (medidas): **Texto do botão**, **Subtítulo do botão**, **Título do pop-up** e **Texto do pop-up**.
 
 ## Como escrever o texto
 
@@ -55,12 +90,14 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 ## Formatação
 
 - **Botão, Texto do botão, Ícone à esquerda, Ícone à direita, Efeitos:** os mesmos do Botão de Navegação (cores, degradê, sombra, arredondamento, borda, ícones, hover, brilho, clique com onda). Ícones novos: informação, ajuda, livro e lâmpada. Ícone à direita padrão: expandir ⤢.
+- **Visual:** função (Botão ou Painel do pop-up).
 - **Pop-up:**
   - título (em branco = texto do botão) e texto;
   - abrir em: caixa de diálogo (padrão) ou modo foco;
   - tamanho do diálogo: tela inteira, grande, médio ou personalizado (largura e altura);
   - cor de fundo, do texto, de destaque (títulos, marcadores, barras) e do fundo dos destaques;
   - tamanho da fonte, alinhamento (à esquerda ou justificado);
+  - no Painel: arredondamento, sombra e X de fechar;
   - largura máxima do texto (padrão 820 px, centralizado: linhas longas demais cansam a leitura).
 
 ## Observações
