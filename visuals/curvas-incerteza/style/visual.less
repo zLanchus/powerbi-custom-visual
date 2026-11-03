@@ -1,0 +1,67 @@
+// Visual "Curvas com Incerteza". Padrão visual do repositório (DESIGN.md);
+// cores e tamanhos vêm do painel de formatação (aplicados em src/render.ts).
+
+@import "../../common/style/common.less";
+
+.ci-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.ci-overlay {
+    cursor: crosshair;
+}
+
+.cv-legend.ci-legend-right {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.ci-table-wrap {
+    flex: 0 0 auto;
+    overflow-x: auto;
+    padding: 4px 8px 2px;
+}
+
+.ci-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0 auto;
+    font-variant-numeric: tabular-nums;
+
+    th, td {
+        padding: 3px 10px;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    th {
+        font-weight: 600;
+        border-bottom: 1px solid rgba(15, 43, 69, .18);
+    }
+
+    tbody tr:nth-child(odd) td {
+        background: rgba(108, 190, 235, .10);
+    }
+
+    .ci-table-name {
+        text-align: left;
+        font-weight: 600;
+    }
+}
+
+.ci-table-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 2px;
+    vertical-align: baseline;
+}

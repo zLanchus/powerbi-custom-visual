@@ -25,6 +25,8 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Colunas Empilhadas e Linha**](visuals/colunas-linha/) | Réplica do gráfico nativo de colunas empilhadas e linhas com legenda interativa: botões para mostrar ou esconder cada série ou todas as colunas / linhas, eixo secundário, rótulos de total e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-linha.pbiviz) |
 | [**Colunas Agrupadas e Linha**](visuals/colunas-agrupadas-linha/) | A versão agrupada (clusterizada) do Colunas Empilhadas e Linha: colunas lado a lado, com a mesma legenda interativa, rótulos acima das colunas, eixos por medida, colunas sempre abaixo das linhas, Ano e Mês aninhados e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-agrupadas-linha.pbiviz) |
 | [**Matriz Diagnóstica**](visuals/matriz-diagnostica/) | Matriz como a nativa, feita para explorar padrões (ex.: turnover) com linhas e colunas escolhidas por parâmetro de campo: mapa de calor contra uma referência (total geral, mediana, faixa típica, média da própria linha ou metas, mesmo que só algumas diretorias tenham meta) e botão ⓘ que explica o cálculo, nº de saídas entre parênteses (24,2% (18)), base mínima (amostra pequena), pontos de atenção clicáveis, filtro "acima da referência", tendência, pesquisa e ordenação por clique. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/matriz-diagnostica.pbiviz) |
+| [**Barras com Comparação**](visuals/barras-comparacao/) | Barras por categoria com marcadores de comparação (ano anterior, meta), linha de referência, cor por regra (acima/abaixo, sinalizador, gradiente) e barras de baixa confiança hachuradas. Vertical, horizontal ou modo cartão. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-comparacao.pbiviz) |
+| [**Curvas com Incerteza**](visuals/curvas-incerteza/) | Curvas por coorte (ou qualquer eixo ordenado) em degrau, reta ou suave, com faixa de intervalo, trechos de baixa confiança tracejados, janelas destacadas, marcos com tabela e referência. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/curvas-incerteza.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -63,7 +65,11 @@ powerbi-custom-visual/
 │   ├── popup-explicativo/
 │   ├── colunas-linha/
 │   ├── colunas-agrupadas-linha/
-│   └── matriz-diagnostica/
+│   ├── matriz-diagnostica/
+│   ├── barras-comparacao/
+│   ├── curvas-incerteza/
+│   ├── common/              # código compartilhado pelos visuais de gráfico (não é um visual)
+│   └── <visual>/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
@@ -85,6 +91,7 @@ Requisitos: Node.js 18 ou superior.
 cd visuals/<nome-do-visual>
 npm install
 npm run lint        # ESLint
+npm test            # testes do modelo de dados (visuais que têm)
 npm run package     # gera dist/*.pbiviz
 npm start           # servidor de desenvolvimento (Developer Visual no Power BI Service)
 ```

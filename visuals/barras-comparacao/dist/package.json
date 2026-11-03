@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Artur Marcolino","email":"73591601+zLanchus@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/barrasComparacao735BE4406C084C31BAEECD49B349D361.pbiviz.json"
+			}
+		],
+		"visual": {"name":"barrasComparacao","displayName":"Barras com Comparação","guid":"barrasComparacao735BE4406C084C31BAEECD49B349D361","visualClassName":"Visual","version":"1.0.0.0","description":"Barras por categoria com marcadores de comparação, linha de referência, cor por regra e baixa confiança.","supportUrl":"https://github.com/zLanchus/powerbi-custom-visual/issues","gitHubUrl":"https://github.com/zLanchus/powerbi-custom-visual"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}
