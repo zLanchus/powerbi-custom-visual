@@ -188,7 +188,8 @@ export class Visual implements IVisual {
         popup.mode.visible = !isPanel;
         const mode = enumValue(popup.mode);
         const inside = !isPanel && mode === "inside";
-        s.buttonCard.width.visible = s.buttonCard.anchor.visible = inside;
+        const bc = s.buttonCard;
+        bc.width.visible = bc.anchor.visible = bc.offsetX.visible = bc.offsetY.visible = inside;
         popup.radius.visible = popup.shadow.visible = isPanel || inside;
         popup.showClose.visible = isPanel;
         popup.closeOnBlur.visible = inside;
@@ -468,14 +469,24 @@ export class Visual implements IVisual {
         const maxHeight = Math.max(0, viewport.height - 2 * inset);
         const inside = enumValue(p.mode) === "inside";
         if (inside) {
-            // Botão num canto; o resto do visual fica transparente até o pop-up abrir.
-            root.classList.add("bn-inside", `bn-anchor-${enumValue(b.anchor)}`);
-            const height = b.height.value > 0 ? b.height.value : 56;
-            button.style.height = `${Math.min(height, maxHeight)}px`;
-            button.style.width = `${Math.min(Math.max(60, b.width.value), Math.max(0, viewport.width - 2 * inset))}px`;
+            // Botão posicionado no visual; o resto fica transparente até o pop-up abrir.
+            root.classList.add("bn-inside");
+            const w = Math.min(Math.max(60, b.width.value), Math.max(0, viewport.width - 2 * inset));
+            const h = Math.min(b.height.value > 0 ? b.height.value : 56, maxHeight);
+            const [vertical, horizontal] = enumValue(b.anchor).split("-");
+            const place = (side: string, size: number, total: number, offset: number): number => {
+                const pos = side === "left" || side === "top" ? inset + offset
+                    : side === "right" || side === "bottom" ? total - inset - size - offset
+                        : (total - size) / 2 + offset;
+                return Math.round(Math.max(inset, Math.min(pos, total - inset - size)));
+            };
+            button.style.width = `${w}px`;
+            button.style.height = `${h}px`;
+            button.style.left = `${place(horizontal, w, viewport.width, b.offsetX.value)}px`;
+            button.style.top = `${place(vertical, h, viewport.height, b.offsetY.value)}px`;
         } else {
             button.style.height = b.height.value > 0 ? `${Math.min(b.height.value, maxHeight)}px` : "";
-            button.style.width = "";
+            button.style.width = button.style.left = button.style.top = "";
         }
         button.replaceChildren();
 

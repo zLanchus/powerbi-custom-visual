@@ -14,10 +14,12 @@ Padrão desde a versão 2.1 (**Formatar visual → Pop-up → Abrir em → Dentr
 |---|---|
 | ![Fechado](docs/5-dentro-fechado.png) | ![Aberto](docs/6-dentro-aberto.png) |
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Deixe o visual **do tamanho que o pop-up deve ter** (ex.: a área central da página).
 3. Em **Formatar visual → Geral → Efeitos**, desligue o **Plano de fundo** (e a borda e a sombra do contêiner), para a área fora do botão ficar transparente.
-4. Em **Formatar visual → Botão**, ajuste **Largura do botão**, **Altura** e **Posição do botão** (um dos quatro cantos).
+4. Em **Formatar visual → Botão**, ajuste **Largura do botão**, **Altura** e onde ele fica:
+   - **Posição do botão:** em cima, no meio ou embaixo, cada um à esquerda, no centro ou à direita (9 posições);
+   - **Deslocamento horizontal** e **vertical** (px): afastam o botão da borda escolhida, para o ajuste fino. Na posição central, valores positivos vão para a direita e para baixo, e negativos para a esquerda e para cima. O botão nunca sai do visual.
 5. Escreva o texto em **Pop-up → Texto** (ou use a medida **Texto do pop-up**).
 
 Para fechar: **X**, **Esc** ou **clicar em qualquer lugar fora do visual** (opção **Fechar ao clicar fora do visual**, ligada por padrão). Assim o pop-up nunca fica aberto atrás dos outros visuais.
@@ -40,7 +42,7 @@ O pop-up tem três peças:
 
 ### Passo a passo (uma vez por página)
 
-0. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+0. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 1. **Painel:** insira o Pop-up Explicativo e, em **Formatar visual → Visual → Função**, escolha **Painel do pop-up**. Escreva título e texto em **Pop-up**. Posicione no centro da página, no tamanho desejado.
 2. **Fundo:** **Inserir → Formas → Retângulo** cobrindo a página inteira. Preenchimento preto (ou `#0F2B45`) com transparência ~45%, sem borda. Em **Ação**, ligue e escolha **Tipo: Indicador** (o indicador é criado no passo 5; volte aqui depois). Em **Exibir → Painel de seleção**, deixe o retângulo **abaixo** do painel.
 3. **Fechar:** **Inserir → Botões → Em branco**, do tamanho do X (~40 × 40), em cima do X do painel. Preenchimento com transparência 100%, sem borda. **Ação → Indicador** (também configurada no passo 5).
@@ -59,7 +61,7 @@ No Desktop, os botões nativos respondem com **Ctrl + clique**. No Service, bast
 
 ## Como usar como botão com caixa de diálogo
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.1.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
 4. Clique no botão (clique normal, também no Power BI Desktop).
@@ -112,7 +114,7 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 - **Pop-up:**
   - título (em branco = texto do botão) e texto;
   - abrir em: dentro do visual (padrão), caixa de diálogo ou modo foco;
-  - dentro do visual: arredondamento, sombra e fechar ao clicar fora (largura e posição do botão ficam em **Botão**);
+  - dentro do visual: arredondamento, sombra e fechar ao clicar fora (largura, posição e deslocamento do botão ficam em **Botão**);
   - tamanho do diálogo: tela inteira, grande, médio ou personalizado (largura e altura);
   - cor de fundo, do texto, de destaque (títulos, marcadores, barras) e do fundo dos destaques;
   - tamanho da fonte, alinhamento (à esquerda ou justificado);

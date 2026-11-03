@@ -151,21 +151,51 @@
                         "enumeration": [
                             {
                                 "value": "top-left",
-                                "displayName": "Canto superior esquerdo"
+                                "displayName": "Em cima, à esquerda"
+                            },
+                            {
+                                "value": "top-center",
+                                "displayName": "Em cima, no centro"
                             },
                             {
                                 "value": "top-right",
-                                "displayName": "Canto superior direito"
+                                "displayName": "Em cima, à direita"
+                            },
+                            {
+                                "value": "middle-left",
+                                "displayName": "No meio, à esquerda"
+                            },
+                            {
+                                "value": "middle-center",
+                                "displayName": "Bem no meio"
+                            },
+                            {
+                                "value": "middle-right",
+                                "displayName": "No meio, à direita"
                             },
                             {
                                 "value": "bottom-left",
-                                "displayName": "Canto inferior esquerdo"
+                                "displayName": "Embaixo, à esquerda"
+                            },
+                            {
+                                "value": "bottom-center",
+                                "displayName": "Embaixo, no centro"
                             },
                             {
                                 "value": "bottom-right",
-                                "displayName": "Canto inferior direito"
+                                "displayName": "Embaixo, à direita"
                             }
                         ]
+                    }
+                },
+                "offsetX": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "offsetY": {
+                    "type": {
+                        "numeric": true
                     }
                 }
             }

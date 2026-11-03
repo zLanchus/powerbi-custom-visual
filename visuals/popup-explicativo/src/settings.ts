@@ -67,10 +67,15 @@ export const MODE_ITEMS = enumItems(
     ["focus", "Área inteira do relatório (modo foco)"]
 );
 export const ANCHOR_ITEMS = enumItems(
-    ["top-left", "Canto superior esquerdo"],
-    ["top-right", "Canto superior direito"],
-    ["bottom-left", "Canto inferior esquerdo"],
-    ["bottom-right", "Canto inferior direito"]
+    ["top-left", "Em cima, à esquerda"],
+    ["top-center", "Em cima, no centro"],
+    ["top-right", "Em cima, à direita"],
+    ["middle-left", "No meio, à esquerda"],
+    ["middle-center", "Bem no meio"],
+    ["middle-right", "No meio, à direita"],
+    ["bottom-left", "Embaixo, à esquerda"],
+    ["bottom-center", "Embaixo, no centro"],
+    ["bottom-right", "Embaixo, à direita"]
 );
 export const SIZE_ITEMS = enumItems(
     ["full", "Tela inteira"],
@@ -119,6 +124,8 @@ class ButtonCard extends FormattingSettingsCard {
     height = num("height", "Altura (px, 0 = ocupa o visual)", 0, "Com Abrir em = Dentro do visual, 0 vira 56 px.");
     width = num("width", "Largura do botão (px)", 300, "Só com Abrir em = Dentro do visual: o resto do visual fica transparente até abrir.");
     anchor = dropdown("anchor", "Posição do botão", ANCHOR_ITEMS, 0);
+    offsetX = num("offsetX", "Deslocamento horizontal (px)", 0, "Afasta o botão da borda escolhida (no centro, positivo vai para a direita). O botão nunca sai do visual.");
+    offsetY = num("offsetY", "Deslocamento vertical (px)", 0, "Afasta o botão da borda escolhida (no meio, positivo vai para baixo). O botão nunca sai do visual.");
     padding = num("padding", "Espaço interno lateral (px)", 20);
     gap = num("gap", "Espaço entre ícone, texto e seta (px)", 14);
     shadow = dropdown("shadow", "Sombra", SHADOW_ITEMS, 1);
@@ -128,7 +135,7 @@ class ButtonCard extends FormattingSettingsCard {
     name = "button";
     displayName = "Botão";
     slices: FormattingSettingsSlice[] = [
-        this.fontFamily, this.background, this.gradient, this.layout, this.radius, this.height, this.width, this.anchor,
+        this.fontFamily, this.background, this.gradient, this.layout, this.radius, this.height, this.width, this.anchor, this.offsetX, this.offsetY,
         this.padding, this.gap, this.shadow, this.borderWidth, this.borderColor
     ];
 }
