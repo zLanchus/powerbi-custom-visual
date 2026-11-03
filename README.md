@@ -22,6 +22,8 @@ Coleção de **visuais personalizados para Power BI**, feitos em TypeScript + HT
 | [**Barras com Base Nominal**](visuals/barras-base/) | Barras empilhadas com legenda e, ao lado, a **base nominal** (tabela com os registros). Clique numa barra, num segmento ou na legenda e a base mostra só aqueles registros; pesquisa, ordenação por coluna e filtro dos outros visuais da página. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/barras-base.pbiviz) |
 | [**Botão de Navegação**](visuals/botao-navegacao/) | Botão bonito para ir a outra página ou abrir um link: ícone, texto e subtítulo, seta animada, degradê, sombras, efeitos de hover e clique, texto e link dinâmicos por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/botao-navegacao.pbiviz) |
 | [**Pop-up Explicativo**](visuals/popup-explicativo/) | Botão que abre um pop-up por cima do relatório com texto explicativo: títulos, listas, destaques, negrito e itálico; texto fixo ou por medida. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/popup-explicativo.pbiviz) |
+| [**Colunas Empilhadas e Linha**](visuals/colunas-linha/) | Réplica do gráfico nativo de colunas empilhadas e linhas com legenda interativa: botões para mostrar ou esconder cada série ou todas as colunas / linhas, eixo secundário, rótulos de total e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-linha.pbiviz) |
+| [**Colunas Agrupadas e Linha**](visuals/colunas-agrupadas-linha/) | A versão agrupada (clusterizada) do Colunas Empilhadas e Linha: colunas lado a lado, com a mesma legenda interativa, rótulos acima das colunas, eixos por medida, colunas sempre abaixo das linhas, Ano e Mês aninhados e formatação completa. | [`.pbiviz`](https://zlanchus.github.io/powerbi-custom-visual/downloads/colunas-agrupadas-linha.pbiviz) |
 
 <p align="center">
   <img src="visuals/filtro-popup/docs/1-fechado.png" width="300" alt="Botão Abrir Filtros">
@@ -57,7 +59,9 @@ powerbi-custom-visual/
 │   ├── barras-base/
 │   ├── exportar-pagina/
 │   ├── botao-navegacao/
-│   └── popup-explicativo/
+│   ├── popup-explicativo/
+│   ├── colunas-linha/
+│   └── colunas-agrupadas-linha/
 │       ├── src/             # código TypeScript
 │       ├── style/           # estilos (LESS)
 │       ├── assets/          # ícone
