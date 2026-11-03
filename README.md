@@ -60,7 +60,6 @@ powerbi-custom-visual/
 │   ├── tabela-avaliacao/
 │   ├── padroes-saida/
 │   ├── barras-base/
-│   ├── exportar-pagina/
 │   ├── botao-navegacao/
 │   ├── popup-explicativo/
 │   ├── colunas-linha/
