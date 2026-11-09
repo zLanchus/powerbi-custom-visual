@@ -102,6 +102,14 @@ export class Visual implements IVisual {
     private root: HTMLElement;
     private button: HTMLElement;
     private popup: PopupState | undefined;
+    /** Links do texto abrem pelo Power BI (launchUrl): o visual roda isolado e não abre abas sozinho. */
+    private readonly markdownOptions = {
+        onLink: (url: string): void => {
+            if (/^https?:/i.test(url)) {
+                this.host.launchUrl(url);
+            }
+        }
+    };
     private inline: HTMLElement | undefined;
     /** "focus": texto aberto no modo foco do Power BI; "fallback": por cima do visual, sem modo foco nem diálogo. */
     private inlineKind: InlineKind = "fallback";
@@ -309,7 +317,7 @@ export class Visual implements IVisual {
         close.appendChild(icon("M6 6l12 12M18 6L6 18", "pe-close-svg"));
         close.addEventListener("click", () => this.closeLayer());
         const scroller = el("div", "pe-inline-scroll");
-        renderPopup(scroller, state, true);
+        renderPopup(scroller, state, true, this.markdownOptions);
         layer.append(scroller, close);
         this.root.appendChild(layer);
         this.inline = layer;
@@ -358,7 +366,7 @@ export class Visual implements IVisual {
         panel.setAttribute("aria-label", state.title);
         panel.style.background = state.background;
         const scroller = el("div", "pe-inline-scroll");
-        renderPopup(scroller, state, true);
+        renderPopup(scroller, state, true, this.markdownOptions);
         panel.appendChild(scroller);
         if (p.showClose.value) {
             const close = el("span", "pe-close");

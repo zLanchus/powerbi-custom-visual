@@ -1,6 +1,6 @@
 # Pop-up Explicativo
 
-Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)) que abre um **texto explicativo na área inteira do relatório**, com um **texto explicativo**: como ler a página, regras de cálculo, glossário, avisos. O texto aceita títulos, listas, destaques, **negrito** e *itálico*. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
+Botão (mesmo desenho caprichado do [Botão de Navegação](../botao-navegacao/)) que abre um **texto explicativo na área inteira do relatório**, com um **texto explicativo**: como ler a página, regras de cálculo, glossário, avisos. O texto aceita Markdown: títulos, listas aninhadas, tabelas, avisos, código, links, **negrito**, *itálico* e mais. Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
 
 | Botões | Pop-up aberto | Dentro do visual (sem diálogo) |
 |---|---|---|
@@ -14,7 +14,7 @@ Padrão desde a versão 2.1 (**Formatar visual → Pop-up → Abrir em → Dentr
 |---|---|
 | ![Fechado](docs/5-dentro-fechado.png) | ![Aberto](docs/6-dentro-aberto.png) |
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.3.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Deixe o visual **do tamanho que o pop-up deve ter** (ex.: a área central da página).
 3. Em **Formatar visual → Geral → Efeitos**, desligue o **Plano de fundo** (e a borda e a sombra do contêiner), para a área fora do botão ficar transparente.
 4. Em **Formatar visual → Botão**, ajuste **Largura do botão**, **Altura** e onde ele fica:
@@ -42,7 +42,7 @@ O pop-up tem três peças:
 
 ### Passo a passo (uma vez por página)
 
-0. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+0. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.3.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 1. **Painel:** insira o Pop-up Explicativo e, em **Formatar visual → Visual → Função**, escolha **Painel do pop-up**. Escreva título e texto em **Pop-up**. Posicione no centro da página, no tamanho desejado.
 2. **Fundo:** **Inserir → Formas → Retângulo** cobrindo a página inteira. Preenchimento preto (ou `#0F2B45`) com transparência ~45%, sem borda. Em **Ação**, ligue e escolha **Tipo: Indicador** (o indicador é criado no passo 5; volte aqui depois). Em **Exibir → Painel de seleção**, deixe o retângulo **abaixo** do painel.
 3. **Fechar:** **Inserir → Botões → Em branco**, do tamanho do X (~40 × 40), em cima do X do painel. Preenchimento com transparência 100%, sem borda. **Ação → Indicador** (também configurada no passo 5).
@@ -61,7 +61,7 @@ No Desktop, os botões nativos respondem com **Ctrl + clique**. No Service, bast
 
 ## Como usar como botão com caixa de diálogo
 
-1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.2.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
+1. Baixe [`dist/popupExplicativoF66C2BC2624544D4B1648167E0490F4F.2.3.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Em **Formatar visual → Texto do botão**, escreva o texto do botão.
 3. Em **Formatar visual → Pop-up → Texto**, escreva a explicação (ou use a medida **Texto do pop-up**, abaixo).
 4. Clique no botão (clique normal, também no Power BI Desktop).
@@ -76,18 +76,35 @@ Campos opcionais (medidas): **Texto do botão**, **Subtítulo do botão**, **Tí
 
 ## Como escrever o texto
 
+O texto aceita **Markdown** (o mesmo do GitHub, Teams, Notion etc.). Desde a versão 2.3 o interpretador cobre quase tudo:
+
 | Escreva | Vira |
 |---|---|
-| `# Título` | título com barrinha colorida |
-| `## Subtítulo` | subtítulo |
-| `- item` (ou `*`, `•`) | lista com marcadores |
-| `1. item` | lista numerada |
-| `> texto` | caixa de destaque (aviso, observação) |
-| `---` | linha divisória |
-| `**texto**` / `*texto*` | **negrito** / *itálico* |
+| `# Título` … `#### Título` (ou `Título` + `===` na linha de baixo) | títulos em 4 níveis (o `#` tem barrinha colorida) |
+| `**texto**` / `__texto__` | **negrito** |
+| `*texto*` / `_texto_` | *itálico* |
+| `***texto***` | ***negrito e itálico*** |
+| `~~texto~~` | ~~riscado~~ |
+| `==texto==` | texto marcado (fundo na cor de destaque) |
+| `` `código` `` | código em fonte monoespaçada |
+| `[texto](https://site.com)` | link (abre pelo Power BI, que pede confirmação) |
+| `https://site.com`, `www.site.com`, `<https://site.com>` | link automático |
+| `![descrição](https://... ou data:image/png;base64,...)` | imagem (veja observações) |
+| `- item` (ou `*`, `+`, `•`) | lista com marcadores |
+| `1. item` (ou `1)`; pode começar em outro número) | lista numerada |
+| item recuado com 2+ espaços | sublista (listas aninhadas, de qualquer tipo) |
+| `- [ ] tarefa` / `- [x] feita` | lista de tarefas com caixinhas |
+| `> texto` (`>>` para aninhar) | caixa de destaque, que aceita listas, títulos etc. dentro |
+| `> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]` na 1ª linha | aviso com ícone e título (Observação, Dica, Importante, Atenção, Cuidado) |
+| <code>```</code> (ou `~~~`) antes e depois | bloco de código (ex.: uma fórmula DAX), sem interpretar a marcação dentro |
+| `\| A \| B \|` + `\|---\|:---:\|` + linhas | tabela; `:---` esquerda, `:---:` centro, `---:` direita |
+| `---`, `***` ou `___` | linha divisória |
+| `<u>`, `<sub>`, `<sup>`, `<kbd>`, `<mark>`, `<small>`, `<br>` | sublinhado, subscrito, sobrescrito, tecla, marcado, menor, quebra de linha |
+| `\*` (barra antes) | o caractere literal, sem virar marcação |
+| Enter | nova linha no mesmo parágrafo |
 | linha em branco | novo parágrafo |
 
-Se a caixa do painel não aceitar Enter, digite `\n` onde quiser quebrar a linha.
+Se a caixa do painel não aceitar Enter, digite `\n` onde quiser quebrar a linha (`\\n` mostra o `\n` literal).
 
 ### Texto por medida (recomendado para textos longos)
 
@@ -125,4 +142,6 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 
 - Caixa de diálogo: o tamanho pedido é limitado pelo Power BI ao espaço da janela ("Tela inteira" pede ~92% da tela); se ele recusar o tamanho, o diálogo abre no tamanho padrão dele.
 - Onde o Power BI não oferece o modo foco nem diálogos (ex.: **Publicar na Web** e alguns ambientes inseridos), o texto abre por cima do próprio visual, com um **X** para fechar (e `Esc`). Nesse caso aparece um ícone de aviso (⚠) no cabeçalho do visual com o motivo; deixe o visual do tamanho que o texto deve ocupar.
-- O texto nunca é interpretado como HTML: só a marcação da tabela acima.
+- O texto nunca é interpretado como HTML: só a marcação da tabela acima (as marcas `<u>`, `<sub>` etc. viram elementos montados pelo visual; `<script>` e outras aparecem como texto).
+- Imagens: as embutidas (`data:image/...;base64,`) sempre aparecem; as de endereço externo (`https://`) dependem de o Power BI permitir o carregamento no seu ambiente.
+- Links só abrem com `http(s)://` e `mailto:`; outros tipos aparecem como texto.
