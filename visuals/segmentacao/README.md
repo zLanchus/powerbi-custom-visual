@@ -8,7 +8,7 @@ Substituto mais bonito da **segmentação de dados (slicer) nativa** do Power BI
 
 ## Como usar
 
-1. Baixe [`dist/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.1.4.1.0.pbiviz`](dist/).
+1. Baixe [`dist/segmentacaoEstilizada9140412062C0470F98172EC5D1A911C8.1.4.2.0.pbiviz`](dist/).
 2. No Power BI Desktop: **Visualizações → `…` → Importar um visual de um arquivo**.
 3. Arraste uma coluna para **Campo**. Para uma **hierarquia** (filtro aninhado), coloque o nível de cima em **Campo** e os de baixo em **Níveis abaixo (hierarquia)**, na ordem: por exemplo, *Ano* em Campo e *Mês* em Níveis abaixo.
 4. Em **Formatar visual → Layout → Estilo**, escolha **Blocos (botões)**, **Lista vertical** ou **Suspenso**.
@@ -60,5 +60,5 @@ Funciona com **parâmetros de campo** (inclusive com uma coluna de grupo, para e
 
 ## Observações
 
-- **Suspenso:** como em todo visual personalizado, a lista aberta só aparece **dentro da área do visual** (o Power BI não deixa desenhar fora dela). Deixe o visual alto o suficiente para a lista; com ela fechada, a área abaixo da caixa fica transparente.
+- **Suspenso:** como em todo visual personalizado, a lista aberta só aparece **dentro da área do visual** (o Power BI não deixa desenhar fora dela). Deixe o visual alto o suficiente para a lista; com ela fechada, a área abaixo da caixa fica transparente. A lista fecha ao escolher (na seleção única), com `Esc`, clicando de novo na caixa ou **clicando fora do visual**, em qualquer lugar do relatório.
 - Um campo por visual, como na segmentação nativa. Para vários campos num lugar só, use o [Filtro em Pop-up](../filtro-popup/).

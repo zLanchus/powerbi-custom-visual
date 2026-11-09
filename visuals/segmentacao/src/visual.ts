@@ -121,6 +121,16 @@ export class Visual implements IVisual {
         this.body = el("div", "fs-body");
         this.root.append(this.header, this.body);
 
+        // Fecha o suspenso ao clicar fora do visual. O visual roda num iframe, então cliques no
+        // resto do relatório não chegam aqui; mas, com o foco dentro do iframe (ver captureFocus),
+        // clicar fora tira o foco da janela e dispara "blur".
+        this.root.tabIndex = -1;
+        window.addEventListener("blur", () => {
+            if (this.dropdownOpen) {
+                this.setDropdown(false, false);
+            }
+        });
+
         this.root.addEventListener("keydown", (e: KeyboardEvent) => {
             if (e.key === "Escape" && this.dropdownOpen) {
                 this.setDropdown(false);
@@ -365,6 +375,7 @@ export class Visual implements IVisual {
         }
         if (this.single && this.mode === "dropdown") {
             this.dropdownOpen = false;
+            this.releaseFocus(true);
         }
         this.applyFilter();
     }
@@ -385,6 +396,7 @@ export class Visual implements IVisual {
         }
         if (this.single && this.mode === "dropdown" && !allSelected) {
             this.dropdownOpen = false;
+            this.releaseFocus(true);
         }
         this.applyFilter();
     }
@@ -759,12 +771,39 @@ export class Visual implements IVisual {
         this.root.classList.toggle("fs-dropdown-open", this.dropdownOpen);
     }
 
-    private setDropdown(open: boolean): void {
+    /** Abre/fecha o suspenso. toHost=false quando o foco já saiu do visual (clique fora). */
+    private setDropdown(open: boolean, toHost = true): void {
         this.dropdownOpen = open;
-        if (!open && this.root.contains(document.activeElement)) {
-            (document.activeElement as HTMLElement).blur();
+        if (open) {
+            this.captureFocus();
+        } else {
+            this.releaseFocus(toHost);
         }
         this.render();
+    }
+
+    /** Põe o foco dentro do visual, para saber (pelo "blur" da janela) quando clicarem fora. */
+    private captureFocus(): void {
+        try {
+            window.focus();
+        } catch {
+            // ignora: alguns hosts não deixam focar a janela
+        }
+        this.root.focus({ preventScroll: true });
+    }
+
+    /** Tira o foco do visual; com toHost, devolve ao relatório para Ctrl+C / Ctrl+V continuarem. */
+    private releaseFocus(toHost: boolean): void {
+        if (this.root.contains(document.activeElement)) {
+            (document.activeElement as HTMLElement).blur();
+        }
+        if (toHost) {
+            try {
+                window.parent?.focus();
+            } catch {
+                // ignora: sem acesso à janela do relatório
+            }
+        }
     }
 
     private selectionLabel(): string {
