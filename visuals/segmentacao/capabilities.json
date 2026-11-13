@@ -48,6 +48,16 @@
                         "bool": true
                     }
                 },
+                "forceSelection": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "defaultItem": {
+                    "type": {
+                        "text": true
+                    }
+                },
                 "showSelectAll": {
                     "type": {
                         "bool": true
@@ -80,8 +90,12 @@
                                 "displayName": "Filtro (colunas comuns)"
                             },
                             {
+                                "value": "key",
+                                "displayName": "Filtro pela chave oculta (parâmetros de campo)"
+                            },
+                            {
                                 "value": "selection",
-                                "displayName": "Seleção (parâmetros de campo)"
+                                "displayName": "Seleção (reserva)"
                             }
                         ]
                     }

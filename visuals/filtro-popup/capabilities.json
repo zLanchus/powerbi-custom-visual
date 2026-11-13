@@ -258,6 +258,11 @@
                         "bool": true
                     }
                 },
+                "forceSelection": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "showSearch": {
                     "type": {
                         "bool": true

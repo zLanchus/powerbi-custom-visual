@@ -24,7 +24,8 @@ const MODE_ITEMS: powerbi.IEnumMember[] = [
 const FILTER_ITEMS: powerbi.IEnumMember[] = [
     { value: "auto", displayName: "Automático" },
     { value: "filter", displayName: "Filtro (colunas comuns)" },
-    { value: "selection", displayName: "Seleção (parâmetros de campo)" }
+    { value: "key", displayName: "Filtro pela chave oculta (parâmetros de campo)" },
+    { value: "selection", displayName: "Seleção (reserva)" }
 ];
 
 class LayoutCardSettings extends FormattingSettingsCard {
@@ -39,6 +40,21 @@ class LayoutCardSettings extends FormattingSettingsCard {
         name: "singleSelect",
         displayName: "Seleção única",
         value: false
+    });
+
+    forceSelection = new formattingSettings.ToggleSwitch({
+        name: "forceSelection",
+        displayName: "Forçar seleção",
+        description: "Com seleção única, sempre há um item marcado: ao limpar (ou ao redefinir o relatório) volta para o item padrão.",
+        value: true
+    });
+
+    defaultItem = new formattingSettings.TextInput({
+        name: "defaultItem",
+        displayName: "Item padrão",
+        description: "Item marcado ao limpar a seleção. Em branco = o primeiro da lista.",
+        placeholder: "Primeiro da lista",
+        value: ""
     });
 
     showSelectAll = new formattingSettings.ToggleSwitch({
@@ -69,7 +85,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
     filterMode = new formattingSettings.ItemDropdown({
         name: "filterMode",
         displayName: "Como filtrar",
-        description: "Automático detecta parâmetros de campo e colunas com chave oculta e usa seleção nelas.",
+        description: "Automático detecta parâmetros de campo e colunas com chave oculta e filtra pela chave, como a segmentação nativa. Seleção é a reserva, se a chave não puder ser lida.",
         items: FILTER_ITEMS,
         value: FILTER_ITEMS[0]
     });
@@ -77,7 +93,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
     name: string = "layout";
     displayName: string = "Layout";
     slices: Array<FormattingSettingsSlice> = [
-        this.mode, this.singleSelect, this.showSelectAll, this.showSearch, this.columns, this.gap, this.filterMode
+        this.mode, this.singleSelect, this.forceSelection, this.defaultItem, this.showSelectAll, this.showSearch, this.columns, this.gap, this.filterMode
     ];
 }
 

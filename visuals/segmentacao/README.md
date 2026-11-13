@@ -17,7 +17,7 @@ Substituto mais bonito da **segmentação de dados (slicer) nativa** do Power BI
 
 - **Hierarquia:** Campo + "Níveis abaixo" viram uma árvore (lista e suspenso) ou blocos agrupados.
 - **Três estilos:** blocos lado a lado (com número de colunas automático ou fixo), lista vertical com rolagem, ou caixa suspensa no estilo do botão "Abrir Filtros".
-- **Seleção múltipla** (clique marca/desmarca) ou **seleção única**.
+- **Seleção múltipla** (clique marca/desmarca) ou **seleção única**. Na seleção única, **Forçar seleção** (ligado por padrão) mantém sempre um item marcado: limpar, **Redefinir** do Power BI ou um indicador sem seleção voltam para o **Item padrão** (em branco = o primeiro da lista).
 - **Selecionar tudo** (opcional), **pesquisa** na lista e no suspenso (aparece com mais de 6 valores).
 - **Cabeçalho** com o nome do campo (ou texto próprio) e botão de **limpar seleção**.
 - **Copiar e colar** (`Ctrl+C` / `Ctrl+V` e menu do botão direito) e **sincronizar segmentações** entre páginas.
@@ -45,14 +45,15 @@ Com colunas em **Níveis abaixo (hierarquia)**, a segmentação vira uma hierarq
 Funciona com **parâmetros de campo** (inclusive com uma coluna de grupo, para escolher vários campos de uma vez):
 
 - Coloque em **Campo** a coluna do parâmetro (ou a coluna de grupo dele).
-- O visual detecta sozinho que a coluna tem uma **chave oculta** (o campo real por trás de cada nome) e passa a filtrar por **seleção**, que o Power BI converte na chave certa — do mesmo jeito que a segmentação nativa. Seleção múltipla funciona normalmente.
-- A seleção fica salva no relatório e é reaplicada quando ele é aberto.
-- Se precisar forçar, use **Formatar visual → Layout → Como filtrar**: *Automático* (padrão), *Filtro (colunas comuns)* ou *Seleção (parâmetros de campo)*.
-- No modo seleção, o efeito nos outros visuais segue **Formatar → Editar interações** (o padrão "filtrar" é o certo).
+- O visual detecta sozinho que a coluna tem uma **chave oculta** (o campo real por trás de cada nome, ex.: `'Medidas'[Vendas]`) e filtra por essa coluna — do mesmo jeito que a segmentação nativa. Assim o item escolhido **aparece marcado**, fica salvo no relatório e funciona com indicadores, **Redefinir** e sincronização entre páginas. Seleção múltipla funciona normalmente.
+- Relatórios feitos com a versão anterior (que usava seleção) são convertidos sozinhos na primeira abertura.
+- Se a chave não puder ser lida, o visual usa a **seleção** do Power BI como reserva. Nesse modo, o efeito nos outros visuais segue **Formatar → Editar interações** (o padrão "filtrar" é o certo), e clicar em outro gráfico pode desfazer a seleção.
+- Se precisar forçar, use **Formatar visual → Layout → Como filtrar**: *Automático* (padrão), *Filtro (colunas comuns)*, *Filtro pela chave oculta (parâmetros de campo)* ou *Seleção (reserva)*.
+- Com parâmetro de campo, ligue **Seleção única** para escolher um campo por vez; com **Forçar seleção**, sempre há um campo escolhido (sem ela, nada marcado mostra todos os campos do parâmetro).
 
 ## Formatação (painel "Formatar visual")
 
-- **Layout:** estilo, seleção única, "Selecionar tudo", pesquisa, colunas dos blocos (0 = automático), espaçamento entre itens, como filtrar (automático, filtro ou seleção).
+- **Layout:** estilo, seleção única, forçar seleção e item padrão, "Selecionar tudo", pesquisa, colunas dos blocos (0 = automático), espaçamento entre itens, como filtrar (automático, filtro, chave oculta ou seleção).
 - **Cabeçalho:** mostrar, texto, tamanho da fonte, fonte, cor, botão de limpar.
 - **Itens:** tamanho da fonte, fonte, cor de fundo e do texto, cor de fundo e do texto quando **selecionado**, arredondamento, altura, espessura e cor da borda, mostrar caixa de seleção.
 - **Caixa de seleção:** símbolo quando selecionado (visto ✓, xis ✕, bolinha ●, quadrado ■ ou nenhum), formato (quadrada arredondada, quadrada ou redonda), tamanho, espessura da borda, cor de fundo e da borda quando não selecionada, e cor de fundo, da borda e do símbolo quando selecionada.

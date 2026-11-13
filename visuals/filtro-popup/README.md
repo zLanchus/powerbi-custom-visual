@@ -19,7 +19,7 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 
 ### O que tem no pop-up
 
-- Um bloco por campo, com **pesquisa**, **"Selecionar tudo"** e lista com caixas de seleção (ou botão de opção, se "Seleção única" estiver ligado).
+- Um bloco por campo, com **pesquisa**, **"Selecionar tudo"** e lista com caixas de seleção (ou botão de opção, se "Seleção única" estiver ligado). Na seleção única, **Forçar seleção** (ligado por padrão) mantém sempre um item marcado em cada filtro: **Limpar**, **Redefinir** do Power BI ou um indicador sem seleção voltam para o primeiro item da lista.
 - Resumo do que está selecionado no cabeçalho de cada bloco e botão de borracha para **limpar só aquele filtro**. Os blocos abrem **retraídos** ao abrir o pop-up; clique no título para expandir.
 - **Filtros aninhados:** cada espaço "Filtro aninhado N" vira uma árvore, com setas para expandir/recolher, marcação parcial no nível de cima e contador de itens.
 - Opcional: modo **intervalo (De/Até)** para campos numéricos e de data.
@@ -33,7 +33,7 @@ Botão **"Abrir Filtros"** (azul-claro, ícone de funil, divisória e seta) que 
 - **Botão:** texto, cor de fundo, cor do texto/ícones, fonte, tamanho da fonte do texto, arredondamento, altura, espessura e cor da borda, ícone e contador.
 - **Pop-up:** título, tamanho da fonte do título, tamanho da fonte do título dos filtros, tamanho da fonte dos valores, cor de fundo, cor dos painéis, cor do texto, espessura e cor da borda, abrir abaixo do botão ou por cima dele, fechar ao clicar fora do visual e fechar ao tirar o mouse.
 - **Botões do pop-up** ("Limpar todos os filtros" e "Fechar"): posição (esquerda, centro ou direita), tamanho da fonte, fonte, largura (0 = automática), cor de fundo e cor do texto de cada um. Os dois botões têm sempre a mesma largura e altura.
-- **Filtros:** abrir com os filtros retraídos (ligado por padrão), seleção única, caixa de pesquisa, intervalo para números e datas, limite de combinações lidas, espessura e cor da borda de cada bloco de filtro.
+- **Filtros:** abrir com os filtros retraídos (ligado por padrão), seleção única, forçar seleção, caixa de pesquisa, intervalo para números e datas, limite de combinações lidas, espessura e cor da borda de cada bloco de filtro.
 - **Caixa de seleção:** símbolo quando selecionado (visto ✓, xis ✕, bolinha ●, quadrado ■ ou nenhum), formato (quadrada arredondada, quadrada ou redonda), tamanho, espessura da borda, cor de fundo e da borda quando não selecionada, e cor de fundo, da borda e do símbolo quando selecionada.
 - **Títulos dos filtros aninhados:** para cada filtro aninhado em uso, escolha o que aparece no título: todos os níveis (A › B › C), primeiro e último (A › C), só o primeiro, só o último ou um nome personalizado. Para renomear um filtro sem aninhamento, use **Renomear para este visual** no campo.
 

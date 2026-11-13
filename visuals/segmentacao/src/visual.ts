@@ -2,7 +2,7 @@
 
 import powerbi from "powerbi-visuals-api";
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
-import { IAdvancedFilter, IBasicFilter, IFilterTarget } from "powerbi-models";
+import { BasicFilter, FilterType, IAdvancedFilter, IBasicFilter, IFilterTarget, PrimitiveValueType } from "powerbi-models";
 import "./../style/visual.less";
 
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
@@ -14,6 +14,7 @@ import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ISelectionId = powerbi.visuals.ISelectionId;
 import DataView = powerbi.DataView;
 import FilterAction = powerbi.FilterAction;
+import PrimitiveValue = powerbi.PrimitiveValue;
 
 import { LayoutMode, VisualFormattingSettingsModel } from "./settings";
 import {
@@ -30,6 +31,7 @@ import {
     valueKey
 } from "./filters";
 import { NestedGroup, TreeNode, buildTree, buildTreeFilter, coverNodes, treeStateFromFilters } from "./hierarchy";
+import { hiddenKeyTarget, hiddenKeyValues } from "./fieldkey";
 
 /** Quantidade máxima de itens desenhados (o resto aparece pela pesquisa). */
 const MAX_RENDERED_ITEMS = 500;
@@ -92,9 +94,17 @@ export class Visual implements IVisual {
     private category: powerbi.DataViewCategoryColumn | undefined;
     /** Primeira linha do data view de cada valor (para criar a seleção). */
     private rowOf = new Map<string, number>();
-    /** true quando a coluna é filtrada por seleção (ex.: parâmetro de campo). */
+    /** true quando a coluna é filtrada por seleção (reserva para colunas com chave oculta). */
     private selectionMode = false;
     private selectionRestored = false;
+    /** Último valor salvo de "state.selected" que o visual leu (no modo seleção). */
+    private savedSeen: string | undefined;
+    /** Coluna oculta pela qual o visual filtra (parâmetros de campo), e a chave de cada item. */
+    private keyTarget: IFilterTarget | undefined;
+    private keyOf = new Map<string, PrimitiveValue>();
+    private keyMigrated = false;
+    /** "Forçar seleção" já mandou o item padrão e espera o Power BI devolver o filtro. */
+    private forcePending = false;
     private state: FieldState = emptyState();
     private search = "";
     private dropdownOpen = false;
@@ -103,6 +113,8 @@ export class Visual implements IVisual {
         this.host = options.host;
         this.events = options.host.eventService;
         this.selectionManager = options.host.createSelectionManager();
+        // Indicadores e "Redefinir" devolvem a seleção por aqui (modo seleção).
+        this.selectionManager.registerOnSelectCallback?.((ids: ISelectionId[]) => this.onHostSelect(ids));
         this.formattingSettingsService = new FormattingSettingsService();
 
         this.root = el("div", "fs-root");
@@ -165,24 +177,39 @@ export class Visual implements IVisual {
             }
 
             this.field = this.readField(dataView);
+            const mode = this.field && !this.tree ? this.filterMode() : "filter";
             const wasSelectionMode = this.selectionMode;
-            this.selectionMode = !!this.field && !this.tree && this.useSelection();
+            this.selectionMode = mode === "selection";
+            if (mode !== "key") {
+                this.keyTarget = undefined;
+                this.keyOf.clear();
+            }
             if (this.selectionMode) {
                 if (!wasSelectionMode) {
                     // Remove um filtro antigo que tenha ficado do modo "filtro".
                     this.host.applyJsonFilter(null, "general", "filter", FilterAction.remove);
                 }
-                this.state = this.savedSelection(dataView);
+                this.state = this.selectionState(dataView);
                 this.restoreSelection();
             } else {
+                if (wasSelectionMode) {
+                    // Saiu do modo seleção: a seleção antiga não pode continuar filtrando os outros visuais.
+                    this.selectionManager.clear();
+                }
                 const filters = (options.jsonFilters || []) as Array<IBasicFilter | IAdvancedFilter>;
                 if (this.tree) {
                     this.state = treeStateFromFilters(this.tree, filters);
+                } else if (this.keyTarget) {
+                    this.state = this.keyState(filters);
+                    this.migrateSavedSelection(dataView);
                 } else {
                     const filter = this.field && filters.find(f => f && f.target && !Array.isArray(f.target)
                         && sameTarget(f.target as IFilterTarget, this.field.target));
                     this.state = this.field && filter ? stateFromFilter(this.field, filter) : emptyState();
                 }
+            }
+            if (!dataView?.metadata?.segment) {
+                this.enforceSelection();
             }
 
             this.applyStyles();
@@ -194,6 +221,9 @@ export class Visual implements IVisual {
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
+        const l = this.formattingSettings.layoutCard;
+        l.forceSelection.visible = l.singleSelect.value;
+        l.defaultItem.visible = l.singleSelect.value && l.forceSelection.value;
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }
 
@@ -269,22 +299,94 @@ export class Visual implements IVisual {
     // --------------------------------------------------------------- filters
 
     /**
-     * Colunas com chave oculta (parâmetros de campo, colunas com "Agrupar por")
-     * não aceitam filtro só pelo texto exibido: nelas o visual usa a seleção do
-     * Power BI, que converte cada item na chave certa (como a segmentação nativa).
+     * Como filtrar. Colunas com chave oculta (parâmetros de campo, colunas com "Agrupar por") não aceitam
+     * filtro pelo texto exibido: nelas o visual filtra pela coluna oculta, como a segmentação nativa.
+     * Assim a escolha aparece marcada, vale em indicadores, "Redefinir" e sincronização entre páginas.
+     * Se a chave de algum item não puder ser lida, usa a seleção do Power BI como reserva.
      */
-    private useSelection(): boolean {
+    private filterMode(): "filter" | "key" | "selection" {
         const mode = String(this.formattingSettings.layoutCard.filterMode.value?.value || "auto");
-        if (mode !== "auto") {
-            return mode === "selection";
+        if (mode === "filter" || mode === "selection") {
+            return mode;
         }
-        const keys = this.category?.identityFields as unknown[] | undefined;
-        const expr = this.category?.source.expr;
-        if (!keys?.length || !expr) {
+        const target = hiddenKeyTarget(this.category);
+        if (!target) {
+            return mode === "key" ? "selection" : "filter";
+        }
+        if (this.prepareKeys(target)) {
+            return "key";
+        }
+        return "selection";
+    }
+
+    /** Lê a chave oculta de cada item; false se alguma não puder ser lida. */
+    private prepareKeys(target: IFilterTarget): boolean {
+        const category = this.category;
+        const keys = category && hiddenKeyValues(category, target);
+        if (!category || !keys) {
             return false;
         }
-        const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
-        return !keys.some(k => same(k, expr));
+        this.keyOf.clear();
+        category.values.forEach((raw, row) => {
+            const key = valueKey(raw);
+            if (!this.keyOf.has(key)) {
+                this.keyOf.set(key, keys[row]);
+            }
+        });
+        this.keyTarget = target;
+        return true;
+    }
+
+    /** Estado a partir do filtro na coluna oculta (salvo, de indicador ou de outra página sincronizada). */
+    private keyState(filters: Array<IBasicFilter | IAdvancedFilter>): FieldState {
+        const state = emptyState();
+        const target = this.keyTarget;
+        const filter = target && filters.find(f => f && f.target && !Array.isArray(f.target)
+            && sameTarget(f.target as IFilterTarget, target));
+        if (!this.field || !filter || filter.filterType !== FilterType.Basic) {
+            return state;
+        }
+        const wanted = new Set((filter as IBasicFilter).values.map(v => valueKey(v as PrimitiveValue)));
+        for (const item of this.field.values) {
+            if (wanted.has(valueKey(this.keyOf.get(item.key)))) {
+                state.selected.set(item.key, item.raw);
+            }
+        }
+        return state;
+    }
+
+    private keyFilter(): IBasicFilter | undefined {
+        if (!this.keyTarget || this.state.selected.size === 0) {
+            return undefined;
+        }
+        const values = Array.from(this.state.selected.keys())
+            .filter(key => this.keyOf.has(key))
+            .map(key => this.keyOf.get(key) as PrimitiveValueType);
+        if (!values.length) {
+            return undefined;
+        }
+        const filter = new BasicFilter(this.keyTarget, "In", values);
+        filter.requireSingleSelection = this.single;
+        return filter.toJSON();
+    }
+
+    /**
+     * Relatórios feitos com a versão anterior guardavam a escolha como seleção. Na primeira vez no modo
+     * chave, ela vira o filtro equivalente e a seleção antiga é limpa.
+     */
+    private migrateSavedSelection(dataView: DataView | undefined): void {
+        if (this.keyMigrated || !this.field) {
+            return;
+        }
+        this.keyMigrated = true;
+        const saved = this.savedSelection(dataView);
+        if (this.state.selected.size > 0 || saved.selected.size === 0) {
+            return;
+        }
+        this.state = saved;
+        this.selectionManager.clear();
+        this.sendFilter();
+        this.host.persistProperties({ merge: [{ objectName: "state", selector: null, properties: { selected: "" } }] });
     }
 
     /** Seleção salva no relatório (o Power BI não guarda seleções sozinho). */
@@ -317,6 +419,100 @@ export class Visual implements IVisual {
             .map(row => this.host.createSelectionIdBuilder().withCategory(category, row).createSelectionId());
     }
 
+    /**
+     * Estado no modo seleção. Só relê o valor salvo quando ele muda: se o Power BI não gravar
+     * (ex.: no modo de leitura), a escolha feita aqui continua marcada em vez de "desmarcar".
+     */
+    private selectionState(dataView: DataView | undefined): FieldState {
+        const raw = dataView?.metadata?.objects?.state?.selected;
+        const saved = typeof raw === "string" ? raw : "";
+        if (saved !== this.savedSeen) {
+            this.savedSeen = saved;
+            return this.savedSelection(dataView);
+        }
+        const state = emptyState();
+        for (const item of this.field?.values || []) {
+            if (this.state.selected.has(item.key)) {
+                state.selected.set(item.key, item.raw);
+            }
+        }
+        return state;
+    }
+
+    /** O Power BI trocou a seleção (indicador, "Redefinir"): atualiza o que aparece marcado. */
+    private onHostSelect(ids: ISelectionId[]): void {
+        if (!this.selectionMode || !this.field) {
+            return;
+        }
+        const state = emptyState();
+        for (const item of this.field.values) {
+            const row = this.rowOf.get(item.key);
+            if (row === undefined || !this.category) {
+                continue;
+            }
+            const id = this.host.createSelectionIdBuilder().withCategory(this.category, row).createSelectionId();
+            if (ids.some(other => other.equals(id))) {
+                state.selected.set(item.key, item.raw);
+            }
+        }
+        this.state = state;
+        this.forcePending = false;
+        this.persistSelection();
+        if (!this.enforceSelection()) {
+            this.render();
+        }
+    }
+
+    private persistSelection(): void {
+        const saved = JSON.stringify(Array.from(this.state.selected.keys()));
+        this.savedSeen = saved;
+        this.host.persistProperties({
+            merge: [{ objectName: "state", selector: null, properties: { selected: saved } }]
+        });
+    }
+
+    // --------------------------------------------------------- forçar seleção
+
+    private get forcing(): boolean {
+        const l = this.formattingSettings.layoutCard;
+        return this.single && l.forceSelection.value && !!this.field && this.field.values.length > 0;
+    }
+
+    /** Item marcado quando nada está selecionado: o "Item padrão" (pelo texto) ou o primeiro. */
+    private defaultItem(): ValueItem | undefined {
+        const values = this.field?.values || [];
+        const wanted = (this.formattingSettings.layoutCard.defaultItem.value || "").trim().toLocaleLowerCase("pt-BR");
+        return (wanted && values.find(v => v.label.trim().toLocaleLowerCase("pt-BR") === wanted)) || values[0];
+    }
+
+    private selectDefault(): boolean {
+        const item = this.defaultItem();
+        if (!item) {
+            return false;
+        }
+        this.state = emptyState();
+        this.state.selected.set(item.key, this.tree ? null : item.raw);
+        return true;
+    }
+
+    /**
+     * "Forçar seleção": com seleção única, se nada estiver marcado (ao abrir, depois de "Redefinir"
+     * ou de um indicador), marca o item padrão. Se o Power BI não devolver o filtro, não tenta de novo
+     * até haver uma seleção (evita repetir sem fim).
+     */
+    private enforceSelection(): boolean {
+        if (this.state.selected.size > 0) {
+            this.forcePending = false;
+            return false;
+        }
+        if (!this.forcing || this.forcePending || !this.selectDefault()) {
+            return false;
+        }
+        this.forcePending = true;
+        this.applyFilter();
+        return true;
+    }
+
     /** Ao abrir o relatório, reaplica a seleção salva (uma vez). */
     private restoreSelection(): void {
         if (this.selectionRestored || this.state.selected.size === 0) {
@@ -337,34 +533,40 @@ export class Visual implements IVisual {
         } else {
             this.selectionManager.clear();
         }
-        this.host.persistProperties({
-            merge: [{
-                objectName: "state",
-                selector: null,
-                properties: { selected: JSON.stringify(Array.from(this.state.selected.keys())) }
-            }]
-        });
-        this.render();
+        this.persistSelection();
     }
 
-    /** Envia o filtro ao Power BI, com a mesma mecânica da segmentação nativa. */
-    private applyFilter(): void {
+    /** Envia a escolha ao Power BI (filtro, como a segmentação nativa, ou seleção no modo reserva). */
+    private sendFilter(): void {
         if (this.selectionMode) {
             this.applySelection();
             return;
         }
         const filter = this.tree
             ? buildTreeFilter(this.tree, this.state, this.single)
-            : this.field && buildFilter(this.field, this.state, false, this.single);
+            : this.keyTarget
+                ? this.keyFilter()
+                : this.field && buildFilter(this.field, this.state, false, this.single);
         if (filter) {
             this.host.applyJsonFilter(filter, "general", "filter", FilterAction.merge);
         } else {
             this.host.applyJsonFilter(null, "general", "filter", FilterAction.remove);
         }
+    }
+
+    private applyFilter(): void {
+        this.sendFilter();
         this.render();
     }
 
     private toggle(item: ValueItem): void {
+        if (this.state.selected.has(item.key) && this.forcing) {
+            // Forçar seleção: clicar no item marcado não deixa a segmentação vazia.
+            if (this.single && this.mode === "dropdown") {
+                this.setDropdown(false);
+            }
+            return;
+        }
         if (this.state.selected.has(item.key)) {
             this.state.selected.delete(item.key);
         } else {
@@ -383,6 +585,9 @@ export class Visual implements IVisual {
     /** Marca/desmarca um nó da hierarquia: vale para todas as folhas abaixo dele. */
     private toggleNode(node: TreeNode): void {
         const allSelected = node.leafKeys.every(k => this.state.selected.has(k));
+        if (allSelected && this.forcing) {
+            return;
+        }
         if (allSelected) {
             node.leafKeys.forEach(k => this.state.selected.delete(k));
         } else {
@@ -419,6 +624,10 @@ export class Visual implements IVisual {
     private clear(): void {
         this.state = emptyState();
         this.search = "";
+        // Forçar seleção: limpar volta para o item padrão.
+        if (this.forcing) {
+            this.selectDefault();
+        }
         this.applyFilter();
     }
 
@@ -463,7 +672,9 @@ export class Visual implements IVisual {
         const active = this.state.selected.size > 0;
         this.header.style.display = h.show.value ? "" : "none";
         this.title.textContent = h.text.value || this.field?.displayName || "Segmentação";
-        this.clearButton.style.display = h.showClear.value && active ? "" : "none";
+        // Forçar seleção: o botão de limpar só aparece quando dá para voltar ao item padrão.
+        const atDefault = this.forcing && this.state.selected.size === 1 && this.state.selected.has(this.defaultItem()?.key ?? "");
+        this.clearButton.style.display = h.showClear.value && active && !atDefault ? "" : "none";
         this.root.classList.toggle("fs-active", active);
 
         const scroll = this.body.querySelector<HTMLElement>(".fs-scroll")?.scrollTop ?? 0;

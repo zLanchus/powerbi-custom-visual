@@ -117,6 +117,8 @@ export class Visual implements IVisual {
     private searchText = new Map<string, string>();
     private collapsed = new Map<string, boolean>();
     private isOpen = false;
+    /** Filtros em que "Forçar seleção" já mandou o primeiro item e espera o Power BI devolver o filtro. */
+    private forcePending = new Set<string>();
     private leaveTimer: number | undefined;
     private dataSignature = "";
     private accumulator = new SegmentAccumulator();
@@ -325,6 +327,10 @@ export class Visual implements IVisual {
             }
         }
         this.syncStateFromHost(this.jsonFilters);
+        // Só depois de ler tudo: o "primeiro da lista" precisa da lista completa.
+        if (this.fetchTimer === undefined && this.enforceSelection()) {
+            this.applyFilters();
+        }
         this.applyStyles();
 
         const signature = this.fields
@@ -346,6 +352,8 @@ export class Visual implements IVisual {
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
+        const slicer = this.formattingSettings.slicerCard;
+        slicer.forceSelection.visible = slicer.singleSelect.value;
         // Só aparecem os filtros aninhados em uso (com mais de uma coluna); o nome só no modo personalizado.
         this.formattingSettings.nestedTitlesCard.nests.forEach((group, k) => {
             group.visible = this.nested.has(NESTED_ROLES[k]);
@@ -507,9 +515,51 @@ export class Visual implements IVisual {
         this.refreshButton();
     }
 
+    // --------------------------------------------------------- forçar seleção
+
+    /** "Forçar seleção" vale para este filtro (seleção única, lista de valores, não intervalo)? */
+    private forced(field: FieldModel): boolean {
+        const s = this.formattingSettings.slicerCard;
+        return s.singleSelect.value && s.forceSelection.value && !this.useRange(field) && field.values.length > 0;
+    }
+
+    /** Estado com só o primeiro item marcado. */
+    private defaultState(field: FieldModel): FieldState {
+        const state = emptyState();
+        const first = field.values[0];
+        state.selected.set(first.key, this.nested.has(field.key) ? null : first.raw);
+        return state;
+    }
+
+    private atDefault(field: FieldModel, state: FieldState | undefined): boolean {
+        return this.forced(field) && !!state && state.selected.size === 1 && state.selected.has(field.values[0].key);
+    }
+
+    /**
+     * Com seleção única e "Forçar seleção", marca o primeiro item dos filtros vazios (ao abrir, depois de
+     * "Redefinir" ou de um indicador). Se o Power BI não devolver o filtro, não tenta de novo até haver
+     * uma seleção naquele filtro (evita repetir sem fim). Devolve true se mudou algum filtro.
+     */
+    private enforceSelection(): boolean {
+        let changed = false;
+        for (const field of this.fields) {
+            if (isActive(this.states.get(field.key))) {
+                this.forcePending.delete(field.key);
+                continue;
+            }
+            if (!this.forced(field) || this.forcePending.has(field.key)) {
+                continue;
+            }
+            this.forcePending.add(field.key);
+            this.states.set(field.key, this.defaultState(field));
+            changed = true;
+        }
+        return changed;
+    }
+
     private clearAll(): void {
         for (const field of this.fields) {
-            this.states.set(field.key, emptyState());
+            this.states.set(field.key, this.forced(field) ? this.defaultState(field) : emptyState());
         }
         this.searchText.clear();
         this.applyFilters();
@@ -517,7 +567,7 @@ export class Visual implements IVisual {
     }
 
     private clearField(field: FieldModel): void {
-        this.states.set(field.key, emptyState());
+        this.states.set(field.key, this.forced(field) ? this.defaultState(field) : emptyState());
         this.applyFilters();
         this.renderBody();
     }
@@ -525,6 +575,10 @@ export class Visual implements IVisual {
     private toggleValue(field: FieldModel, item: ValueItem): void {
         const state = this.states.get(field.key) || emptyState();
         const single = this.formattingSettings.slicerCard.singleSelect.value;
+        if (state.selected.has(item.key) && this.forced(field)) {
+            // Forçar seleção: clicar no item marcado não deixa o filtro vazio.
+            return;
+        }
         if (state.selected.has(item.key)) {
             state.selected.delete(item.key);
         } else {
@@ -558,6 +612,9 @@ export class Visual implements IVisual {
     private toggleNode(field: FieldModel, group: NestedGroup, node: TreeNode): void {
         const state = this.ensureState(field);
         const allSelected = node.leafKeys.every(k => state.selected.has(k));
+        if (allSelected && this.forced(field)) {
+            return;
+        }
         if (allSelected) {
             node.leafKeys.forEach(k => state.selected.delete(k));
         } else {
@@ -608,7 +665,9 @@ export class Visual implements IVisual {
     private activeCount(): number {
         let count = 0;
         for (const field of this.fields) {
-            if (isActive(this.states.get(field.key))) {
+            const state = this.states.get(field.key);
+            // Com "Forçar seleção", o item padrão não conta como filtro ativo.
+            if (isActive(state) && !this.atDefault(field, state)) {
                 count++;
             }
         }
@@ -1104,7 +1163,8 @@ export class Visual implements IVisual {
     private refreshFieldHeader(field: FieldModel, section: HTMLElement): void {
         const state = this.states.get(field.key);
         const active = isActive(state);
-        section.classList.toggle("fp-active", active);
+        // No item padrão de "Forçar seleção" não há o que limpar (o botão de borracha some).
+        section.classList.toggle("fp-active", active && !this.atDefault(field, state));
         const count = section.querySelector<HTMLElement>(".fp-field-count");
         if (count) {
             if (!active || !state) {

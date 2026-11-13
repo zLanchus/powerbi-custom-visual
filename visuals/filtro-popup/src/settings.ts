@@ -180,6 +180,13 @@ class SlicerCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    forceSelection = new formattingSettings.ToggleSwitch({
+        name: "forceSelection",
+        displayName: "Forçar seleção",
+        description: "Com seleção única, cada filtro sempre tem um item marcado: ao limpar (ou ao redefinir o relatório) volta para o primeiro da lista.",
+        value: true
+    });
+
     showSearch = new formattingSettings.ToggleSwitch({
         name: "showSearch",
         displayName: "Mostrar caixa de pesquisa",
@@ -230,7 +237,7 @@ class SlicerCardSettings extends FormattingSettingsCard {
     });
 
     slices: Array<FormattingSettingsSlice> = [
-        this.startCollapsed, this.singleSelect, this.showSearch, this.rangeForNumbers, this.maxRows, this.catalogFilters, this.borderWidth, this.borderColor
+        this.startCollapsed, this.singleSelect, this.forceSelection, this.showSearch, this.rangeForNumbers, this.maxRows, this.catalogFilters, this.borderWidth, this.borderColor
     ];
 }
 
