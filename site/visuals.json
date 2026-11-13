@@ -87,9 +87,9 @@
     "name": "Barras com Insight",
     "summary": "Barras horizontais com trilho, valor e detalhe ao lado e uma frase de insight automática.",
     "features": [
-      "Detalhe ao lado do valor, como 24,2% (18)",
+      "Detalhe ao lado do valor, como 27,9% (21)",
       "Mostrar apenas o top N (maiores, menores ou primeiros da ordenação)",
-      "Ordenação por outro campo (ex.: ordem do nível)",
+      "Ordenação por outro campo (ex.: ordem da faixa de tempo de casa)",
       "Insight automático do maior ou menor valor, com texto editável",
       "Cor da barra com fx, destaque da maior barra, trilho e título configuráveis"
     ],

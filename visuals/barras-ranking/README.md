@@ -1,8 +1,8 @@
 # Barras com Insight
 
-Gráfico de barras horizontais no estilo de ranking: cada linha tem o **rótulo da categoria**, uma **barra com trilho** e o **valor com um detalhe ao lado** (ex.: `24,2% (18)`). Embaixo aparece uma **frase de insight** automática, como *"Maior taxa: Auxiliar · 24,2% (18)."*. Dá para mostrar só o **top N** e **ordenar por outro campo** (ex.: a ordem dos níveis). Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
+Gráfico de barras horizontais no estilo de ranking: cada linha tem o **rótulo da categoria**, uma **barra com trilho** e o **valor com um detalhe ao lado** (ex.: `27,9% (21)`). Embaixo aparece uma **frase de insight** automática, como *"Maior taxa: 3 a 6 meses · 27,9% (21)."*. Dá para mostrar só o **top N** e **ordenar por outro campo** (ex.: a ordem das faixas de tempo de casa). Segue o padrão visual do repositório ([DESIGN.md](../../DESIGN.md)).
 
-| Padrão (ordenado pelo nível) | Top 3 com destaque | Cores por regra (fx) |
+| Padrão (ordenado pela faixa) | Top 3 com destaque | Cores por regra (fx) |
 |---|---|---|
 | ![Padrão](docs/1-padrao.png) | ![Top 3](docs/2-top-destaque.png) | ![fx](docs/3-fx.png) |
 
@@ -10,10 +10,10 @@ Gráfico de barras horizontais no estilo de ranking: cada linha tem o **rótulo 
 
 1. Baixe [`dist/barrasRankingA8588BCCC6D14E3E8FC340A9DF9CD332.1.0.0.0.pbiviz`](dist/) e importe no Power BI (**Visualizações → `…` → Importar um visual de um arquivo**).
 2. Arraste os campos:
-   - **Categoria**: cada valor vira uma barra (ex.: Nível, Cargo).
+   - **Categoria**: cada valor vira uma barra (ex.: Faixa de tempo de casa, Cargo).
    - **Valor**: a medida que define o tamanho da barra (ex.: Taxa de turnover).
-   - **Detalhe** (opcional, até 3): medidas mostradas ao lado do valor (ex.: nº de desligados → `(18)`). Com mais de uma, elas aparecem separadas por `·`.
-   - **Ordenar por** (opcional): campo ou medida usado para ordenar as barras (ex.: *Ordem do nível* = 1, 2, 3…). Para uma coluna de texto, troque a agregação para **Primeiro**.
+   - **Detalhe** (opcional, até 3): medidas mostradas ao lado do valor (ex.: nº de desligados → `(21)`). Com mais de uma, elas aparecem separadas por `·`.
+   - **Ordenar por** (opcional): campo ou medida usado para ordenar as barras (ex.: *Ordem da faixa* = 1, 2, 3…). Para uma coluna de texto, troque a agregação para **Primeiro**.
    - **Dicas de ferramenta** (opcional): medidas extras mostradas ao passar o mouse.
 
 ## Recursos
@@ -22,8 +22,8 @@ Gráfico de barras horizontais no estilo de ranking: cada linha tem o **rótulo 
   - **Automático**: pelo campo *Ordenar por*, se houver; senão, pelo valor;
   - **Valor**, **Campo Ordenar por**, **Categoria (A–Z)** ou **Ordem do Power BI** (respeita a classificação do campo e o menu *Classificar eixo*);
   - **Direção**: automática (valor: maior primeiro; demais: crescente), decrescente ou crescente.
-- **Top N** (**Formatar visual → Top N**): mostra só N barras, escolhidas pelos **maiores valores**, **menores valores** ou **primeiros da ordenação**. As barras escolhidas continuam na ordem configurada (ex.: top 3 por taxa, exibidas na ordem do nível).
-- **Detalhe ao lado do valor**: entre parênteses `(18)`, após um ponto `· 18` ou sem separador, com fonte, tamanho e cor próprios.
+- **Top N** (**Formatar visual → Top N**): mostra só N barras, escolhidas pelos **maiores valores**, **menores valores** ou **primeiros da ordenação**. As barras escolhidas continuam na ordem configurada (ex.: top 3 por taxa, exibidas na ordem das faixas).
+- **Detalhe ao lado do valor**: entre parênteses `(21)`, após um ponto `· 21` ou sem separador, com fonte, tamanho e cor próprios.
 - **Insight** (**Formatar visual → Insight**):
   - liga e desliga a frase;
   - destaca o **maior** ou o **menor** valor;
