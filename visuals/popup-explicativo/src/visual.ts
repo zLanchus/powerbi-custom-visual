@@ -44,6 +44,9 @@ const ARROWS: Record<string, string> = {
     badge: "M7 12h10M13 8l4 4-4 4"
 };
 
+/** Folga antes de fechar quando o mouse sai do visual ("Fechar ao tirar o mouse"). */
+const LEAVE_DELAY_MS = 350;
+
 /** Folga em volta do botão para a sombra (e a elevação) não serem cortadas. */
 const SHADOW_INSET: Record<string, number> = { none: 3, soft: 4, medium: 8, strong: 14 };
 
@@ -117,6 +120,7 @@ export class Visual implements IVisual {
     private panel: HTMLElement | undefined;
     private focusTimer: number | undefined;
     private rippleOn = true;
+    private leaveTimer: number | undefined;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -157,6 +161,22 @@ export class Visual implements IVisual {
                 this.closeInline();
             }
         });
+        // "Fechar ao tirar o mouse" (só "Dentro do visual"): com uma pequena folga, para uma saída rápida
+        // e volta não fechar.
+        const page = document.documentElement;
+        page.addEventListener("mouseleave", (e: MouseEvent) => {
+            if (this.inline && this.inlineKind === "inside" && e.buttons === 0
+                && this.formattingSettings.popupCard.closeOnLeave.value) {
+                window.clearTimeout(this.leaveTimer);
+                this.leaveTimer = window.setTimeout(() => {
+                    if (this.inline && this.inlineKind === "inside") {
+                        this.closeInline();
+                        this.releaseFocus();
+                    }
+                }, LEAVE_DELAY_MS);
+            }
+        });
+        page.addEventListener("mouseenter", () => window.clearTimeout(this.leaveTimer));
         this.root.addEventListener("keydown", (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 this.closeLayer();
@@ -200,7 +220,7 @@ export class Visual implements IVisual {
         bc.width.visible = bc.anchor.visible = bc.offsetX.visible = bc.offsetY.visible = inside;
         popup.radius.visible = popup.shadow.visible = isPanel || inside;
         popup.showClose.visible = isPanel;
-        popup.closeOnBlur.visible = inside;
+        popup.closeOnBlur.visible = popup.closeOnLeave.visible = inside;
         const dialog = !isPanel && mode === "dialog";
         popup.size.visible = dialog;
         popup.width.visible = popup.height.visible = dialog && enumValue(popup.size) === "custom";
@@ -225,6 +245,9 @@ export class Visual implements IVisual {
         const mode = enumValue(this.formattingSettings.popupCard.mode);
         if (mode === "inside") {
             this.openInline(state, "inside");
+            if (this.formattingSettings.popupCard.closeOnBlur.value) {
+                this.captureFocus();
+            }
             return;
         }
         if (mode === "focus") {
@@ -275,6 +298,32 @@ export class Visual implements IVisual {
             this.host.switchFocusModeState?.(false);
         } else {
             this.closeInline();
+            this.releaseFocus();
+        }
+    }
+
+    /**
+     * Põe o foco do teclado dentro do visual (o iframe), para saber pelo "blur" da janela quando
+     * clicarem fora. Sem isso o clique no visual (com preventDefault no mousedown) não foca o iframe.
+     */
+    private captureFocus(): void {
+        try {
+            window.focus();
+        } catch {
+            // ignora: alguns hosts não deixam focar a janela
+        }
+        this.inline?.focus({ preventScroll: true });
+    }
+
+    /** Devolve o foco ao relatório, para Ctrl+C / Ctrl+V do Power BI continuarem funcionando. */
+    private releaseFocus(): void {
+        if (this.root.contains(document.activeElement)) {
+            (document.activeElement as HTMLElement).blur();
+        }
+        try {
+            window.parent?.focus();
+        } catch {
+            // ignora: sem acesso à janela do relatório
         }
     }
 
@@ -328,6 +377,7 @@ export class Visual implements IVisual {
     }
 
     private closeInline(): void {
+        window.clearTimeout(this.leaveTimer);
         this.inline?.remove();
         this.inline = undefined;
         this.button.style.visibility = "";

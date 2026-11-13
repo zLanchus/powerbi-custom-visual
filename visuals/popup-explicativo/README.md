@@ -22,9 +22,9 @@ Padrão desde a versão 2.1 (**Formatar visual → Pop-up → Abrir em → Dentr
    - **Deslocamento horizontal** e **vertical** (px): afastam o botão da borda escolhida, para o ajuste fino. Na posição central, valores positivos vão para a direita e para baixo, e negativos para a esquerda e para cima. O botão nunca sai do visual.
 5. Escreva o texto em **Pop-up → Texto** (ou use a medida **Texto do pop-up**).
 
-Para fechar: **X**, **Esc** ou **clicar em qualquer lugar fora do visual** (opção **Fechar ao clicar fora do visual**, ligada por padrão). Assim o pop-up nunca fica aberto atrás dos outros visuais.
+Para fechar: **X**, **Esc** ou **clicar em qualquer lugar fora do visual** (opção **Fechar ao clicar fora do visual**, ligada por padrão). Se preferir, ligue também **Fechar ao tirar o mouse**: o pop-up fecha assim que o mouse sai do visual. Assim o pop-up nunca fica aberto atrás dos outros visuais.
 
-**Camadas:** a área transparente continua sendo do visual. Se ele ficar **na frente**, os visuais embaixo não recebem passar o mouse nem cliques naquela área. Se ficar **atrás**, eles funcionam normalmente; ao clicar no botão, o Power BI seleciona o visual e o traz para a frente, e o pop-up aparece por cima. Confira esse comportamento no seu relatório.
+**Camadas:** a área transparente continua sendo do visual. Se ele ficar **na frente**, os visuais embaixo não recebem passar o mouse nem cliques naquela área. Se ficar **atrás**, eles funcionam normalmente; ao clicar no botão, o Power BI traz o visual para a frente e o pop-up aparece por cima, mas ele volta para a camada dele quando o mouse sai. O visual não consegue impedir isso (a ordem das camadas é do Power BI); por isso use **Fechar ao clicar fora do visual** e, se quiser, **Fechar ao tirar o mouse**.
 
 ## Alternativa: pop-up com indicadores
 
@@ -131,7 +131,7 @@ Também há **Título do pop-up**, **Texto do botão** e **Subtítulo do botão*
 - **Pop-up:**
   - título (em branco = texto do botão) e texto;
   - abrir em: dentro do visual (padrão), caixa de diálogo ou modo foco;
-  - dentro do visual: arredondamento, sombra e fechar ao clicar fora (largura, posição e deslocamento do botão ficam em **Botão**);
+  - dentro do visual: arredondamento, sombra, fechar ao clicar fora e fechar ao tirar o mouse (largura, posição e deslocamento do botão ficam em **Botão**);
   - tamanho do diálogo: tela inteira, grande, médio ou personalizado (largura e altura);
   - cor de fundo, do texto, de destaque (títulos, marcadores, barras) e do fundo dos destaques;
   - tamanho da fonte, alinhamento (à esquerda ou justificado);

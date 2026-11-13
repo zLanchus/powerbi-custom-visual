@@ -204,6 +204,16 @@
                         "bool": true
                     }
                 },
+                "closeOnBlur": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "closeOnLeave": {
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "titleFontSize": {
                     "type": {
                         "formatting": {

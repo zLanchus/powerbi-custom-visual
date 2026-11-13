@@ -228,13 +228,14 @@ class PopupCard extends FormattingSettingsCard {
     shadow = toggle("shadow", "Sombra do painel", true);
     showClose = toggle("showClose", "Mostrar X de fechar", true);
     closeOnBlur = toggle("closeOnBlur", "Fechar ao clicar fora do visual", true);
+    closeOnLeave = toggle("closeOnLeave", "Fechar ao tirar o mouse", false);
     maxWidth = num("maxWidth", "Largura máxima do texto (px, 0 = toda)", 820, "Linhas muito longas cansam a leitura; o texto fica centralizado nessa largura.");
 
     name = "popup";
     displayName = "Pop-up";
     slices: FormattingSettingsSlice[] = [
         this.title, this.content, this.mode, this.size, this.width, this.height, this.background, this.fontColor,
-        this.accent, this.panel, this.fontSize, this.align, this.radius, this.shadow, this.showClose, this.closeOnBlur, this.maxWidth
+        this.accent, this.panel, this.fontSize, this.align, this.radius, this.shadow, this.showClose, this.closeOnBlur, this.closeOnLeave, this.maxWidth
     ];
 }
 

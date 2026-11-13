@@ -138,6 +138,20 @@ class PopupCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    closeOnBlur = new formattingSettings.ToggleSwitch({
+        name: "closeOnBlur",
+        displayName: "Fechar ao clicar fora do visual",
+        description: "Clicar em qualquer lugar do relatório fecha o pop-up, para ele não ficar aberto atrás dos outros visuais.",
+        value: true
+    });
+
+    closeOnLeave = new formattingSettings.ToggleSwitch({
+        name: "closeOnLeave",
+        displayName: "Fechar ao tirar o mouse",
+        description: "Fecha o pop-up assim que o mouse sai do visual (não fecha enquanto um campo de texto está sendo usado).",
+        value: false
+    });
+
     name: string = "popup";
     displayName: string = "Pop-up";
     borderWidth = new formattingSettings.NumUpDown({
@@ -154,7 +168,8 @@ class PopupCardSettings extends FormattingSettingsCard {
 
     slices: Array<FormattingSettingsSlice> = [
         this.title, this.titleFontSize, this.fieldFontSize, this.valueFontSize,
-        this.fill, this.panelFill, this.fontColor, this.borderWidth, this.borderColor, this.overlay
+        this.fill, this.panelFill, this.fontColor, this.borderWidth, this.borderColor, this.overlay,
+        this.closeOnBlur, this.closeOnLeave
     ];
 }
 

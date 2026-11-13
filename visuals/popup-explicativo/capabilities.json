@@ -605,6 +605,11 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "closeOnLeave": {
+                    "type": {
+                        "bool": true
+                    }
                 }
             }
         }

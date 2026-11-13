@@ -45,6 +45,8 @@ const UPDATE_TYPE_DATA = 2;
 const OPERATION_CREATE = 0;
 /** Espera depois de uma consulta nova antes de pedir as próximas partes (ms). */
 const FETCH_DELAY_MS = 900;
+/** Folga antes de fechar quando o mouse sai do visual ("Fechar ao tirar o mouse"). */
+const LEAVE_DELAY_MS = 350;
 
 /** Quantidade máxima de itens desenhados por lista (o resto aparece pela pesquisa). */
 const MAX_RENDERED_ITEMS = 300;
@@ -115,6 +117,7 @@ export class Visual implements IVisual {
     private searchText = new Map<string, string>();
     private collapsed = new Map<string, boolean>();
     private isOpen = false;
+    private leaveTimer: number | undefined;
     private dataSignature = "";
     private accumulator = new SegmentAccumulator();
     /** A leitura parou no limite de combinações (alguma lista pode estar incompleta). */
@@ -146,6 +149,32 @@ export class Visual implements IVisual {
                 this.button.focus();
             }
         });
+
+        // Fechar ao clicar fora: o visual roda num iframe e não recebe os cliques do resto do relatório;
+        // mas, com o foco dentro dele (ver captureFocus), clicar fora tira o foco da janela e dispara "blur".
+        // Sem isso, o pop-up continuaria aberto e, numa camada abaixo, ficaria atrás dos outros visuais.
+        this.root.tabIndex = -1;
+        window.addEventListener("blur", () => {
+            if (this.isOpen && this.formattingSettings?.popupCard.closeOnBlur.value) {
+                this.setOpen(false, false, false);
+            }
+        });
+
+        // Fechar ao tirar o mouse (com uma pequena folga, para uma saída rápida e volta não fechar).
+        const page = document.documentElement;
+        page.addEventListener("mouseleave", (e: MouseEvent) => {
+            if (this.isOpen && e.buttons === 0 && this.formattingSettings?.popupCard.closeOnLeave.value) {
+                window.clearTimeout(this.leaveTimer);
+                this.leaveTimer = window.setTimeout(() => {
+                    // Não fecha enquanto um campo (pesquisa, datas) está em uso: o seletor de datas do
+                    // navegador fica fora do visual e levar o mouse até ele dispararia o "mouseleave".
+                    if (this.isOpen && !(document.activeElement instanceof HTMLInputElement)) {
+                        this.setOpen(false);
+                    }
+                }, LEAVE_DELAY_MS);
+            }
+        });
+        page.addEventListener("mouseenter", () => window.clearTimeout(this.leaveTimer));
 
         // Menu do botão direito do Power BI (copiar, colar, etc.), como nos visuais nativos.
         this.selectionManager = this.host.createSelectionManager();
@@ -224,6 +253,7 @@ export class Visual implements IVisual {
 
     public destroy(): void {
         this.cancelPendingFetch();
+        window.clearTimeout(this.leaveTimer);
     }
 
     // ------------------------------------------------------------ leitura em partes
@@ -619,18 +649,49 @@ export class Visual implements IVisual {
         this.clearAllButton.disabled = count === 0;
     }
 
-    private setOpen(open: boolean, viaKeyboard = false): void {
+    /** Abre/fecha o pop-up. toHost=false quando o foco já saiu do visual (clique fora). */
+    private setOpen(open: boolean, viaKeyboard = false, toHost = true): void {
         if (open && !this.isOpen && this.formattingSettings?.slicerCard.startCollapsed.value) {
             this.collapseAll();
         }
+        window.clearTimeout(this.leaveTimer);
         this.isOpen = open;
         this.root.classList.toggle("fp-open", open);
         this.button.setAttribute("aria-expanded", String(open));
-        if (open && viaKeyboard) {
-            const first = this.popup.querySelector<HTMLElement>("input, button.fp-close");
-            first?.focus();
-        } else if (!open && this.root.contains(document.activeElement)) {
+        if (open) {
+            if (this.formattingSettings?.popupCard.closeOnBlur.value) {
+                this.captureFocus();
+            }
+            if (viaKeyboard) {
+                const first = this.popup.querySelector<HTMLElement>("input, button.fp-close");
+                first?.focus();
+            }
+        } else {
+            this.releaseFocus(toHost);
+        }
+    }
+
+    /** Põe o foco dentro do visual, para saber (pelo "blur" da janela) quando clicarem fora. */
+    private captureFocus(): void {
+        try {
+            window.focus();
+        } catch {
+            // ignora: alguns hosts não deixam focar a janela
+        }
+        this.root.focus({ preventScroll: true });
+    }
+
+    /** Tira o foco do visual; com toHost, devolve ao relatório para Ctrl+C / Ctrl+V continuarem. */
+    private releaseFocus(toHost: boolean): void {
+        if (this.root.contains(document.activeElement)) {
             (document.activeElement as HTMLElement).blur();
+        }
+        if (toHost) {
+            try {
+                window.parent?.focus();
+            } catch {
+                // ignora: sem acesso à janela do relatório
+            }
         }
     }
 
